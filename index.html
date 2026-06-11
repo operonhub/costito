@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Costito — Calculadora de precios</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh;padding:24px 16px}
+  .app{max-width:640px;margin:0 auto}
+  .logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .logo-icon{width:44px;height:44px;background:#1D9E75;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;flex-shrink:0}
+  .logo-text{font-size:24px;font-weight:600;color:#1a1a1a}
+  .logo-sub{font-size:13px;color:#666;margin-top:2px}
+  .tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid #e0e0d8;flex-wrap:wrap}
+  .tab{padding:10px 16px;font-size:14px;cursor:pointer;border:none;background:none;color:#666;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color 0.15s;font-family:inherit}
+  .tab.active{color:#1D9E75;border-bottom-color:#1D9E75;font-weight:600}
+  .tab:hover:not(.active){color:#333}
+  .panel{display:none}
+  .panel.active{display:block}
+  .card{background:#fff;border:1px solid #e8e8e0;border-radius:12px;padding:20px;margin-bottom:14px}
+  .section-title{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:14px}
+  .field-row{margin-bottom:14px}
+  .field-row:last-child{margin-bottom:0}
+  .field-label{font-size:13px;color:#666;margin-bottom:6px;display:block}
+  .field-hint{font-size:12px;color:#aaa;margin-top:4px;line-height:1.4}
+  .input-wrap{display:flex;align-items:center;border:1px solid #ddd;border-radius:8px;overflow:hidden;transition:border-color 0.15s}
+  .input-wrap:focus-within{border-color:#1D9E75}
+  .input-prefix{padding:0 10px;font-size:13px;color:#888;background:#f8f8f4;height:38px;display:flex;align-items:center;border-right:1px solid #e0e0d8;flex-shrink:0}
+  .input-wrap input{border:none;outline:none;background:transparent;padding:0 12px;height:38px;font-size:15px;color:#1a1a1a;width:100%;font-family:inherit}
+
+  .modalidad-switch{display:flex;background:#f0f0e8;border-radius:8px;padding:3px;margin-bottom:14px;gap:3px}
+  .mod-btn{flex:1;padding:8px 12px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:13px;color:#666;font-family:inherit;font-weight:500;transition:all 0.15s}
+  .mod-btn.active{background:#fff;color:#1D9E75;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+  .plataformas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
+  .plat-btn{padding:10px 12px;border:1px solid #e0e0d8;border-radius:8px;background:#fff;cursor:pointer;text-align:left;transition:all 0.15s;font-family:inherit}
+  .plat-btn:hover{background:#f0faf5;border-color:#5DCAA5}
+  .plat-btn.active{border-color:#1D9E75;background:#e8f7f1}
+  .plat-name{font-size:13px;font-weight:600;color:#333}
+  .plat-com{font-size:11px;color:#888;margin-top:3px}
+  .plat-btn.active .plat-name{color:#0F6E56}
+  .plat-btn.active .plat-com{color:#1D9E75}
+
+  .submenu{background:#f8f8f4;border-radius:8px;padding:12px;margin-bottom:14px}
+  .submenu-label{font-size:12px;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+  .submenu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px}
+  .sub-btn{padding:8px 10px;border:1px solid #e0e0d8;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all 0.15s;text-align:center;line-height:1.3}
+  .sub-btn:hover{border-color:#5DCAA5}
+  .sub-btn.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
+
+  .results{background:#f8f8f4;border-radius:10px;padding:16px;margin-top:12px}
+  .result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eee;gap:10px}
+  .result-row:last-child{border-bottom:none}
+  .result-label{font-size:13px;color:#666;flex:1}
+  .result-val{font-size:14px;font-weight:600;color:#1a1a1a;text-align:right;white-space:nowrap}
+  .result-big{background:#e8f7f1;border-radius:10px;padding:16px 20px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .result-big-label{font-size:14px;color:#0F6E56;font-weight:600}
+  .result-big-sub{font-size:12px;color:#1D9E75;margin-top:2px}
+  .result-big-val{font-size:26px;font-weight:700;color:#085041;white-space:nowrap}
+  .insight{background:#e8f7f1;border-left:3px solid #1D9E75;padding:12px 14px;border-radius:0 8px 8px 0;margin-top:12px;font-size:13px;color:#0F6E56;line-height:1.6}
+
+  .check-row{display:flex;align-items:flex-start;gap:10px;margin-top:6px;padding:10px;background:#fafaf5;border-radius:8px;cursor:pointer}
+  .check-row input[type=checkbox]{margin-top:2px;accent-color:#1D9E75;cursor:pointer;width:16px;height:16px;flex-shrink:0}
+  .check-label{font-size:13px;color:#444;line-height:1.4;cursor:pointer}
+  .check-label small{color:#888;display:block;margin-top:2px;font-size:11px}
+
+  .error-msg{font-size:13px;color:#c0392b;margin-top:10px;padding:10px 14px;background:#fdf0f0;border-radius:8px;display:none}
+
+  .markup-table{width:100%;font-size:13px;border-collapse:collapse}
+  .markup-table th{text-align:left;color:#888;font-weight:500;padding:8px;border-bottom:1px solid #eee;font-size:12px}
+  .markup-table td{padding:9px 8px;border-bottom:1px solid #f0f0ec;color:#333}
+  .markup-table tr:last-child td{border-bottom:none}
+  .markup-table .highlight{background:#e8f7f1}
+  .markup-table .highlight td{color:#0F6E56;font-weight:600}
+
+  .imp-total{background:#e8f7f1;border-radius:10px;padding:16px;margin-top:14px}
+  .imp-total-label{font-size:13px;color:#0F6E56;font-weight:500}
+  .imp-total-val{font-size:22px;font-weight:700;color:#085041;margin-top:4px}
+  .imp-total-sub{font-size:12px;color:#1D9E75;margin-top:4px}
+  .add-btn{font-size:13px;color:#1D9E75;cursor:pointer;background:none;border:1px dashed #5DCAA5;border-radius:8px;padding:8px 14px;margin-bottom:12px;width:100%;text-align:center;font-family:inherit;transition:background 0.15s}
+  .add-btn:hover{background:#e8f7f1}
+  .imp-item{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+  .imp-item input[type=text]{flex:2;border:1px solid #ddd;border-radius:8px;padding:0 10px;height:36px;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.15s;min-width:0}
+  .imp-item input[type=text]:focus{border-color:#1D9E75}
+  .imp-item input[type=number]{width:80px;flex:none;border:1px solid #ddd;border-radius:8px;padding:0 8px;height:36px;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.15s}
+  .imp-item input[type=number]:focus{border-color:#1D9E75}
+  .imp-item select{width:62px;flex:none;border:1px solid #ddd;border-radius:8px;padding:0 4px;height:36px;font-size:13px;font-family:inherit;background:#fff;outline:none}
+  .remove-btn{background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;padding:0 4px;line-height:1;flex-shrink:0}
+  .remove-btn:hover{color:#c0392b}
+  .use-btn{margin-top:14px;font-size:13px;padding:8px 16px;color:#1D9E75;background:none;border:1px solid #5DCAA5;border-radius:8px;cursor:pointer;font-family:inherit;transition:background 0.15s}
+  .use-btn:hover{background:#e8f7f1}
+
+  .conv-box{background:#f8f8f4;border-radius:10px;padding:14px;margin-top:12px}
+  .conv-label{font-size:13px;color:#666}
+  .conv-result{font-size:22px;font-weight:700;color:#085041;margin-top:4px}
+
+  .explainer-toggle{width:100%;border:none;background:none;display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:0;font-family:inherit;text-align:left}
+  .explainer-toggle.open #explainerArrow{transform:rotate(180deg)}
+  .explain-step{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+  .explain-num{width:26px;height:26px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+  .explain-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
+  .explain-text{font-size:13px;color:#666;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="logo">
+    <div class="logo-icon">$</div>
+    <div>
+      <div class="logo-text">Costito</div>
+      <div class="logo-sub">Calculá el precio real de lo que vendés</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('calc')">Calculadora</button>
+    <button class="tab" onclick="showTab('import')">Costo de importación</button>
+    <button class="tab" onclick="showTab('conv')">Markup vs margen</button>
+  </div>
+
+  <!-- TAB: CALCULADORA -->
+  <div id="tab-calc" class="panel active">
+
+    <div class="card">
+      <div class="section-title">Tu producto</div>
+      <div class="field-row">
+        <label class="field-label">Costo final del producto (todo incluido)</label>
+        <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="costo" placeholder="0" oninput="calcular()"></div>
+        <div class="field-hint">Lo que efectivamente te sale el producto: precio del proveedor + IVA si no lo descontás + flete + packaging.</div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">Margen que querés ganar (sobre el precio)</label>
+        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="margen" placeholder="ej: 35" oninput="calcular()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Canal de venta</div>
+
+      <div class="modalidad-switch">
+        <button class="mod-btn active" id="mod-online" onclick="setModalidad('online')">🛒 Venta online</button>
+        <button class="mod-btn" id="mod-local" onclick="setModalidad('local')">🏪 Venta en local</button>
+      </div>
+
+      <div class="plataformas-grid" id="plataformasGrid"></div>
+
+      <div id="submenuContainer"></div>
+
+      <div class="field-row">
+        <label class="field-label">Comisión nominal del canal (editable)</label>
+        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="comision" placeholder="ej: 13" step="0.01" oninput="calcular()"></div>
+      </div>
+
+      <label class="check-row" for="comIva">
+        <input type="checkbox" id="comIva" onchange="calcular()">
+        <span class="check-label">
+          La comisión paga IVA (21%)
+          <small>Activá esto para posnets que cobran "comisión + IVA" (Nave, Mercado Pago, posnet tradicional). Cuenta DNI ya viene con IVA incluido.</small>
+        </span>
+      </label>
+    </div>
+
+    <div id="resultados" style="display:none">
+      <div class="results">
+        <div class="result-row"><span class="result-label">Costo del producto</span><span class="result-val" id="r-costo">—</span></div>
+        <div class="result-row"><span class="result-label">Comisión nominal</span><span class="result-val" id="r-com-nom">—</span></div>
+        <div class="result-row" id="r-com-efe-row"><span class="result-label">Comisión efectiva (+ IVA)</span><span class="result-val" id="r-com-efe">—</span></div>
+        <div class="result-row"><span class="result-label">Lo que se queda la plataforma</span><span class="result-val" id="r-com-monto">—</span></div>
+        <div class="result-row"><span class="result-label">Tu ganancia neta</span><span class="result-val" id="r-ganancia" style="color:#1D9E75">—</span></div>
+      </div>
+      <div class="result-big">
+        <div>
+          <div class="result-big-label">Precio a publicar</div>
+          <div class="result-big-sub" id="r-publicado-sub"></div>
+        </div>
+        <div class="result-big-val" id="r-publicado">—</div>
+      </div>
+      <div class="insight" id="insight-msg"></div>
+    </div>
+    <div class="error-msg" id="error-calc">Completá costo, margen y comisión para ver el resultado.</div>
+  </div>
+
+  <!-- TAB: IMPORTACION -->
+  <div id="tab-import" class="panel">
+
+    <div class="card" style="background:#fafaf5;border-color:#e8e8d8">
+      <button class="explainer-toggle" onclick="toggleExplainer()" id="explainerBtn">
+        <span style="font-size:15px;font-weight:600;color:#1a1a1a">¿Cómo se calcula el costo de importación?</span>
+        <span id="explainerArrow" style="color:#1D9E75;font-size:18px;transition:transform 0.2s">▼</span>
+      </button>
+      <div id="explainerContent" style="display:none;margin-top:14px">
+
+        <p style="font-size:14px;color:#444;line-height:1.6;margin-bottom:14px">El costo real de un producto importado <strong>no es lo que pagás al proveedor</strong>. Es todo lo que ponés para que el producto llegue a tu depósito listo para vender.</p>
+
+        <div class="explain-step">
+          <div class="explain-num">1</div>
+          <div>
+            <div class="explain-title">Precio FOB (lo que le pagás al proveedor)</div>
+            <div class="explain-text">FOB significa "Free On Board" — el precio del producto puesto en el puerto de origen. No incluye flete ni impuestos argentinos.</div>
+          </div>
+        </div>
+
+        <div class="explain-step">
+          <div class="explain-num">2</div>
+          <div>
+            <div class="explain-title">Flete internacional (5-12% del FOB típico)</div>
+            <div class="explain-text">Lo que cuesta traer la mercadería de China, EE.UU., Brasil, etc. hasta el puerto argentino. Por barco es más barato (más lento), por avión más caro (más rápido).</div>
+          </div>
+        </div>
+
+        <div class="explain-step">
+          <div class="explain-num">3</div>
+          <div>
+            <div class="explain-title">Aranceles de importación (0-35%)</div>
+            <div class="explain-text">Impuesto que cobra la Aduana cuando ingresa el producto. Depende de la categoría: electrónica suele ser ~16%, ropa ~35%, libros 0%. Se busca por código NCM.</div>
+          </div>
+        </div>
+
+        <div class="explain-step">
+          <div class="explain-num">4</div>
+          <div>
+            <div class="explain-title">Tasa estadística (3%) e IVA aduana (21%)</div>
+            <div class="explain-text">La tasa estadística va al gobierno por registrar la operación. El IVA de aduana se paga al ingresar — si sos Responsable Inscripto lo descontás después, si no, queda como costo.</div>
+          </div>
+        </div>
+
+        <div class="explain-step">
+          <div class="explain-num">5</div>
+          <div>
+            <div class="explain-title">Despachante de aduana (~2% o monto fijo)</div>
+            <div class="explain-text">Es el gestor que hace todo el trámite con la Aduana. No es opcional: sin despachante no podés sacar la mercadería del puerto.</div>
+          </div>
+        </div>
+
+        <div class="explain-step">
+          <div class="explain-num">6</div>
+          <div>
+            <div class="explain-title">Costos hormiga (flete local, depósito, packaging)</div>
+            <div class="explain-text">Llevarlo del puerto a tu depósito, almacenamiento si tarda en salir, reembalaje. Parece poco, pero suma.</div>
+          </div>
+        </div>
+
+        <div style="background:#e8f7f1;border-radius:8px;padding:14px;margin-top:14px">
+          <div style="font-size:13px;font-weight:600;color:#0F6E56;margin-bottom:8px">Ejemplo simple</div>
+          <div style="font-size:13px;color:#0F6E56;line-height:1.7">
+            Importás 100 mochilas a USD 10 cada una desde China:<br>
+            • FOB: USD 1.000<br>
+            • Flete (8%): USD 80<br>
+            • Aranceles (16%): USD 160<br>
+            • Tasa estadística (3%): USD 30<br>
+            • Despachante: USD 50<br>
+            • Flete local: USD 30<br>
+            <strong style="display:block;margin-top:6px">Costo final: USD 1.350 → USD 13,50 por mochila</strong>
+            La mochila no te costó USD 10, te costó USD 13,50. Vender pensando en USD 10 = perder plata.
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:#888;margin-top:14px;font-style:italic">⚠️ Estos porcentajes son aproximados. El % real depende del producto, origen y categoría arancelaria. Para cifras exactas, consultá con un despachante.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Precio de origen</div>
+      <div class="field-row">
+        <label class="field-label">Costo FOB / precio al proveedor (por unidad)</label>
+        <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="fob" placeholder="0" oninput="calcImp()"></div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">Cantidad de unidades</label>
+        <div class="input-wrap"><span class="input-prefix">#</span><input type="number" id="qty" placeholder="1" value="1" oninput="calcImp()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Costos adicionales</div>
+      <div id="imp-items"></div>
+      <button class="add-btn" onclick="addImpItem()">+ Agregar ítem</button>
+      <div style="font-size:12px;color:#aaa">Podés cargar en % sobre el FOB total o en $ fijo</div>
+    </div>
+
+    <div class="imp-total" id="imp-total" style="display:none">
+      <div class="imp-total-label">Costo unitario final (landed cost)</div>
+      <div class="imp-total-val" id="imp-total-val">—</div>
+      <div class="imp-total-sub" id="imp-total-sub"></div>
+      <button class="use-btn" onclick="usarEnCalc()">Usar este costo en la calculadora →</button>
+    </div>
+  </div>
+
+  <!-- TAB: MARKUP VS MARGEN -->
+  <div id="tab-conv" class="panel">
+    <div class="card">
+      <div class="section-title">Convertir markup → margen</div>
+      <div class="field-row">
+        <label class="field-label">Markup que tenés (% que le sumás al costo)</label>
+        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="markup-in" placeholder="ej: 80" oninput="convertMarkup()"></div>
+      </div>
+      <div id="markup-result" style="display:none">
+        <div class="conv-box">
+          <div class="conv-label">Tu margen real es</div>
+          <div class="conv-result" id="markup-out">—</div>
+        </div>
+        <div class="insight" id="markup-insight"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Convertir margen → markup</div>
+      <div class="field-row">
+        <label class="field-label">Margen que querés lograr</label>
+        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="margen-in" placeholder="ej: 35" oninput="convertMargen()"></div>
+      </div>
+      <div id="margen-result" style="display:none">
+        <div class="conv-box">
+          <div class="conv-label">Necesitás un markup de</div>
+          <div class="conv-result" id="margen-out">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Tabla de equivalencias</div>
+      <table class="markup-table">
+        <thead><tr><th>Markup</th><th>Margen real</th><th>Qué significa</th></tr></thead>
+        <tbody id="equiv-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CANALES = {
+  online: [
+    {id:'ml_arg', name:'Mercado Libre AR', com:14, ivaDefault:false},
+    {id:'ml_mex', name:'Mercado Libre MX', com:16, ivaDefault:false},
+    {id:'tiendanube', name:'Tienda Nube', com:5, ivaDefault:false},
+    {id:'rappi', name:'Rappi', com:30, ivaDefault:false},
+    {id:'pedidosya', name:'PedidosYa', com:28, ivaDefault:false},
+    {id:'online_custom', name:'Personalizado', com:null, ivaDefault:false}
+  ],
+  local: [
+    {id:'efectivo', name:'Efectivo', com:0, ivaDefault:false},
+    {id:'cuentadni', name:'Cuenta DNI', com:0.6, ivaDefault:false},
+    {id:'nave', name:'Nave (Galicia)', ivaDefault:true, submenu:[
+      {id:'sal', name:'Saldo / QR', com:0.8},
+      {id:'deb', name:'Débito', com:0.8},
+      {id:'c1', name:'Crédito 1 pago', com:1.8},
+      {id:'c3', name:'Crédito 3 cuotas', com:2.5},
+      {id:'c6', name:'Crédito 6 cuotas', com:3.5},
+      {id:'c12', name:'Crédito 12 cuotas', com:4.5}
+    ]},
+    {id:'mp_qr', name:'Mercado Pago QR', ivaDefault:true, submenu:[
+      {id:'sal', name:'Saldo MP', com:0.6},
+      {id:'deb', name:'Débito', com:0.8},
+      {id:'c1', name:'Crédito 1 pago', com:2.99},
+      {id:'c3', name:'Crédito 3 cuotas', com:3.49},
+      {id:'c6', name:'Crédito 6 cuotas', com:3.99},
+      {id:'c12', name:'Crédito 12 cuotas', com:4.49}
+    ]},
+    {id:'modo', name:'Modo', ivaDefault:true, submenu:[
+      {id:'sal', name:'Saldo / QR', com:0.8},
+      {id:'deb', name:'Débito', com:1.2},
+      {id:'c1', name:'Crédito 1 pago', com:2.99}
+    ]},
+    {id:'credicoop', name:'Credicoop / SiPago', ivaDefault:true, submenu:[
+      {id:'deb', name:'Débito', com:0.8},
+      {id:'c1', name:'Crédito 1 pago', com:1.8},
+      {id:'c3', name:'Crédito 3 cuotas', com:2.5}
+    ]},
+    {id:'posnet', name:'Posnet tradicional', ivaDefault:true, submenu:[
+      {id:'deb', name:'Débito', com:1.5},
+      {id:'c1', name:'Crédito 1 pago', com:1.8},
+      {id:'c3', name:'Crédito 3 cuotas', com:3.5},
+      {id:'c6', name:'Crédito 6 cuotas', com:5.5},
+      {id:'c12', name:'Crédito 12 cuotas', com:7.5}
+    ]},
+    {id:'local_custom', name:'Personalizado', com:null, ivaDefault:true}
+  ]
+};
+
+let modalidad = 'online';
+let selectedCanal = null;
+let selectedSub = null;
+
+let impItems = [
+  {id:1, label:'Flete internacional', tipo:'pct', valor:8},
+  {id:2, label:'Aranceles de importación', tipo:'pct', valor:16},
+  {id:3, label:'Tasa estadística', tipo:'pct', valor:3},
+  {id:4, label:'IVA aduana (si no descontás)', tipo:'pct', valor:0},
+  {id:5, label:'Despachante', tipo:'pct', valor:2},
+  {id:6, label:'Flete local + almacenamiento', tipo:'fijo', valor:0}
+];
+let nextId = 10;
+
+function fmt(n){
+  return '$' + n.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function pct(n){return n.toFixed(2) + '%'}
+
+function setModalidad(m){
+  modalidad = m;
+  document.getElementById('mod-online').classList.toggle('active', m === 'online');
+  document.getElementById('mod-local').classList.toggle('active', m === 'local');
+  selectedCanal = null;
+  selectedSub = null;
+  document.getElementById('comision').value = '';
+  document.getElementById('comIva').checked = false;
+  buildCanales();
+  document.getElementById('submenuContainer').innerHTML = '';
+  selectCanal(CANALES[m][0]);
+}
+
+function buildCanales(){
+  const g = document.getElementById('plataformasGrid');
+  g.innerHTML = '';
+  CANALES[modalidad].forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'plat-btn';
+    b.id = 'plat-' + c.id;
+    let comStr;
+    if(c.submenu) comStr = 'Elegí medio de pago';
+    else if(c.com === null) comStr = 'Ingresá %';
+    else if(c.com === 0) comStr = 'Sin comisión';
+    else comStr = c.com + '% ' + (c.ivaDefault ? '+ IVA' : '');
+    b.innerHTML = '<div class="plat-name">' + c.name + '</div><div class="plat-com">' + comStr + '</div>';
+    b.onclick = function(){ selectCanal(c); };
+    g.appendChild(b);
+  });
+}
+
+function selectCanal(c){
+  selectedCanal = c;
+  selectedSub = null;
+  document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('plat-' + c.id);
+  if(btn) btn.classList.add('active');
+
+  document.getElementById('comIva').checked = c.ivaDefault || false;
+
+  const sc = document.getElementById('submenuContainer');
+  if(c.submenu){
+    let html = '<div class="submenu"><div class="submenu-label">Medio de pago</div><div class="submenu-grid">';
+    c.submenu.forEach(s => {
+      html += '<button class="sub-btn" id="sub-' + s.id + '" onclick="selectSub(\'' + s.id + '\')">' + s.name + '<br><span style="font-size:11px;opacity:0.85">' + s.com + '%</span></button>';
+    });
+    html += '</div></div>';
+    sc.innerHTML = html;
+    selectSub(c.submenu[0].id);
+  } else {
+    sc.innerHTML = '';
+    if(c.com !== null){
+      document.getElementById('comision').value = c.com;
+    } else {
+      document.getElementById('comision').value = '';
+      document.getElementById('comision').focus();
+    }
+    calcular();
+  }
+}
+
+function selectSub(subId){
+  selectedSub = subId;
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('sub-' + subId);
+  if(btn) btn.classList.add('active');
+  const sub = selectedCanal.submenu.find(s => s.id === subId);
+  if(sub){
+    document.getElementById('comision').value = sub.com;
+  }
+  calcular();
+}
+
+function calcular(){
+  const costo = parseFloat(document.getElementById('costo').value);
+  const margen = parseFloat(document.getElementById('margen').value) / 100;
+  const comNominal = parseFloat(document.getElementById('comision').value) / 100;
+  const comIva = document.getElementById('comIva').checked;
+  const err = document.getElementById('error-calc');
+  const res = document.getElementById('resultados');
+
+  if(isNaN(costo) || isNaN(margen) || isNaN(comNominal) || costo <= 0){
+    err.style.display = 'block';
+    err.textContent = 'Completá costo, margen y comisión para ver el resultado.';
+    res.style.display = 'none';
+    return;
+  }
+
+  const comEfectiva = comIva ? comNominal * 1.21 : comNominal;
+  const divisor = 1 - comEfectiva - margen;
+
+  if(divisor <= 0){
+    err.textContent = 'La suma de comisión + margen supera el 100%. Bajá el margen o cambiá el canal.';
+    err.style.display = 'block';
+    res.style.display = 'none';
+    return;
+  }
+  err.style.display = 'none';
+
+  const precio = costo / divisor;
+  const comisionMonto = precio * comEfectiva;
+  const ganancia = precio - costo - comisionMonto;
+
+  document.getElementById('r-costo').textContent = fmt(costo);
+  document.getElementById('r-com-nom').textContent = pct(comNominal * 100);
+
+  const efeRow = document.getElementById('r-com-efe-row');
+  if(comIva){
+    efeRow.style.display = 'flex';
+    document.getElementById('r-com-efe').textContent = pct(comEfectiva * 100);
+  } else {
+    efeRow.style.display = 'none';
+  }
+
+  document.getElementById('r-com-monto').textContent = fmt(comisionMonto);
+  document.getElementById('r-ganancia').textContent = fmt(ganancia) + ' (' + pct(margen * 100) + ' del precio)';
+  document.getElementById('r-publicado').textContent = fmt(precio);
+
+  const platName = selectedCanal ? selectedCanal.name : 'la plataforma';
+  let subStr = '';
+  if(selectedCanal && selectedCanal.submenu && selectedSub){
+    const sub = selectedCanal.submenu.find(s => s.id === selectedSub);
+    if(sub) subStr = ' · ' + sub.name;
+  }
+  document.getElementById('r-publicado-sub').textContent = platName + subStr;
+
+  let insightStr = 'De cada ' + fmt(precio) + ' que cobrás, ' + platName + ' se queda con ' + fmt(comisionMonto) + ', tu costo es ' + fmt(costo) + ' y tu ganancia neta es ' + fmt(ganancia) + '.';
+  if(comIva){
+    insightStr += ' La comisión nominal es ' + pct(comNominal * 100) + ', pero con IVA pagás ' + pct(comEfectiva * 100) + '.';
+  }
+  document.getElementById('insight-msg').textContent = insightStr;
+
+  res.style.display = 'block';
+}
+
+function renderImpItems(){
+  const c = document.getElementById('imp-items');
+  c.innerHTML = '';
+  impItems.forEach(function(item){
+    const d = document.createElement('div');
+    d.className = 'imp-item';
+    d.innerHTML = '<input type="text" placeholder="Concepto" value="' + item.label + '" oninput="updateImpLabel(' + item.id + ',this.value)">'
+      + '<select onchange="updateImpTipo(' + item.id + ',this.value)"><option value="pct"' + (item.tipo === 'pct' ? ' selected' : '') + '>%</option><option value="fijo"' + (item.tipo === 'fijo' ? ' selected' : '') + '>$</option></select>'
+      + '<input type="number" value="' + item.valor + '" placeholder="0" oninput="updateImpValor(' + item.id + ',this.value)">'
+      + '<button class="remove-btn" onclick="removeImpItem(' + item.id + ')">×</button>';
+    c.appendChild(d);
+  });
+}
+
+function updateImpLabel(id, v){ var i = impItems.find(x => x.id === id); if(i) i.label = v; }
+function updateImpTipo(id, v){ var i = impItems.find(x => x.id === id); if(i){ i.tipo = v; calcImp(); } }
+function updateImpValor(id, v){ var i = impItems.find(x => x.id === id); if(i){ i.valor = parseFloat(v) || 0; calcImp(); } }
+
+function addImpItem(){
+  impItems.push({id:nextId++, label:'', tipo:'pct', valor:0});
+  renderImpItems();
+  calcImp();
+}
+
+function removeImpItem(id){
+  impItems = impItems.filter(i => i.id !== id);
+  renderImpItems();
+  calcImp();
+}
+
+function calcImp(){
+  const fob = parseFloat(document.getElementById('fob').value) || 0;
+  const qty = parseFloat(document.getElementById('qty').value) || 1;
+  if(fob <= 0){ document.getElementById('imp-total').style.display = 'none'; return; }
+  const totalFob = fob * qty;
+  let totalExtra = 0;
+  impItems.forEach(function(item){
+    if(item.tipo === 'pct') totalExtra += totalFob * (item.valor / 100);
+    else totalExtra += item.valor;
+  });
+  const totalLanded = totalFob + totalExtra;
+  const unitario = totalLanded / qty;
+  document.getElementById('imp-total-val').textContent = fmt(unitario) + ' / unidad';
+  document.getElementById('imp-total-sub').textContent = 'Total landed: ' + fmt(totalLanded) + ' para ' + qty + ' unidades';
+  document.getElementById('imp-total').style.display = 'block';
+}
+
+function usarEnCalc(){
+  const fob = parseFloat(document.getElementById('fob').value) || 0;
+  const qty = parseFloat(document.getElementById('qty').value) || 1;
+  const totalFob = fob * qty;
+  let totalExtra = 0;
+  impItems.forEach(function(item){
+    if(item.tipo === 'pct') totalExtra += totalFob * (item.valor / 100);
+    else totalExtra += item.valor;
+  });
+  const unitario = (totalFob + totalExtra) / qty;
+  document.getElementById('costo').value = unitario.toFixed(2);
+  showTab('calc');
+  calcular();
+}
+
+function convertMarkup(){
+  const mu = parseFloat(document.getElementById('markup-in').value);
+  const r = document.getElementById('markup-result');
+  if(isNaN(mu) || mu < 0){ r.style.display = 'none'; return; }
+  const margen = mu / (1 + mu / 100) * 100;
+  document.getElementById('markup-out').textContent = pct(margen);
+  document.getElementById('markup-insight').textContent = 'Si creés que ganás ' + mu + '% sobre el costo, tu margen real sobre el precio es ' + pct(margen) + '. La diferencia importa cuando entran comisiones de plataformas.';
+  r.style.display = 'block';
+}
+
+function convertMargen(){
+  const mg = parseFloat(document.getElementById('margen-in').value);
+  const r = document.getElementById('margen-result');
+  if(isNaN(mg) || mg <= 0 || mg >= 100){ r.style.display = 'none'; return; }
+  const markup = (mg / (100 - mg)) * 100;
+  document.getElementById('margen-out').textContent = pct(markup);
+  r.style.display = 'block';
+}
+
+function buildEquivTable(){
+  const datos = [[20,16.7,'Margen bajo'],[30,23.1,'Margen bajo'],[50,33.3,'Margen moderado'],[60,37.5,'Margen moderado'],[80,44.4,'Margen bueno'],[100,50,'Vendés al doble del costo'],[200,66.7,'Ganás 2× el costo']];
+  const tb = document.getElementById('equiv-table');
+  datos.forEach(function(row){
+    const tr = document.createElement('tr');
+    if(row[0] === 100) tr.className = 'highlight';
+    tr.innerHTML = '<td>' + row[0] + '%</td><td>' + row[1] + '%</td><td>' + row[2] + '</td>';
+    tb.appendChild(tr);
+  });
+}
+
+function showTab(id){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  var idx = {calc:0, import:1, conv:2}[id];
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+}
+
+function toggleExplainer(){
+  const c = document.getElementById('explainerContent');
+  const b = document.getElementById('explainerBtn');
+  if(c.style.display === 'none'){
+    c.style.display = 'block';
+    b.classList.add('open');
+  } else {
+    c.style.display = 'none';
+    b.classList.remove('open');
+  }
+}
+
+buildCanales();
+selectCanal(CANALES.online[0]);
+renderImpItems();
+buildEquivTable();
+</script>
+</body>
+</html>
