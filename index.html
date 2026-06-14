@@ -338,12 +338,16 @@
   <div class="modal-overlay" id="auth-modal" style="display:none" onclick="if(event.target===this)closeAuthModal()">
     <div class="modal">
       <div class="modal-title">Acceder a Costito</div>
-      <div class="modal-sub">Ingresá tu email y te mandamos un link para entrar sin contraseña.</div>
-      <div class="input-wrap" style="margin-bottom:0">
+      <div class="modal-sub">Ingresá tu email y contraseña para entrar.</div>
+      <div class="input-wrap" style="margin-bottom:8px">
         <span class="input-prefix">@</span>
-        <input type="email" id="auth-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')sendMagicLink()" style="height:42px;font-size:15px">
+        <input type="email" id="auth-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()" style="height:42px;font-size:15px">
       </div>
-      <button class="btn-primary" id="auth-btn" onclick="sendMagicLink()">Enviar link de acceso</button>
+      <div class="input-wrap" style="margin-bottom:0">
+        <span class="input-prefix" style="font-size:16px">🔒</span>
+        <input type="password" id="auth-password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')loginConPassword()" style="height:42px;font-size:15px">
+      </div>
+      <button class="btn-primary" id="auth-btn" onclick="loginConPassword()">Ingresar</button>
       <button class="btn-secondary" onclick="closeAuthModal()">Cancelar</button>
       <div class="modal-msg" id="auth-msg"></div>
     </div>
@@ -1497,15 +1501,15 @@ async function handleSession(session){
   }
 }
 
-async function sendMagicLink(){
+async function loginConPassword(){
   const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
   const btn = document.getElementById('auth-btn');
-  if(!email){ showAuthMsg('Ingresá tu email.', 'err'); return; }
-  btn.disabled = true; btn.textContent = 'Enviando...';
-  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: window.location.origin } });
-  btn.disabled = false; btn.textContent = 'Enviar link de acceso';
-  if(error) showAuthMsg('Error: ' + error.message, 'err');
-  else showAuthMsg('¡Listo! Revisá tu email y hacé clic en el link para entrar.', 'ok');
+  if(!email || !password){ showAuthMsg('Ingresá tu email y contraseña.', 'err'); return; }
+  btn.disabled = true; btn.textContent = 'Ingresando...';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Ingresar';
+  if(error) showAuthMsg('Email o contraseña incorrectos.', 'err');
 }
 
 function showAuthMsg(text, type){
@@ -1518,6 +1522,7 @@ function closeAuthModal(){
   document.getElementById('auth-modal').style.display = 'none';
   document.getElementById('auth-msg').style.display = 'none';
   document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
 }
 async function logout(){ await sb.auth.signOut(); }
 
