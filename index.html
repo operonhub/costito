@@ -99,6 +99,26 @@
   .conv-label{font-size:13px;color:#666}
   .conv-result{font-size:22px;font-weight:700;color:#085041;margin-top:4px}
 
+  .select-field{width:100%;border:1px solid #ddd;border-radius:8px;padding:0 12px;height:38px;font-size:14px;font-family:inherit;background:#fff;outline:none;color:#1a1a1a;transition:border-color 0.15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+  .select-field:focus{border-color:#1D9E75}
+  .comp-table{width:100%;font-size:13px;border-collapse:collapse;margin-top:8px}
+  .comp-table th{text-align:left;color:#888;font-weight:500;padding:8px;border-bottom:1px solid #eee;font-size:12px}
+  .comp-table td{padding:9px 8px;border-bottom:1px solid #f0f0ec;color:#333;vertical-align:middle}
+  .comp-table tr:last-child td{border-bottom:none}
+  .comp-table .best td{background:#e8f7f1;color:#0F6E56;font-weight:600}
+  .comp-table .best td:first-child{border-radius:6px 0 0 6px}
+  .comp-table .best td:last-child{border-radius:0 6px 6px 0}
+  .comp-badge{display:inline-block;font-size:10px;background:#1D9E75;color:#fff;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:middle}
+  .section-toggle{width:100%;border:none;background:none;display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:10px 0 0;font-family:inherit;text-align:left;color:#1D9E75;font-size:13px;font-weight:600}
+  .pdf-btn{margin-top:14px;width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s}
+  .pdf-btn:hover{background:#178a64}
+  @media print{
+    body{background:#fff;padding:8px}
+    .tabs,.modalidad-switch,.plataformas-grid,.submenu,.card:not(#print-card),.section-toggle,.pdf-btn,.add-btn,.use-btn{display:none!important}
+    #print-card{display:block!important}
+    .result-big{background:#e8f7f1!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .results,.result-big,.insight{break-inside:avoid}
+  }
   .explainer-toggle{width:100%;border:none;background:none;display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:0;font-family:inherit;text-align:left}
   .explainer-toggle.open #explainerArrow{transform:rotate(180deg)}
   .explain-step{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
@@ -174,6 +194,41 @@
       </label>
     </div>
 
+    <div class="card">
+      <div class="section-title">Ingresos Brutos (IIBB)</div>
+      <div class="field-row">
+        <label class="field-label">Provincia donde operás</label>
+        <select id="iibb-provincia" class="select-field" onchange="calcular()">
+          <option value="0">No aplica / No inscripto en IIBB</option>
+          <option value="3">CABA — 3%</option>
+          <option value="3.5">Buenos Aires — 3,5%</option>
+          <option value="3">Córdoba — 3%</option>
+          <option value="3.5">Santa Fe — 3,5%</option>
+          <option value="3">Mendoza — 3%</option>
+          <option value="3">Tucumán — 3%</option>
+          <option value="3">Entre Ríos — 3%</option>
+          <option value="3.5">Misiones — 3,5%</option>
+          <option value="3.5">Salta — 3,5%</option>
+          <option value="3.5">Chaco — 3,5%</option>
+          <option value="3">Corrientes — 3%</option>
+          <option value="3.5">Santiago del Estero — 3,5%</option>
+          <option value="3">San Juan — 3%</option>
+          <option value="3">Jujuy — 3%</option>
+          <option value="3">Río Negro — 3%</option>
+          <option value="3">Neuquén — 3%</option>
+          <option value="3">Formosa — 3%</option>
+          <option value="3">Chubut — 3%</option>
+          <option value="2">San Luis — 2%</option>
+          <option value="3">Catamarca — 3%</option>
+          <option value="3">La Rioja — 3%</option>
+          <option value="3">Santa Cruz — 3%</option>
+          <option value="3">La Pampa — 3%</option>
+          <option value="0">Tierra del Fuego — 0%</option>
+        </select>
+        <div class="field-hint">Las alícuotas son aproximadas para comercio minorista 2026. Verificá con tu contador la alícuota exacta de tu actividad.</div>
+      </div>
+    </div>
+
     <div id="resultados" style="display:none">
       <div class="results">
         <div class="result-row"><span class="result-label">Precio del proveedor</span><span class="result-val" id="r-costo">—</span></div>
@@ -182,6 +237,7 @@
         <div class="result-row"><span class="result-label">Comisión nominal</span><span class="result-val" id="r-com-nom">—</span></div>
         <div class="result-row" id="r-com-efe-row"><span class="result-label">Comisión efectiva (+ IVA)</span><span class="result-val" id="r-com-efe">—</span></div>
         <div class="result-row"><span class="result-label">Lo que se queda la plataforma</span><span class="result-val" id="r-com-monto">—</span></div>
+        <div class="result-row" id="r-iibb-row" style="display:none"><span class="result-label" id="r-iibb-label">IIBB</span><span class="result-val" id="r-iibb-monto" style="color:#c0392b">—</span></div>
         <div class="result-row"><span class="result-label">Tu ganancia neta</span><span class="result-val" id="r-ganancia" style="color:#1D9E75">—</span></div>
       </div>
       <div class="result-big">
@@ -192,6 +248,20 @@
         <div class="result-big-val" id="r-publicado">—</div>
       </div>
       <div class="insight" id="insight-msg"></div>
+
+      <button class="section-toggle" onclick="toggleComparador()">
+        Ver en todas las plataformas <span id="comp-arrow">▼</span>
+      </button>
+      <div id="comparador-content" style="display:none;margin-top:8px">
+        <div style="overflow-x:auto">
+          <table class="comp-table" id="comp-table">
+            <thead><tr><th>Plataforma</th><th>Comisión</th><th>Precio a publicar</th><th>Tu ganancia</th></tr></thead>
+            <tbody id="comp-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <button class="pdf-btn" id="pdf-btn" onclick="exportarPDF()">Exportar resultado en PDF</button>
     </div>
     <div class="error-msg" id="error-calc">Completá costo, margen y comisión para ver el resultado.</div>
   </div>
@@ -512,11 +582,12 @@ function calcular(){
   const ivaMontoBase = costoBase * ivaRate;
   const costo = costoBase + ivaMontoBase;
 
+  const iibbRate = parseFloat(document.getElementById('iibb-provincia').value) / 100 || 0;
   const comEfectiva = comIva ? comNominal * 1.21 : comNominal;
-  const divisor = 1 - comEfectiva - margen;
+  const divisor = 1 - comEfectiva - margen - iibbRate;
 
   if(divisor <= 0){
-    err.textContent = 'La suma de comisión + margen supera el 100%. Bajá el margen o cambiá el canal.';
+    err.textContent = 'La suma de comisión + IIBB + margen supera el 100%. Bajá el margen o cambiá el canal.';
     err.style.display = 'block';
     res.style.display = 'none';
     return;
@@ -525,7 +596,8 @@ function calcular(){
 
   const precio = costo / divisor;
   const comisionMonto = precio * comEfectiva;
-  const ganancia = precio - costo - comisionMonto;
+  const iibbMonto = precio * iibbRate;
+  const ganancia = precio - costo - comisionMonto - iibbMonto;
 
   document.getElementById('r-costo').textContent = fmt(costoBase);
   const ivaRow = document.getElementById('r-iva-row');
@@ -551,6 +623,16 @@ function calcular(){
   }
 
   document.getElementById('r-com-monto').textContent = fmt(comisionMonto);
+  const iibbRow = document.getElementById('r-iibb-row');
+  if(iibbRate > 0){
+    const sel = document.getElementById('iibb-provincia');
+    const provName = sel.options[sel.selectedIndex].text.split(' — ')[0];
+    document.getElementById('r-iibb-label').textContent = 'IIBB ' + provName;
+    document.getElementById('r-iibb-monto').textContent = '-' + fmt(iibbMonto);
+    iibbRow.style.display = 'flex';
+  } else {
+    iibbRow.style.display = 'none';
+  }
   document.getElementById('r-ganancia').textContent = fmt(ganancia) + ' (' + pct(margen * 100) + ' del precio)';
   document.getElementById('r-publicado').textContent = fmt(precio);
 
@@ -562,13 +644,65 @@ function calcular(){
   }
   document.getElementById('r-publicado-sub').textContent = platName + subStr;
 
-  let insightStr = 'De cada ' + fmt(precio) + ' que cobrás, ' + platName + ' se queda con ' + fmt(comisionMonto) + ', tu costo es ' + fmt(costo) + ' y tu ganancia neta es ' + fmt(ganancia) + '.';
-  if(comIva){
-    insightStr += ' La comisión nominal es ' + pct(comNominal * 100) + ', pero con IVA pagás ' + pct(comEfectiva * 100) + '.';
-  }
+  let insightStr = 'De cada ' + fmt(precio) + ' que cobrás, ' + platName + ' se queda con ' + fmt(comisionMonto);
+  if(iibbRate > 0) insightStr += ', IIBB se lleva ' + fmt(iibbMonto);
+  insightStr += ', tu costo es ' + fmt(costo) + ' y tu ganancia neta es ' + fmt(ganancia) + '.';
+  if(comIva) insightStr += ' La comisión nominal es ' + pct(comNominal * 100) + ', pero con IVA pagás ' + pct(comEfectiva * 100) + '.';
   document.getElementById('insight-msg').textContent = insightStr;
 
   res.style.display = 'block';
+  buildComparadorTable(costo, margen, iibbRate, comIva);
+}
+
+function buildComparadorTable(costo, margen, iibbRate, comIva){
+  const tbody = document.getElementById('comp-body');
+  tbody.innerHTML = '';
+  const filas = [];
+  const todos = CANALES.online.concat(CANALES.local);
+  todos.forEach(function(c){
+    if(c.com === null) return;
+    if(c.submenu){
+      c.submenu.forEach(function(s){
+        filas.push({name: c.name + ' · ' + s.name, com: s.com, ivaDefault: c.ivaDefault});
+      });
+    } else {
+      filas.push({name: c.name, com: c.com, ivaDefault: c.ivaDefault});
+    }
+  });
+  let minPrecio = Infinity, maxGanancia = -Infinity;
+  const rows = filas.map(function(f){
+    const comEf = (comIva || f.ivaDefault) ? f.com/100 * 1.21 : f.com/100;
+    const div = 1 - comEf - margen - iibbRate;
+    if(div <= 0) return null;
+    const precio = costo / div;
+    const ganancia = precio - costo - precio*comEf - precio*iibbRate;
+    if(precio < minPrecio) minPrecio = precio;
+    if(ganancia > maxGanancia) maxGanancia = ganancia;
+    return {name: f.name, com: f.com, precio, ganancia};
+  });
+  rows.forEach(function(r){
+    if(!r) return;
+    const tr = document.createElement('tr');
+    const isBest = Math.abs(r.ganancia - maxGanancia) < 0.01;
+    if(isBest) tr.className = 'best';
+    tr.innerHTML = '<td>' + r.name + (isBest ? '<span class="comp-badge">mejor</span>' : '') + '</td>'
+      + '<td>' + r.com + '%</td>'
+      + '<td>' + fmt(r.precio) + '</td>'
+      + '<td>' + fmt(r.ganancia) + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleComparador(){
+  const c = document.getElementById('comparador-content');
+  const a = document.getElementById('comp-arrow');
+  const open = c.style.display !== 'none';
+  c.style.display = open ? 'none' : 'block';
+  a.textContent = open ? '▼' : '▲';
+}
+
+function exportarPDF(){
+  window.print();
 }
 
 function renderImpItems(){
