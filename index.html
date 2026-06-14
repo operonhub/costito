@@ -156,6 +156,26 @@
   .prod-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:20px;padding:0 2px;flex-shrink:0;line-height:1}
   .prod-del:hover{color:#c0392b}
   .empty-state{text-align:center;padding:32px 16px;color:#aaa;font-size:14px;line-height:1.6}
+
+  .medios-wrap{overflow-x:auto;margin-top:10px;border-radius:8px;border:1px solid #e8e8e0}
+  .medios-table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
+  .medios-table th{background:#f0f0e8;color:#888;font-weight:600;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.4px}
+  .medios-table th:not(:first-child){text-align:right}
+  .medios-table td{padding:9px 10px;border-top:1px solid #f0f0ec;vertical-align:middle}
+  .medios-table td:not(:first-child){text-align:right}
+  .medios-cat-row td{background:#f8f8f4;color:#999;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:5px 10px;border-top:2px solid #e8e8e0}
+  .medios-free td{background:#e8f7f1}
+  .medios-free td:first-child{color:#0F6E56;font-weight:600}
+  .medios-price{font-weight:700;color:#085041}
+  .medios-recargo-neg{color:#c0392b;font-size:12px}
+  .medios-pct{font-weight:700;color:#c0392b;background:#fdf0f0;border-radius:4px;padding:2px 6px;font-size:12px;display:inline-block}
+  .medios-pct-zero{font-weight:600;color:#1D9E75;background:#e8f7f1;border-radius:4px;padding:2px 6px;font-size:12px;display:inline-block}
+  .m-input-com{width:54px;border:1px solid #e0e0d8;border-radius:6px;padding:4px 6px;font-size:13px;font-family:inherit;text-align:right;outline:none;background:#fff;transition:border-color 0.15s}
+  .m-input-com:focus{border-color:#1D9E75}
+  .m-input-name{border:1px solid #e0e0d8;border-radius:6px;padding:4px 8px;font-size:13px;font-family:inherit;width:100%;min-width:130px;outline:none;background:#fff;transition:border-color 0.15s}
+  .m-input-name:focus{border-color:#1D9E75}
+  .m-del{background:none;border:none;cursor:pointer;color:#ddd;font-size:18px;padding:0 2px;line-height:1;vertical-align:middle}
+  .m-del:hover{color:#c0392b}
 </style>
 </head>
 <body>
@@ -196,6 +216,7 @@
     <button class="tab" onclick="showTab('import')">Costo de importación</button>
     <button class="tab" onclick="showTab('conv')">Markup vs margen</button>
     <button class="tab" onclick="showTab('serv')">Precio de servicio</button>
+    <button class="tab" onclick="showTab('medios')">Medios de pago</button>
     <button class="tab" id="tab-btn-prods" onclick="showTab('prods')" style="display:none">Mis productos</button>
   </div>
 
@@ -324,6 +345,44 @@
       <button class="pdf-btn" id="pdf-btn" onclick="exportarPDF()">Exportar resultado en PDF</button>
     </div>
     <div class="error-msg" id="error-calc">Completá costo, margen y comisión para ver el resultado.</div>
+  </div>
+
+  <!-- TAB: MEDIOS DE PAGO -->
+  <div id="tab-medios" class="panel">
+
+    <div class="card">
+      <div class="section-title">Precio base (contado / efectivo)</div>
+      <div class="field-row">
+        <label class="field-label">¿Cuánto cobrás en efectivo o transferencia?</label>
+        <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="m-base" placeholder="ej: 10000" oninput="calcMedios()"></div>
+        <div class="field-hint">Este es tu precio de referencia. La tabla te muestra cuánto cobrar en cada otro medio para llevarte lo mismo.</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:16px 20px 10px;display:flex;justify-content:space-between;align-items:center">
+        <div class="section-title" style="margin-bottom:0">Precios por medio de pago</div>
+        <button class="add-btn" style="width:auto;margin:0;padding:6px 12px" onclick="addMedioPago()">+ Agregar método</button>
+      </div>
+      <div class="medios-wrap" style="border:none;border-top:1px solid #e8e8e0;border-radius:0">
+        <table class="medios-table">
+          <thead>
+            <tr>
+              <th>Medio de pago</th>
+              <th>Comisión</th>
+              <th>Precio a cobrar</th>
+              <th>Recargo</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="medios-body"></tbody>
+        </table>
+      </div>
+      <div style="padding:12px 20px 16px">
+        <button class="pdf-btn" onclick="window.print()" style="margin-top:0">Exportar tabla en PDF</button>
+      </div>
+    </div>
+
   </div>
 
   <!-- TAB: PRECIO DE SERVICIO -->
@@ -1007,10 +1066,107 @@ function showTab(id){
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
-  const tabMap = {calc:0, serv:1, import:2, conv:3, prods:4};
+  const tabMap = {calc:0, serv:1, medios:2, import:3, conv:4, prods:5};
   const tabs = document.querySelectorAll('.tab');
   if(tabMap[id] !== undefined && tabs[tabMap[id]]) tabs[tabMap[id]].classList.add('active');
 }
+
+// ── MEDIOS DE PAGO ────────────────────────────────────────────────────────
+let nextMedioId = 100;
+let mediosPago = [
+  {id:1,  cat:'Sin costo',          nombre:'Efectivo',                    com:0,    fijo:true},
+  {id:2,  cat:'Sin costo',          nombre:'Transferencia / CBU',          com:0,    fijo:true},
+  {id:3,  cat:'QR / Billeteras',    nombre:'Cuenta DNI',                   com:0.6,  fijo:false},
+  {id:4,  cat:'QR / Billeteras',    nombre:'Mercado Pago QR – Saldo',      com:0.6,  fijo:false},
+  {id:5,  cat:'QR / Billeteras',    nombre:'Nave (Galicia) QR – Saldo',    com:0.8,  fijo:false},
+  {id:6,  cat:'QR / Billeteras',    nombre:'Modo QR – Saldo',              com:0.8,  fijo:false},
+  {id:7,  cat:'Débito',             nombre:'Débito Visa / Mastercard',     com:1.5,  fijo:false},
+  {id:8,  cat:'Crédito 1 pago',     nombre:'Crédito 1 pago (Visa/MC)',     com:2.99, fijo:false},
+  {id:9,  cat:'Crédito 1 pago',     nombre:'Naranja X 1 pago',             com:3.5,  fijo:false},
+  {id:10, cat:'Cuotas sin interés', nombre:'3 cuotas sin interés',          com:6,    fijo:false},
+  {id:11, cat:'Cuotas sin interés', nombre:'6 cuotas sin interés',          com:11,   fijo:false},
+  {id:12, cat:'Cuotas sin interés', nombre:'9 cuotas sin interés',          com:15,   fijo:false},
+  {id:13, cat:'Cuotas sin interés', nombre:'12 cuotas sin interés',         com:18,   fijo:false},
+  {id:14, cat:'Cuotas sin interés', nombre:'18 cuotas sin interés',         com:22,   fijo:false},
+  {id:15, cat:'Cuotas sin interés', nombre:'24 cuotas sin interés',         com:26,   fijo:false},
+];
+
+function addMedioPago(){
+  mediosPago.push({id:nextMedioId++, cat:'Personalizado', nombre:'', com:0, fijo:false});
+  renderMedios();
+  calcMedios();
+}
+
+function removeMedioPago(id){
+  mediosPago = mediosPago.filter(m => m.id !== id);
+  renderMedios();
+  calcMedios();
+}
+
+function updateMedioNombre(id, v){ const m = mediosPago.find(x=>x.id===id); if(m) m.nombre = v; }
+function updateMedioCom(id, v){ const m = mediosPago.find(x=>x.id===id); if(m){ m.com = parseFloat(v)||0; calcMedios(); } }
+
+function renderMedios(){
+  const tbody = document.getElementById('medios-body');
+  const base = parseFloat(document.getElementById('m-base').value) || 0;
+  tbody.innerHTML = '';
+
+  // Agrupar por categoría manteniendo orden de aparición
+  const cats = [];
+  const grupos = {};
+  mediosPago.forEach(function(m){
+    if(!grupos[m.cat]){ grupos[m.cat] = []; cats.push(m.cat); }
+    grupos[m.cat].push(m);
+  });
+
+  cats.forEach(function(cat){
+    // Fila de categoría
+    const catRow = document.createElement('tr');
+    catRow.className = 'medios-cat-row';
+    catRow.innerHTML = '<td colspan="5">' + cat + '</td>';
+    tbody.appendChild(catRow);
+
+    grupos[cat].forEach(function(m){
+      const com = m.com / 100;
+      const div = 1 - com;
+      const precioACobrar = div > 0 && base > 0 ? base / div : null;
+      const recargoPesos = precioACobrar ? precioACobrar - base : null;
+      const recargoPct = com > 0 ? (com / div) * 100 : 0;
+
+      const tr = document.createElement('tr');
+      if(m.com === 0) tr.className = 'medios-free';
+
+      const nombreCell = m.fijo
+        ? '<td style="font-weight:600">' + escHtml(m.nombre) + '</td>'
+        : '<td><input class="m-input-name" value="' + escHtml(m.nombre) + '" placeholder="Nombre del medio" oninput="updateMedioNombre(' + m.id + ',this.value)"></td>';
+
+      const comCell = m.fijo
+        ? '<td><span class="medios-pct-zero">0%</span></td>'
+        : '<td><input class="m-input-com" type="number" value="' + m.com + '" step="0.1" min="0" oninput="updateMedioCom(' + m.id + ',this.value)"> %</td>';
+
+      const precioCell = base > 0 && precioACobrar !== null
+        ? '<td class="medios-price">' + fmt(precioACobrar) + '</td>'
+        : '<td style="color:#ccc">—</td>';
+
+      const recargoCell = base > 0 && recargoPesos !== null && recargoPesos > 0
+        ? '<td><div class="medios-recargo-neg">+' + fmt(recargoPesos) + '</div></td>'
+        : '<td><span style="color:#1D9E75;font-size:12px">base</span></td>';
+
+      const pctCell = recargoPct > 0
+        ? '<td><span class="medios-pct">+' + recargoPct.toFixed(1) + '%</span></td>'
+        : '<td><span class="medios-pct-zero">0%</span></td>';
+
+      const delCell = m.fijo
+        ? '<td></td>'
+        : '<td><button class="m-del" onclick="removeMedioPago(' + m.id + ')" title="Eliminar">×</button></td>';
+
+      tr.innerHTML = nombreCell + comCell + precioCell + recargoCell + pctCell + delCell;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function calcMedios(){ renderMedios(); }
 
 // ── CALCULADORA DE SERVICIOS ──────────────────────────────────────────────
 let gastoItems = [
@@ -1269,6 +1425,7 @@ buildCanales();
 selectCanal(CANALES.online[0]);
 renderImpItems();
 renderGastoItems();
+renderMedios();
 buildEquivTable();
 initAuth();
 </script>
