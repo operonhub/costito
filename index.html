@@ -985,6 +985,8 @@ let selectedCanal = null;
 let selectedSub = null;
 let ivaCosto = 'no';
 let compTipo = 'general';
+let todosLosProductos = [];
+let filtroCategoria = null;
 
 function setIvaCosto(v){
   ivaCosto = v;
@@ -1736,7 +1738,9 @@ function suscribirRealtime(){
 // ── CRUD productos ────────────────────────────────────────────────────────
 async function loadProductos(){
   const { data } = await sb.from('productos').select('*').order('updated_at', { ascending: false });
-  renderProductos(data || []);
+  todosLosProductos = data || [];
+  filtroCategoria = null;
+  renderProductos(todosLosProductos);
 }
 
 function renderProductos(lista){
@@ -1745,8 +1749,20 @@ function renderProductos(lista){
     el.innerHTML = '<div class="empty-state">Todavía no guardaste ningún producto.<br>Calculá un precio y usá el botón "Guardar producto".</div>';
     return;
   }
-  el.innerHTML = '';
-  lista.forEach(function(p){
+
+  const cats = [...new Set(lista.map(p => p.categoria).filter(Boolean))].sort();
+  let chipsHTML = '';
+  if(cats.length){
+    chipsHTML = '<div class="lista-canal-filter" style="margin-bottom:12px">'
+      + '<button class="cat-chip' + (!filtroCategoria ? ' active' : '') + '" onclick="filtrarPorCategoria(null)">Todos</button>'
+      + cats.map(c => '<button class="cat-chip' + (filtroCategoria === c ? ' active' : '') + '" onclick="filtrarPorCategoria(' + JSON.stringify(c) + ')">' + escHtml(c) + '</button>').join('')
+      + '</div>';
+  }
+
+  const filtrada = filtroCategoria ? lista.filter(p => p.categoria === filtroCategoria) : lista;
+
+  el.innerHTML = chipsHTML;
+  filtrada.forEach(function(p){
     const d = document.createElement('div');
     d.className = 'prod-item';
     const catTag = p.categoria ? '<span class="prod-cat-tag">' + escHtml(p.categoria) + '</span>' : '';
@@ -1759,6 +1775,11 @@ function renderProductos(lista){
     d.onclick = function(){ cargarProducto(p); };
     el.appendChild(d);
   });
+}
+
+function filtrarPorCategoria(cat){
+  filtroCategoria = cat;
+  renderProductos(todosLosProductos);
 }
 
 async function guardarProducto(){
