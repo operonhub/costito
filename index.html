@@ -194,7 +194,11 @@
     <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
   </div>
   <div id="login-prompt" style="display:none;margin-bottom:14px">
-    <button class="login-prompt-btn" onclick="showAuthModal()">Iniciá sesión para guardar tus productos →</button>
+    <div style="background:#fff;border:1px solid #e8e8e0;border-radius:10px;padding:14px 16px">
+      <div style="font-size:13px;color:#555;margin-bottom:10px">Iniciá sesión para guardar tus productos y acceder desde cualquier dispositivo.</div>
+      <button class="login-prompt-btn" onclick="showAuthModal()" style="margin-bottom:8px">Iniciar sesión →</button>
+      <button onclick="continuarSinSesion()" style="width:100%;padding:8px;border:none;background:none;color:#aaa;font-size:12px;cursor:pointer;font-family:inherit">Continuar sin iniciar sesión</button>
+    </div>
   </div>
 
   <div class="modal-overlay" id="auth-modal" style="display:none" onclick="if(event.target===this)closeAuthModal()">
@@ -1315,6 +1319,7 @@ function showAuthMsg(text, type){
   const m = document.getElementById('auth-msg');
   m.textContent = text; m.className = 'modal-msg ' + type; m.style.display = 'block';
 }
+function continuarSinSesion(){ document.getElementById('login-prompt').style.display = 'none'; }
 function showAuthModal(){ document.getElementById('auth-modal').style.display = 'flex'; }
 function closeAuthModal(){
   document.getElementById('auth-modal').style.display = 'none';
