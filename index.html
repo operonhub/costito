@@ -65,6 +65,10 @@
   .check-label{font-size:13px;color:#444;line-height:1.4;cursor:pointer}
   .check-label small{color:#888;display:block;margin-top:2px;font-size:11px}
 
+  .iva-opts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .iva-opt{padding:6px 14px;border:1px solid #e0e0d8;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;color:#666;font-family:inherit;transition:all 0.15s}
+  .iva-opt:hover{border-color:#5DCAA5}
+  .iva-opt.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
   .error-msg{font-size:13px;color:#c0392b;margin-top:10px;padding:10px 14px;background:#fdf0f0;border-radius:8px;display:none}
 
   .markup-table{width:100%;font-size:13px;border-collapse:collapse}
@@ -126,9 +130,17 @@
     <div class="card">
       <div class="section-title">Tu producto</div>
       <div class="field-row">
-        <label class="field-label">Costo final del producto (todo incluido)</label>
+        <label class="field-label">Precio del proveedor (sin IVA)</label>
         <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="costo" placeholder="0" oninput="calcular()"></div>
-        <div class="field-hint">Lo que efectivamente te sale el producto: precio del proveedor + IVA si no lo descontás + flete + packaging.</div>
+        <div class="field-hint">El precio base que te cobra el proveedor, sin contar IVA. Después elegís si te corresponde sumarlo.</div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">¿Tenés que sumarle IVA? <span style="font-size:11px;color:#aaa;font-weight:400">(si sos Monotributista no podés descontarlo)</span></label>
+        <div class="iva-opts">
+          <button class="iva-opt active" id="iva-no" onclick="setIvaCosto('no')">Sin IVA</button>
+          <button class="iva-opt" id="iva-21" onclick="setIvaCosto('21')">+ IVA 21%</button>
+          <button class="iva-opt" id="iva-105" onclick="setIvaCosto('105')">+ IVA 10,5%</button>
+        </div>
       </div>
       <div class="field-row">
         <label class="field-label">Margen que querés ganar (sobre el precio)</label>
@@ -164,7 +176,9 @@
 
     <div id="resultados" style="display:none">
       <div class="results">
-        <div class="result-row"><span class="result-label">Costo del producto</span><span class="result-val" id="r-costo">—</span></div>
+        <div class="result-row"><span class="result-label">Precio del proveedor</span><span class="result-val" id="r-costo">—</span></div>
+        <div class="result-row" id="r-iva-row" style="display:none"><span class="result-label" id="r-iva-label">IVA sobre el costo</span><span class="result-val" id="r-iva-monto" style="color:#c0392b">—</span></div>
+        <div class="result-row" id="r-costo-total-row" style="display:none"><span class="result-label" style="font-weight:600">Costo real (con IVA)</span><span class="result-val" id="r-costo-total" style="font-weight:600">—</span></div>
         <div class="result-row"><span class="result-label">Comisión nominal</span><span class="result-val" id="r-com-nom">—</span></div>
         <div class="result-row" id="r-com-efe-row"><span class="result-label">Comisión efectiva (+ IVA)</span><span class="result-val" id="r-com-efe">—</span></div>
         <div class="result-row"><span class="result-label">Lo que se queda la plataforma</span><span class="result-val" id="r-com-monto">—</span></div>
@@ -383,6 +397,13 @@ const CANALES = {
 let modalidad = 'online';
 let selectedCanal = null;
 let selectedSub = null;
+let ivaCosto = 'no';
+
+function setIvaCosto(v){
+  ivaCosto = v;
+  ['no','21','105'].forEach(x => document.getElementById('iva-'+x).classList.toggle('active', x === v));
+  calcular();
+}
 
 let impItems = [
   {id:1, label:'Flete internacional', tipo:'pct', valor:8},
@@ -473,19 +494,23 @@ function selectSub(subId){
 }
 
 function calcular(){
-  const costo = parseFloat(document.getElementById('costo').value);
+  const costoBase = parseFloat(document.getElementById('costo').value);
   const margen = parseFloat(document.getElementById('margen').value) / 100;
   const comNominal = parseFloat(document.getElementById('comision').value) / 100;
   const comIva = document.getElementById('comIva').checked;
   const err = document.getElementById('error-calc');
   const res = document.getElementById('resultados');
 
-  if(isNaN(costo) || isNaN(margen) || isNaN(comNominal) || costo <= 0){
+  if(isNaN(costoBase) || isNaN(margen) || isNaN(comNominal) || costoBase <= 0){
     err.style.display = 'block';
     err.textContent = 'Completá costo, margen y comisión para ver el resultado.';
     res.style.display = 'none';
     return;
   }
+
+  const ivaRate = ivaCosto === '21' ? 0.21 : ivaCosto === '105' ? 0.105 : 0;
+  const ivaMontoBase = costoBase * ivaRate;
+  const costo = costoBase + ivaMontoBase;
 
   const comEfectiva = comIva ? comNominal * 1.21 : comNominal;
   const divisor = 1 - comEfectiva - margen;
@@ -502,7 +527,19 @@ function calcular(){
   const comisionMonto = precio * comEfectiva;
   const ganancia = precio - costo - comisionMonto;
 
-  document.getElementById('r-costo').textContent = fmt(costo);
+  document.getElementById('r-costo').textContent = fmt(costoBase);
+  const ivaRow = document.getElementById('r-iva-row');
+  const costoTotalRow = document.getElementById('r-costo-total-row');
+  if(ivaRate > 0){
+    document.getElementById('r-iva-label').textContent = 'IVA ' + (ivaCosto === '21' ? '21%' : '10,5%') + ' sobre el costo';
+    document.getElementById('r-iva-monto').textContent = '+' + fmt(ivaMontoBase);
+    document.getElementById('r-costo-total').textContent = fmt(costo);
+    ivaRow.style.display = 'flex';
+    costoTotalRow.style.display = 'flex';
+  } else {
+    ivaRow.style.display = 'none';
+    costoTotalRow.style.display = 'none';
+  }
   document.getElementById('r-com-nom').textContent = pct(comNominal * 100);
 
   const efeRow = document.getElementById('r-com-efe-row');
