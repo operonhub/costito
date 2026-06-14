@@ -250,6 +250,13 @@
   .prods-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
   .toolbar-btn{padding:7px 12px;border:1px solid #e0e0d8;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#555;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px}
   .toolbar-btn:hover{background:#f0faf5;border-color:#5DCAA5;color:#0F6E56}
+  .tabs-more-wrap{position:relative;display:inline-block}
+  .tabs-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid #e0e0d8;border-radius:10px;padding:6px;z-index:50;min-width:200px;box-shadow:0 4px 16px rgba(0,0,0,0.10)}
+  .dd-btn{display:block;width:100%;text-align:left;padding:9px 13px;border:none;background:none;font-size:13px;color:#444;cursor:pointer;border-radius:7px;font-family:inherit;transition:background 0.12s}
+  .dd-btn:hover{background:#f0faf5;color:#0F6E56}
+  .dd-btn.active{background:#e8f7f1;color:#0F6E56;font-weight:600}
+  .comp-tipo-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .comp-tipo-row span{font-size:12px;color:#888}
 </style>
 </head>
 <body>
@@ -359,12 +366,17 @@
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('calc')">Calculadora</button>
-    <button class="tab" onclick="showTab('import')">Costo de importación</button>
-    <button class="tab" onclick="showTab('conv')">Markup vs margen</button>
-    <button class="tab" onclick="showTab('serv')">Precio de servicio</button>
     <button class="tab" onclick="showTab('medios')">Medios de pago</button>
-    <button class="tab" onclick="showTab('mixta')">Compra mixta</button>
+    <button class="tab" onclick="showTab('serv')">Precio de servicio</button>
     <button class="tab" id="tab-btn-prods" onclick="showTab('prods')" style="display:none">Mis productos</button>
+    <div class="tabs-more-wrap">
+      <button class="tab" id="tabs-more-btn" onclick="toggleMasHerramientas(event)">Más herramientas <span id="mas-arrow" style="font-size:10px;vertical-align:middle">▼</span></button>
+      <div class="tabs-dropdown" id="tabs-dropdown" style="display:none">
+        <button class="dd-btn" onclick="showTab('import');closeMasDD()">Costo de importación</button>
+        <button class="dd-btn" onclick="showTab('mixta');closeMasDD()">Compra mixta</button>
+        <button class="dd-btn" onclick="showTab('conv');closeMasDD()">Markup vs margen</button>
+      </div>
+    </div>
   </div>
 
   <!-- TAB: CALCULADORA -->
@@ -484,6 +496,11 @@
         Ver en todas las plataformas <span id="comp-arrow">▼</span>
       </button>
       <div id="comparador-content" style="display:none;margin-top:8px">
+        <div class="comp-tipo-row">
+          <span>¿Qué vendés?</span>
+          <button class="iva-btn active" id="comp-tipo-general" onclick="setCompTipo('general')">Producto / servicio</button>
+          <button class="iva-btn" id="comp-tipo-alimento" onclick="setCompTipo('alimento')">Alimento / delivery</button>
+        </div>
         <div style="overflow-x:auto">
           <table class="comp-table" id="comp-table">
             <thead><tr><th>Plataforma</th><th>Comisión</th><th>Precio a publicar</th><th>Tu ganancia</th></tr></thead>
@@ -918,10 +935,9 @@
 const CANALES = {
   online: [
     {id:'ml_arg', name:'Mercado Libre AR', com:14, ivaDefault:false},
-    {id:'ml_mex', name:'Mercado Libre MX', com:16, ivaDefault:false},
     {id:'tiendanube', name:'Tienda Nube', com:5, ivaDefault:false},
-    {id:'rappi', name:'Rappi', com:30, ivaDefault:false},
-    {id:'pedidosya', name:'PedidosYa', com:28, ivaDefault:false},
+    {id:'rappi', name:'Rappi', com:30, ivaDefault:false, tipo:'delivery'},
+    {id:'pedidosya', name:'PedidosYa', com:28, ivaDefault:false, tipo:'delivery'},
     {id:'online_custom', name:'Personalizado', com:null, ivaDefault:false}
   ],
   local: [
@@ -968,6 +984,7 @@ let modalidad = 'online';
 let selectedCanal = null;
 let selectedSub = null;
 let ivaCosto = 'no';
+let compTipo = 'general';
 
 function setIvaCosto(v){
   ivaCosto = v;
@@ -1161,6 +1178,7 @@ function buildComparadorTable(costo, margen, iibbRate, comIva){
   const todos = CANALES.online.concat(CANALES.local);
   todos.forEach(function(c){
     if(c.com === null) return;
+    if(c.tipo === 'delivery' && compTipo !== 'alimento') return;
     if(c.submenu){
       c.submenu.forEach(function(s){
         filas.push({name: c.name + ' · ' + s.name, com: s.com, ivaDefault: c.ivaDefault});
@@ -1303,9 +1321,49 @@ function showTab(id){
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
-  const tabMap = {calc:0, import:1, conv:2, serv:3, medios:4, mixta:5, prods:6};
+  const primaryMap = {calc:0, medios:1, serv:2, prods:3};
   const tabs = document.querySelectorAll('.tab');
-  if(tabMap[id] !== undefined && tabs[tabMap[id]]) tabs[tabMap[id]].classList.add('active');
+  const secondary = ['import','conv','mixta'];
+  if(primaryMap[id] !== undefined && tabs[primaryMap[id]]) tabs[primaryMap[id]].classList.add('active');
+  const moreBtn = document.getElementById('tabs-more-btn');
+  const ddBtns = document.querySelectorAll('#tabs-dropdown .dd-btn');
+  if(secondary.includes(id)){
+    if(moreBtn) moreBtn.classList.add('active');
+    const secMap = {import:0, mixta:1, conv:2};
+    ddBtns.forEach((b,i) => b.classList.toggle('active', i === secMap[id]));
+  } else {
+    ddBtns.forEach(b => b.classList.remove('active'));
+  }
+}
+
+function toggleMasHerramientas(e){
+  e.stopPropagation();
+  const dd = document.getElementById('tabs-dropdown');
+  const open = dd.style.display !== 'none';
+  dd.style.display = open ? 'none' : 'block';
+  document.getElementById('mas-arrow').textContent = open ? '▼' : '▲';
+}
+
+function closeMasDD(){
+  const dd = document.getElementById('tabs-dropdown');
+  if(dd) dd.style.display = 'none';
+  const arr = document.getElementById('mas-arrow');
+  if(arr) arr.textContent = '▼';
+}
+
+function setCompTipo(t){
+  compTipo = t;
+  ['general','alimento'].forEach(x => document.getElementById('comp-tipo-'+x).classList.toggle('active', x === t));
+  const c = document.getElementById('comparador-content');
+  if(c && c.style.display !== 'none'){
+    const costo = parseFloat(document.getElementById('costo').value);
+    const margen = parseFloat(document.getElementById('margen').value)/100;
+    const iibbRate = parseFloat(document.getElementById('iibb-provincia').value)/100 || 0;
+    const comIva = document.getElementById('comIva').checked;
+    const ivaRate = ivaCosto === '21' ? 0.21 : ivaCosto === '105' ? 0.105 : 0;
+    const costoConIva = costo * (1 + ivaRate);
+    if(!isNaN(costoConIva) && !isNaN(margen)) buildComparadorTable(costoConIva, margen, iibbRate, comIva);
+  }
 }
 
 // ── MEDIOS DE PAGO ────────────────────────────────────────────────────────
@@ -1924,6 +1982,7 @@ renderGastoItems();
 renderMedios();
 buildEquivTable();
 initAuth();
+document.addEventListener('click', function(){ closeMasDD(); });
 </script>
 </body>
 </html>
