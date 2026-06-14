@@ -221,8 +221,25 @@
   .cat-chip{padding:5px 12px;border:1px solid #e0e0d8;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all .15s}
   .cat-chip.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
   @media print{
+    /* lista de precios */
     .lista-overlay .lista-header button,.cur-btn,.cat-chip{display:none!important}
     .lista-modal{box-shadow:none;max-height:none;border-radius:0}
+    /* PDF del resultado de la calculadora */
+    body.printing-pdf #header-auth,
+    body.printing-pdf #login-prompt,
+    body.printing-pdf .currency-bar,
+    body.printing-pdf .tabs,
+    body.printing-pdf .save-bar,
+    body.printing-pdf #error-calc,
+    body.printing-pdf .insight,
+    body.printing-pdf .pdf-btn { display:none!important }
+    body.printing-pdf .panel { display:none!important }
+    body.printing-pdf #tab-calc { display:block!important }
+    body.printing-pdf .card { display:none!important }
+    body.printing-pdf #resultados { display:block!important }
+    body.printing-pdf .results { box-shadow:none!important;border:1px solid #ddd!important }
+    body.printing-pdf .logo { margin-bottom:16px }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact }
   }
 
   .prod-cat-tag{display:inline-block;font-size:10px;background:#f0f0e8;color:#888;border-radius:4px;padding:1px 6px;margin-left:4px;vertical-align:middle}
@@ -252,7 +269,8 @@
     <div id="header-auth">
       <button id="header-login-btn" onclick="showAuthModal()" style="font-size:12px;color:#1D9E75;background:#e8f7f1;border:1px solid #5DCAA5;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit;font-weight:500">Iniciar sesión</button>
       <div id="header-user" style="display:none;align-items:center;gap:8px">
-        <span id="user-email-display" style="font-size:12px;color:#0F6E56;font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <span id="header-plan-badge"></span>
+        <span id="user-email-display" style="font-size:12px;color:#0F6E56;font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
       </div>
     </div>
@@ -1097,7 +1115,9 @@ function toggleComparador(){
 }
 
 function exportarPDF(){
+  document.body.classList.add('printing-pdf');
   window.print();
+  document.body.classList.remove('printing-pdf');
 }
 
 function renderImpItems(){
@@ -1437,10 +1457,14 @@ async function loadProfile(){
 function updatePremiumUI(){
   const badge = document.getElementById('prods-plan-badge');
   const toolbar = document.getElementById('prods-toolbar');
+  const headerBadge = document.getElementById('header-plan-badge');
   if(badge) badge.innerHTML = isPremium
     ? '<span style="font-size:12px;background:#085041;color:#5DCAA5;border-radius:6px;padding:3px 10px;font-weight:700">PREMIUM ✓</span>'
     : '<span style="font-size:12px;color:#aaa">Plan gratuito · 3 productos</span>';
   if(toolbar) toolbar.style.display = isPremium ? 'flex' : 'none';
+  if(headerBadge) headerBadge.innerHTML = isPremium
+    ? '<span style="font-size:10px;background:#085041;color:#5DCAA5;border-radius:4px;padding:2px 7px;font-weight:700;letter-spacing:.03em">PRO</span>'
+    : '<span style="font-size:10px;background:#f0f0e8;color:#999;border-radius:4px;padding:2px 7px">Gratis</span>';
 }
 
 function cerrarUpgrade(){ document.getElementById('upgrade-modal').style.display = 'none'; }
