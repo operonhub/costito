@@ -1066,7 +1066,7 @@ function showTab(id){
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
-  const tabMap = {calc:0, serv:1, medios:2, import:3, conv:4, prods:5};
+  const tabMap = {calc:0, import:1, conv:2, serv:3, medios:4, prods:5};
   const tabs = document.querySelectorAll('.tab');
   if(tabMap[id] !== undefined && tabs[tabMap[id]]) tabs[tabMap[id]].classList.add('active');
 }
