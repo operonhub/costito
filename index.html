@@ -994,13 +994,13 @@ function calcular(){
   const iibbMonto = precio * iibbRate;
   const ganancia = precio - costo - comisionMonto - iibbMonto;
 
-  document.getElementById('r-costo').textContent = fmt(costoBase);
+  document.getElementById('r-costo').textContent = fmtC(costoBase);
   const ivaRow = document.getElementById('r-iva-row');
   const costoTotalRow = document.getElementById('r-costo-total-row');
   if(ivaRate > 0){
     document.getElementById('r-iva-label').textContent = 'IVA ' + (ivaCosto === '21' ? '21%' : '10,5%') + ' sobre el costo';
-    document.getElementById('r-iva-monto').textContent = '+' + fmt(ivaMontoBase);
-    document.getElementById('r-costo-total').textContent = fmt(costo);
+    document.getElementById('r-iva-monto').textContent = '+' + fmtC(ivaMontoBase);
+    document.getElementById('r-costo-total').textContent = fmtC(costo);
     ivaRow.style.display = 'flex';
     costoTotalRow.style.display = 'flex';
   } else {
@@ -1017,13 +1017,13 @@ function calcular(){
     efeRow.style.display = 'none';
   }
 
-  document.getElementById('r-com-monto').textContent = fmt(comisionMonto);
+  document.getElementById('r-com-monto').textContent = fmtC(comisionMonto);
   const iibbRow = document.getElementById('r-iibb-row');
   if(iibbRate > 0){
     const sel = document.getElementById('iibb-provincia');
     const provName = sel.options[sel.selectedIndex].text.split(' — ')[0];
     document.getElementById('r-iibb-label').textContent = 'IIBB ' + provName;
-    document.getElementById('r-iibb-monto').textContent = '-' + fmt(iibbMonto);
+    document.getElementById('r-iibb-monto').textContent = '-' + fmtC(iibbMonto);
     iibbRow.style.display = 'flex';
   } else {
     iibbRow.style.display = 'none';
@@ -1452,7 +1452,7 @@ async function initAuth(){
   sb.auth.onAuthStateChange((_e, session) => handleSession(session));
 }
 
-function handleSession(session){
+async function handleSession(session){
   currentUser = session?.user ?? null;
   const loggedIn = !!currentUser;
   document.getElementById('header-login-btn').style.display = loggedIn ? 'none' : 'inline-block';
