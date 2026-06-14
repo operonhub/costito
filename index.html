@@ -180,6 +180,55 @@
   .m-input-name:focus{border-color:#1D9E75}
   .m-del{background:none;border:none;cursor:pointer;color:#ddd;font-size:18px;padding:0 2px;line-height:1;vertical-align:middle}
   .m-del:hover{color:#c0392b}
+
+  .pro-badge{display:inline-block;font-size:10px;font-weight:700;background:#085041;color:#5DCAA5;border-radius:4px;padding:2px 6px;letter-spacing:0.5px;vertical-align:middle;margin-left:5px}
+  .upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+  .upgrade-modal{background:#fff;border-radius:16px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 12px 40px rgba(0,0,0,0.18);text-align:center}
+  .upgrade-icon{width:60px;height:60px;background:#e8f7f1;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px}
+  .upgrade-title{font-size:20px;font-weight:700;color:#085041;margin-bottom:8px}
+  .upgrade-sub{font-size:14px;color:#666;line-height:1.6;margin-bottom:20px}
+  .upgrade-features{text-align:left;background:#f8f8f4;border-radius:10px;padding:14px 16px;margin-bottom:20px}
+  .upgrade-feature{font-size:13px;color:#333;padding:4px 0;display:flex;gap:8px;align-items:flex-start}
+  .upgrade-feature::before{content:"✓";color:#1D9E75;font-weight:700;flex-shrink:0}
+  .btn-upgrade{display:block;width:100%;padding:13px;background:#1D9E75;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;margin-bottom:10px;transition:background .15s}
+  .btn-upgrade:hover{background:#178a64}
+  .btn-upgrade-cancel{background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;font-family:inherit;padding:4px}
+
+  .currency-bar{display:flex;align-items:center;gap:8px;background:#f0f0e8;border-radius:8px;padding:6px 10px;margin-bottom:14px;font-size:13px}
+  .currency-bar label{color:#666;font-size:12px}
+  .currency-opts{display:flex;gap:4px}
+  .cur-btn{padding:4px 10px;border:1px solid #e0e0d8;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all .15s}
+  .cur-btn.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:600}
+  .cur-rate-wrap{display:none;align-items:center;gap:6px;margin-left:8px}
+  .cur-rate-wrap input{width:90px;border:1px solid #ddd;border-radius:6px;padding:3px 8px;font-size:12px;font-family:inherit;outline:none}
+  .cur-rate-wrap input:focus{border-color:#1D9E75}
+
+  .lista-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+  .lista-modal{background:#fff;border-radius:14px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.18)}
+  .lista-header{padding:20px 24px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1}
+  .lista-body{padding:20px 24px}
+  .lista-product-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0ec;gap:12px}
+  .lista-product-row:last-child{border-bottom:none}
+  .lista-prod-name{font-size:14px;font-weight:600;color:#1a1a1a}
+  .lista-prod-meta{font-size:12px;color:#888;margin-top:2px}
+  .lista-prod-price{font-size:16px;font-weight:700;color:#085041;white-space:nowrap}
+  .lista-cat-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1D9E75;padding:14px 0 6px;border-bottom:2px solid #e8f7f1;margin-bottom:4px}
+  .lista-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f5f5f0}
+  .lista-row:last-child{border-bottom:none}
+  .lista-nombre{font-size:14px;font-weight:500;color:#1a1a1a}
+  .lista-precio{font-size:15px;font-weight:700;color:#085041;white-space:nowrap}
+  .lista-canal-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .cat-chip{padding:5px 12px;border:1px solid #e0e0d8;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all .15s}
+  .cat-chip.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
+  @media print{
+    .lista-overlay .lista-header button,.cur-btn,.cat-chip{display:none!important}
+    .lista-modal{box-shadow:none;max-height:none;border-radius:0}
+  }
+
+  .prod-cat-tag{display:inline-block;font-size:10px;background:#f0f0e8;color:#888;border-radius:4px;padding:1px 6px;margin-left:4px;vertical-align:middle}
+  .prods-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .toolbar-btn{padding:7px 12px;border:1px solid #e0e0d8;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#555;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px}
+  .toolbar-btn:hover{background:#f0faf5;border-color:#5DCAA5;color:#0F6E56}
 </style>
 </head>
 <body>
@@ -209,6 +258,58 @@
       <div style="font-size:13px;color:#555;margin-bottom:10px">Iniciá sesión para guardar tus productos y acceder desde cualquier dispositivo.</div>
       <button class="login-prompt-btn" onclick="showAuthModal()" style="margin-bottom:8px">Iniciar sesión →</button>
       <button onclick="continuarSinSesion()" style="width:100%;padding:8px;border:none;background:none;color:#aaa;font-size:12px;cursor:pointer;font-family:inherit">Continuar sin iniciar sesión</button>
+    </div>
+  </div>
+
+  <!-- Barra de moneda -->
+  <div class="currency-bar">
+    <label>Moneda:</label>
+    <div class="currency-opts">
+      <button class="cur-btn active" id="cur-ars" onclick="setCurrency('ARS')">ARS $</button>
+      <button class="cur-btn" id="cur-usd" onclick="setCurrency('USD')">USD u$s</button>
+    </div>
+    <div class="cur-rate-wrap" id="cur-rate-wrap">
+      <label style="color:#888;font-size:12px">1 USD =</label>
+      <input type="number" id="cur-rate" placeholder="1200" value="1200" oninput="calcular()">
+      <label style="color:#888;font-size:12px">ARS</label>
+    </div>
+  </div>
+
+  <!-- Upgrade modal -->
+  <div class="upgrade-modal-overlay" id="upgrade-modal" style="display:none" onclick="if(event.target===this)cerrarUpgrade()">
+    <div class="upgrade-modal">
+      <div class="upgrade-icon">⭐</div>
+      <div class="upgrade-title">Pasate a Premium</div>
+      <div class="upgrade-sub">Llegaste al límite de 3 productos gratuitos. Con Premium guardás todo sin límites y accedés a herramientas profesionales.</div>
+      <div class="upgrade-features">
+        <div class="upgrade-feature">Productos ilimitados con categorías</div>
+        <div class="upgrade-feature">Lista de precios para clientes (link compartible)</div>
+        <div class="upgrade-feature">Exportar catálogo completo a Excel</div>
+        <div class="upgrade-feature">Alertas cuando suben comisiones</div>
+        <div class="upgrade-feature">Multi-moneda ARS / USD</div>
+      </div>
+      <a class="btn-upgrade" href="https://wa.me/5491100000000?text=Hola%2C%20quiero%20activar%20Costito%20Premium" target="_blank">Activar Premium por WhatsApp</a>
+      <button class="btn-upgrade-cancel" onclick="cerrarUpgrade()">Ahora no</button>
+    </div>
+  </div>
+
+  <!-- Lista de precios modal -->
+  <div class="lista-overlay" id="lista-modal" style="display:none" onclick="if(event.target===this)cerrarLista()">
+    <div class="lista-modal">
+      <div class="lista-header">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#085041">Lista de precios</div>
+          <div style="font-size:12px;color:#888;margin-top:2px" id="lista-fecha"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="toolbar-btn" onclick="window.print()">Exportar PDF</button>
+          <button class="toolbar-btn" onclick="cerrarLista()" style="color:#aaa">✕ Cerrar</button>
+        </div>
+      </div>
+      <div class="lista-body">
+        <div class="lista-canal-filter" id="lista-cats"></div>
+        <div id="lista-productos"></div>
+      </div>
     </div>
   </div>
 
@@ -341,7 +442,10 @@
       <div class="insight" id="insight-msg"></div>
 
       <div class="save-bar" id="save-bar">
-        <input type="text" id="prod-nombre" placeholder="Nombre del producto (ej: Remera básica XL)">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="prod-nombre" placeholder="Nombre del producto (ej: Remera básica XL)" style="flex:2;margin-bottom:0">
+          <input type="text" id="prod-categoria" placeholder="Categoría (opcional)" style="flex:1;margin-bottom:0">
+        </div>
         <button class="btn-save" onclick="guardarProducto()">Guardar producto</button>
       </div>
 
@@ -645,7 +749,14 @@
   <!-- TAB: MIS PRODUCTOS -->
   <div id="tab-prods" class="panel">
     <div class="card">
-      <div class="section-title">Mis productos guardados</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="section-title" style="margin-bottom:0">Mis productos guardados</div>
+        <div id="prods-plan-badge"></div>
+      </div>
+      <div class="prods-toolbar" id="prods-toolbar" style="display:none">
+        <button class="toolbar-btn" onclick="mostrarListaPrecios()">📋 Lista de precios <span class="pro-badge">PRO</span></button>
+        <button class="toolbar-btn" onclick="exportarCSV()">⬇ Exportar Excel <span class="pro-badge">PRO</span></button>
+      </div>
       <div id="prods-list">
         <div class="empty-state">Todavía no guardaste ningún producto.<br>Calculá un precio y usá el botón "Guardar producto".</div>
       </div>
@@ -1285,12 +1396,51 @@ function calcProyecto(){
   res.style.display = 'block';
 }
 
+// ── Moneda ───────────────────────────────────────────────────────────────
+let currency = 'ARS';
+function setCurrency(c){
+  currency = c;
+  document.getElementById('cur-ars').classList.toggle('active', c==='ARS');
+  document.getElementById('cur-usd').classList.toggle('active', c==='USD');
+  const rw = document.getElementById('cur-rate-wrap');
+  rw.style.display = c==='USD' ? 'flex' : 'none';
+  calcular();
+}
+function fmtC(n){
+  if(currency==='USD'){
+    const rate = parseFloat(document.getElementById('cur-rate').value)||1200;
+    return 'u$s ' + (n/rate).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  return fmt(n);
+}
+
 // ── Supabase ──────────────────────────────────────────────────────────────
 const SUPA_URL = 'https://pedpqmrxzftddvgfwlxx.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlZHBxbXJ4emZ0ZGR2Z2Z3bHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzODI0MzksImV4cCI6MjA5Njk1ODQzOX0.9TldQoWXjY13gLHpyhOc1kaoi513l-OARG5XH0Xzdog';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 let currentUser = null;
 let realtimeChannel = null;
+let isPremium = false;
+const FREE_LIMIT = 3;
+
+async function loadProfile(){
+  if(!currentUser) return;
+  const { data } = await sb.from('profiles').select('is_premium').eq('id', currentUser.id).single();
+  isPremium = data?.is_premium || false;
+  updatePremiumUI();
+}
+
+function updatePremiumUI(){
+  const badge = document.getElementById('prods-plan-badge');
+  const toolbar = document.getElementById('prods-toolbar');
+  if(badge) badge.innerHTML = isPremium
+    ? '<span style="font-size:12px;background:#085041;color:#5DCAA5;border-radius:6px;padding:3px 10px;font-weight:700">PREMIUM ✓</span>'
+    : '<span style="font-size:12px;color:#aaa">Plan gratuito · 3 productos</span>';
+  if(toolbar) toolbar.style.display = isPremium ? 'flex' : 'none';
+}
+
+function cerrarUpgrade(){ document.getElementById('upgrade-modal').style.display = 'none'; }
+function mostrarUpgrade(){ document.getElementById('upgrade-modal').style.display = 'flex'; }
 
 async function initAuth(){
   const { data: { session } } = await sb.auth.getSession();
@@ -1308,9 +1458,12 @@ function handleSession(session){
   if(loggedIn){
     document.getElementById('user-email-display').textContent = currentUser.email;
     closeAuthModal();
+    await loadProfile();
     loadProductos();
     suscribirRealtime();
   } else {
+    isPremium = false;
+    updatePremiumUI();
     if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel = null; }
   }
 }
@@ -1363,11 +1516,12 @@ function renderProductos(lista){
   lista.forEach(function(p){
     const d = document.createElement('div');
     d.className = 'prod-item';
+    const catTag = p.categoria ? '<span class="prod-cat-tag">' + escHtml(p.categoria) + '</span>' : '';
     d.innerHTML = '<div style="flex:1;min-width:0">'
-      + '<div class="prod-name">' + escHtml(p.nombre || 'Sin nombre') + '</div>'
-      + '<div class="prod-meta">' + escHtml(p.canal_nombre) + (p.margen ? ' · Margen ' + p.margen + '%' : '') + '</div>'
+      + '<div class="prod-name">' + escHtml(p.nombre || 'Sin nombre') + catTag + '</div>'
+      + '<div class="prod-meta">' + escHtml(p.canal_nombre || '') + (p.margen ? ' · Margen ' + p.margen + '%' : '') + '</div>'
       + '</div>'
-      + '<div class="prod-precio">' + (p.precio_publicar ? fmt(p.precio_publicar) : '—') + '</div>'
+      + '<div class="prod-precio">' + (p.precio_publicar ? fmtC(p.precio_publicar) : '—') + '</div>'
       + '<button class="prod-del" title="Eliminar" onclick="event.stopPropagation();eliminarProducto(\'' + p.id + '\')">×</button>';
     d.onclick = function(){ cargarProducto(p); };
     el.appendChild(d);
@@ -1376,7 +1530,12 @@ function renderProductos(lista){
 
 async function guardarProducto(){
   if(!currentUser){ showAuthModal(); return; }
+  if(!isPremium){
+    const { count } = await sb.from('productos').select('*', {count:'exact',head:true}).eq('user_id', currentUser.id);
+    if(count >= FREE_LIMIT){ mostrarUpgrade(); return; }
+  }
   const nombre = (document.getElementById('prod-nombre').value.trim()) || 'Sin nombre';
+  const categoria = (document.getElementById('prod-categoria').value.trim()) || '';
   const costoBase = parseFloat(document.getElementById('costo').value) || 0;
   const margenVal = parseFloat(document.getElementById('margen').value) || 0;
   const comisionVal = parseFloat(document.getElementById('comision').value) || 0;
@@ -1390,9 +1549,8 @@ async function guardarProducto(){
   const div = 1 - comEf - margenVal/100 - iibbRateVal/100;
   const precio = div > 0 ? costoReal / div : null;
   const ganancia = precio ? precio - costoReal - precio*comEf - precio*(iibbRateVal/100) : null;
-
   const { error } = await sb.from('productos').insert({
-    user_id: currentUser.id, nombre,
+    user_id: currentUser.id, nombre, categoria,
     costo: costoBase, iva_costo: ivaCosto, margen: margenVal,
     canal_id: selectedCanal?.id || '', canal_nombre: selectedCanal?.name || '',
     sub_id: selectedSub || null, comision: comisionVal, com_iva: comIvaVal,
@@ -1401,6 +1559,7 @@ async function guardarProducto(){
   });
   if(error){ alert('Error al guardar: ' + error.message); return; }
   document.getElementById('prod-nombre').value = '';
+  document.getElementById('prod-categoria').value = '';
   showTab('prods');
 }
 
@@ -1422,6 +1581,64 @@ function cargarProducto(p){
   showTab('calc');
   calcular();
 }
+
+function exportarCSV(){
+  if(!currentUser) return;
+  sb.from('productos').select('*').order('categoria').order('nombre').then(function({ data }){
+    if(!data || !data.length){ alert('No tenés productos guardados.'); return; }
+    const cols = ['Nombre','Categoría','Costo','IVA costo','Margen %','Canal','Comisión %','IVA com.','IIBB %','Provincia','Precio publicar','Ganancia'];
+    const rows = data.map(function(p){
+      return [
+        p.nombre || '',
+        p.categoria || '',
+        p.costo || 0,
+        p.iva_costo || 'no',
+        p.margen || 0,
+        p.canal_nombre || '',
+        p.comision || 0,
+        p.com_iva ? 'Sí' : 'No',
+        p.iibb_rate || 0,
+        p.iibb_provincia || '',
+        p.precio_publicar ? p.precio_publicar.toFixed(2) : '',
+        p.ganancia ? p.ganancia.toFixed(2) : ''
+      ].map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
+    });
+    const csv = '﻿' + cols.map(function(c){ return '"'+c+'"'; }).join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'costito-productos.csv'; a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+function mostrarListaPrecios(){
+  if(!currentUser) return;
+  sb.from('productos').select('*').order('categoria').order('nombre').then(function({ data }){
+    const body = document.getElementById('lista-body');
+    if(!data || !data.length){
+      body.innerHTML = '<p style="color:#888;text-align:center">No tenés productos guardados.</p>';
+    } else {
+      let html = '';
+      let lastCat = null;
+      data.forEach(function(p){
+        const cat = p.categoria || 'Sin categoría';
+        if(cat !== lastCat){
+          html += '<div class="lista-cat-header">' + escHtml(cat) + '</div>';
+          lastCat = cat;
+        }
+        html += '<div class="lista-row">'
+          + '<span class="lista-nombre">' + escHtml(p.nombre || 'Sin nombre') + '</span>'
+          + '<span class="lista-precio">' + (p.precio_publicar ? fmtC(p.precio_publicar) : '—') + '</span>'
+          + '</div>';
+      });
+      body.innerHTML = html;
+    }
+    document.getElementById('lista-modal').style.display = 'flex';
+  });
+}
+
+function cerrarLista(){ document.getElementById('lista-modal').style.display = 'none'; }
 
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
