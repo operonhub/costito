@@ -1,2026 +1,235 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-AR" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Costito — Calculadora de precios</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 72 72' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='8' y='8' width='56' height='56' rx='14' fill='%231D9E75'/%3E%3Ctext x='36' y='48' text-anchor='middle' font-family='-apple-system,sans-serif' font-size='38' font-weight='800' fill='white'%3EC%3C/text%3E%3Cline x1='26' y1='34' x2='46' y2='34' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3Cline x1='26' y1='40' x2='46' y2='40' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
-<meta property="og:title" content="Costito — Calculadora de precios">
-<meta property="og:description" content="Calculá el precio real de lo que vendés. Comisiones de plataformas, IVA, IIBB, servicios y más.">
-<meta name="theme-color" content="#1D9E75">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh;padding:24px 16px}
-  .app{max-width:640px;margin:0 auto}
-  .logo{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}
-  .logo-icon{width:44px;height:44px;background:#1D9E75;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;flex-shrink:0}
-  .logo-text{font-size:24px;font-weight:600;color:#1a1a1a}
-  .logo-sub{font-size:13px;color:#666;margin-top:2px}
-  .tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid #e0e0d8;flex-wrap:wrap}
-  .tab{padding:10px 16px;font-size:14px;cursor:pointer;border:none;background:none;color:#666;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color 0.15s;font-family:inherit}
-  .tab.active{color:#1D9E75;border-bottom-color:#1D9E75;font-weight:600}
-  .tab:hover:not(.active){color:#333}
-  .panel{display:none}
-  .panel.active{display:block}
-  .card{background:#fff;border:1px solid #e8e8e0;border-radius:12px;padding:20px;margin-bottom:14px}
-  .section-title{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:14px}
-  .field-row{margin-bottom:14px}
-  .field-row:last-child{margin-bottom:0}
-  .field-label{font-size:13px;color:#666;margin-bottom:6px;display:block}
-  .field-hint{font-size:12px;color:#aaa;margin-top:4px;line-height:1.4}
-  .input-wrap{display:flex;align-items:center;border:1px solid #ddd;border-radius:8px;overflow:hidden;transition:border-color 0.15s}
-  .input-wrap:focus-within{border-color:#1D9E75}
-  .input-prefix{padding:0 10px;font-size:13px;color:#888;background:#f8f8f4;height:38px;display:flex;align-items:center;border-right:1px solid #e0e0d8;flex-shrink:0}
-  .input-wrap input{border:none;outline:none;background:transparent;padding:0 12px;height:38px;font-size:15px;color:#1a1a1a;width:100%;font-family:inherit}
-
-  .modalidad-switch{display:flex;background:#f0f0e8;border-radius:8px;padding:3px;margin-bottom:14px;gap:3px}
-  .mod-btn{flex:1;padding:8px 12px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:13px;color:#666;font-family:inherit;font-weight:500;transition:all 0.15s}
-  .mod-btn.active{background:#fff;color:#1D9E75;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
-
-  .plataformas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
-  .plat-btn{padding:10px 12px;border:1px solid #e0e0d8;border-radius:8px;background:#fff;cursor:pointer;text-align:left;transition:all 0.15s;font-family:inherit}
-  .plat-btn:hover{background:#f0faf5;border-color:#5DCAA5}
-  .plat-btn.active{border-color:#1D9E75;background:#e8f7f1}
-  .plat-name{font-size:13px;font-weight:600;color:#333}
-  .plat-com{font-size:11px;color:#888;margin-top:3px}
-  .plat-btn.active .plat-name{color:#0F6E56}
-  .plat-btn.active .plat-com{color:#1D9E75}
-
-  .submenu{background:#f8f8f4;border-radius:8px;padding:12px;margin-bottom:14px}
-  .submenu-label{font-size:12px;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
-  .submenu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px}
-  .sub-btn{padding:8px 10px;border:1px solid #e0e0d8;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all 0.15s;text-align:center;line-height:1.3}
-  .sub-btn:hover{border-color:#5DCAA5}
-  .sub-btn.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
-
-  .results{background:#f8f8f4;border-radius:10px;padding:16px;margin-top:12px}
-  .result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eee;gap:10px}
-  .result-row:last-child{border-bottom:none}
-  .result-label{font-size:13px;color:#666;flex:1}
-  .result-val{font-size:14px;font-weight:600;color:#1a1a1a;text-align:right;white-space:nowrap}
-  .result-big{background:#e8f7f1;border-radius:10px;padding:16px 20px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .result-big-label{font-size:14px;color:#0F6E56;font-weight:600}
-  .result-big-sub{font-size:12px;color:#1D9E75;margin-top:2px}
-  .result-big-val{font-size:26px;font-weight:700;color:#085041;white-space:nowrap}
-  .insight{background:#e8f7f1;border-left:3px solid #1D9E75;padding:12px 14px;border-radius:0 8px 8px 0;margin-top:12px;font-size:13px;color:#0F6E56;line-height:1.6}
-
-  .check-row{display:flex;align-items:flex-start;gap:10px;margin-top:6px;padding:10px;background:#fafaf5;border-radius:8px;cursor:pointer}
-  .check-row input[type=checkbox]{margin-top:2px;accent-color:#1D9E75;cursor:pointer;width:16px;height:16px;flex-shrink:0}
-  .check-label{font-size:13px;color:#444;line-height:1.4;cursor:pointer}
-  .check-label small{color:#888;display:block;margin-top:2px;font-size:11px}
-
-  .iva-opts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-  .iva-opt{padding:6px 14px;border:1px solid #e0e0d8;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;color:#666;font-family:inherit;transition:all 0.15s}
-  .iva-opt:hover{border-color:#5DCAA5}
-  .iva-opt.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
-  .error-msg{font-size:13px;color:#c0392b;margin-top:10px;padding:10px 14px;background:#fdf0f0;border-radius:8px;display:none}
-
-  .markup-table{width:100%;font-size:13px;border-collapse:collapse}
-  .markup-table th{text-align:left;color:#888;font-weight:500;padding:8px;border-bottom:1px solid #eee;font-size:12px}
-  .markup-table td{padding:9px 8px;border-bottom:1px solid #f0f0ec;color:#333}
-  .markup-table tr:last-child td{border-bottom:none}
-  .markup-table .highlight{background:#e8f7f1}
-  .markup-table .highlight td{color:#0F6E56;font-weight:600}
-
-  .imp-total{background:#e8f7f1;border-radius:10px;padding:16px;margin-top:14px}
-  .imp-total-label{font-size:13px;color:#0F6E56;font-weight:500}
-  .imp-total-val{font-size:22px;font-weight:700;color:#085041;margin-top:4px}
-  .imp-total-sub{font-size:12px;color:#1D9E75;margin-top:4px}
-  .add-btn{font-size:13px;color:#1D9E75;cursor:pointer;background:none;border:1px dashed #5DCAA5;border-radius:8px;padding:8px 14px;margin-bottom:12px;width:100%;text-align:center;font-family:inherit;transition:background 0.15s}
-  .add-btn:hover{background:#e8f7f1}
-  .imp-item{display:flex;gap:8px;margin-bottom:8px;align-items:center}
-  .imp-item input[type=text]{flex:2;border:1px solid #ddd;border-radius:8px;padding:0 10px;height:36px;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.15s;min-width:0}
-  .imp-item input[type=text]:focus{border-color:#1D9E75}
-  .imp-item input[type=number]{width:80px;flex:none;border:1px solid #ddd;border-radius:8px;padding:0 8px;height:36px;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.15s}
-  .imp-item input[type=number]:focus{border-color:#1D9E75}
-  .imp-item select{width:62px;flex:none;border:1px solid #ddd;border-radius:8px;padding:0 4px;height:36px;font-size:13px;font-family:inherit;background:#fff;outline:none}
-  .remove-btn{background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;padding:0 4px;line-height:1;flex-shrink:0}
-  .remove-btn:hover{color:#c0392b}
-  .use-btn{margin-top:14px;font-size:13px;padding:8px 16px;color:#1D9E75;background:none;border:1px solid #5DCAA5;border-radius:8px;cursor:pointer;font-family:inherit;transition:background 0.15s}
-  .use-btn:hover{background:#e8f7f1}
-
-  .conv-box{background:#f8f8f4;border-radius:10px;padding:14px;margin-top:12px}
-  .conv-label{font-size:13px;color:#666}
-  .conv-result{font-size:22px;font-weight:700;color:#085041;margin-top:4px}
-
-  .select-field{width:100%;border:1px solid #ddd;border-radius:8px;padding:0 12px;height:38px;font-size:14px;font-family:inherit;background:#fff;outline:none;color:#1a1a1a;transition:border-color 0.15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-  .select-field:focus{border-color:#1D9E75}
-  .comp-table{width:100%;font-size:13px;border-collapse:collapse;margin-top:8px}
-  .comp-table th{text-align:left;color:#888;font-weight:500;padding:8px;border-bottom:1px solid #eee;font-size:12px}
-  .comp-table td{padding:9px 8px;border-bottom:1px solid #f0f0ec;color:#333;vertical-align:middle}
-  .comp-table tr:last-child td{border-bottom:none}
-  .comp-table .best td{background:#e8f7f1;color:#0F6E56;font-weight:600}
-  .comp-table .best td:first-child{border-radius:6px 0 0 6px}
-  .comp-table .best td:last-child{border-radius:0 6px 6px 0}
-  .comp-badge{display:inline-block;font-size:10px;background:#1D9E75;color:#fff;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:middle}
-  .section-toggle{width:100%;border:none;background:none;display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:10px 0 0;font-family:inherit;text-align:left;color:#1D9E75;font-size:13px;font-weight:600}
-  .pdf-btn{margin-top:14px;width:100%;padding:11px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s}
-  .pdf-btn:hover{background:#178a64}
-  @media print{
-    body{background:#fff;padding:8px}
-    .tabs,.modalidad-switch,.plataformas-grid,.submenu,.card:not(#print-card),.section-toggle,.pdf-btn,.add-btn,.use-btn{display:none!important}
-    #print-card{display:block!important}
-    .result-big{background:#e8f7f1!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .results,.result-big,.insight{break-inside:avoid}
-  }
-  .explainer-toggle{width:100%;border:none;background:none;display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:0;font-family:inherit;text-align:left}
-  .explainer-toggle.open #explainerArrow{transform:rotate(180deg)}
-  .explain-step{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
-  .explain-num{width:26px;height:26px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
-  .explain-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
-  .explain-text{font-size:13px;color:#666;line-height:1.5}
-
-  .user-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#e8f7f1;border-radius:8px;margin-bottom:14px;font-size:13px}
-  .user-bar-email{color:#0F6E56;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .btn-logout{font-size:12px;color:#888;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;flex-shrink:0;margin-left:8px}
-  .login-prompt-btn{width:100%;padding:10px;border:1px dashed #5DCAA5;border-radius:8px;background:none;color:#1D9E75;font-size:13px;cursor:pointer;font-family:inherit;transition:background 0.15s}
-  .login-prompt-btn:hover{background:#e8f7f1}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
-  .modal{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.14)}
-  .btn-google{width:100%;padding:11px;border:1px solid #e0e0d8;border-radius:8px;background:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;color:#333;transition:background 0.15s;margin-bottom:0}
-  .btn-google:hover{background:#f8f8f4;border-color:#ccc}
-  .auth-separator{display:flex;align-items:center;gap:10px;margin:14px 0;color:#bbb;font-size:12px}
-  .auth-separator::before,.auth-separator::after{content:'';flex:1;border-top:1px solid #e8e8e0}
-  .modal-title{font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
-  .modal-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
-  .btn-primary{width:100%;padding:12px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s;margin-top:8px}
-  .btn-primary:hover{background:#178a64}
-  .btn-primary:disabled{background:#aaa;cursor:not-allowed}
-  .btn-secondary{width:100%;padding:10px;border:none;background:none;color:#888;cursor:pointer;font-family:inherit;font-size:14px;margin-top:6px}
-  .modal-msg{font-size:13px;margin-top:12px;padding:10px 12px;border-radius:8px;display:none}
-  .modal-msg.ok{background:#e8f7f1;color:#0F6E56}
-  .modal-msg.err{background:#fdf0f0;color:#c0392b}
-  .save-bar{margin-top:12px;display:none}
-  .save-bar input{width:100%;border:1px solid #ddd;border-radius:8px;padding:0 12px;height:38px;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.15s;margin-bottom:8px}
-  .save-bar input:focus{border-color:#1D9E75}
-  .btn-save{width:100%;padding:11px;background:#085041;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s}
-  .btn-save:hover{background:#063d30}
-  .prod-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #e8e8e0;border-radius:8px;margin-bottom:8px;cursor:pointer;transition:background 0.15s}
-  .prod-item:hover{background:#f0faf5;border-color:#5DCAA5}
-  .prod-name{font-size:14px;font-weight:600;color:#1a1a1a}
-  .prod-meta{font-size:12px;color:#888;margin-top:2px}
-  .prod-precio{font-size:15px;font-weight:700;color:#085041;white-space:nowrap;flex-shrink:0}
-  .prod-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:20px;padding:0 2px;flex-shrink:0;line-height:1}
-  .prod-del:hover{color:#c0392b}
-  .empty-state{text-align:center;padding:32px 16px;color:#aaa;font-size:14px;line-height:1.6}
-
-  .medios-wrap{overflow-x:auto;margin-top:10px;border-radius:8px;border:1px solid #e8e8e0}
-  .medios-table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
-  .medios-table th{background:#f0f0e8;color:#888;font-weight:600;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.4px}
-  .medios-table th:not(:first-child){text-align:right}
-  .medios-table td{padding:9px 10px;border-top:1px solid #f0f0ec;vertical-align:middle}
-  .medios-table td:not(:first-child){text-align:right}
-  .medios-cat-row td{background:#f8f8f4;color:#999;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:5px 10px;border-top:2px solid #e8e8e0}
-  .medios-free td{background:#e8f7f1}
-  .medios-free td:first-child{color:#0F6E56;font-weight:600}
-  .medios-price{font-weight:700;color:#085041}
-  .medios-recargo-neg{color:#c0392b;font-size:12px}
-  .medios-pct{font-weight:700;color:#c0392b;background:#fdf0f0;border-radius:4px;padding:2px 6px;font-size:12px;display:inline-block}
-  .medios-pct-zero{font-weight:600;color:#1D9E75;background:#e8f7f1;border-radius:4px;padding:2px 6px;font-size:12px;display:inline-block}
-  .m-input-com{width:54px;border:1px solid #e0e0d8;border-radius:6px;padding:4px 6px;font-size:13px;font-family:inherit;text-align:right;outline:none;background:#fff;transition:border-color 0.15s}
-  .m-input-com:focus{border-color:#1D9E75}
-  .m-input-name{border:1px solid #e0e0d8;border-radius:6px;padding:4px 8px;font-size:13px;font-family:inherit;width:100%;min-width:130px;outline:none;background:#fff;transition:border-color 0.15s}
-  .m-input-name:focus{border-color:#1D9E75}
-  .m-del{background:none;border:none;cursor:pointer;color:#ddd;font-size:18px;padding:0 2px;line-height:1;vertical-align:middle}
-  .m-del:hover{color:#c0392b}
-
-  .pro-badge{display:inline-block;font-size:10px;font-weight:700;background:#085041;color:#5DCAA5;border-radius:4px;padding:2px 6px;letter-spacing:0.5px;vertical-align:middle;margin-left:5px}
-  .upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
-  .upgrade-modal{background:#fff;border-radius:16px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 12px 40px rgba(0,0,0,0.18);text-align:center}
-  .upgrade-icon{width:60px;height:60px;background:#e8f7f1;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px}
-  .upgrade-title{font-size:20px;font-weight:700;color:#085041;margin-bottom:8px}
-  .upgrade-sub{font-size:14px;color:#666;line-height:1.6;margin-bottom:20px}
-  .upgrade-features{text-align:left;background:#f8f8f4;border-radius:10px;padding:14px 16px;margin-bottom:20px}
-  .upgrade-feature{font-size:13px;color:#333;padding:4px 0;display:flex;gap:8px;align-items:flex-start}
-  .upgrade-feature::before{content:"✓";color:#1D9E75;font-weight:700;flex-shrink:0}
-  .btn-upgrade{display:block;width:100%;padding:13px;background:#1D9E75;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;margin-bottom:10px;transition:background .15s}
-  .btn-upgrade:hover{background:#178a64}
-  .btn-upgrade-cancel{background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;font-family:inherit;padding:4px}
-
-  .currency-bar{display:flex;align-items:center;gap:8px;background:#f0f0e8;border-radius:8px;padding:6px 10px;margin-bottom:14px;font-size:13px}
-  .currency-bar label{color:#666;font-size:12px}
-  .currency-opts{display:flex;gap:4px}
-  .cur-btn{padding:4px 10px;border:1px solid #e0e0d8;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all .15s}
-  .cur-btn.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:600}
-  .cur-rate-wrap{display:none;align-items:center;gap:6px;margin-left:8px}
-  .cur-rate-wrap input{width:90px;border:1px solid #ddd;border-radius:6px;padding:3px 8px;font-size:12px;font-family:inherit;outline:none}
-  .cur-rate-wrap input:focus{border-color:#1D9E75}
-
-  .lista-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
-  .lista-modal{background:#fff;border-radius:14px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.18)}
-  .lista-header{padding:20px 24px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1}
-  .lista-body{padding:20px 24px}
-  .lista-product-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0ec;gap:12px}
-  .lista-product-row:last-child{border-bottom:none}
-  .lista-prod-name{font-size:14px;font-weight:600;color:#1a1a1a}
-  .lista-prod-meta{font-size:12px;color:#888;margin-top:2px}
-  .lista-prod-price{font-size:16px;font-weight:700;color:#085041;white-space:nowrap}
-  .lista-cat-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1D9E75;padding:14px 0 6px;border-bottom:2px solid #e8f7f1;margin-bottom:4px}
-  .lista-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f5f5f0}
-  .lista-row:last-child{border-bottom:none}
-  .lista-nombre{font-size:14px;font-weight:500;color:#1a1a1a}
-  .lista-precio{font-size:15px;font-weight:700;color:#085041;white-space:nowrap}
-  .lista-canal-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
-  .cat-chip{padding:5px 12px;border:1px solid #e0e0d8;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all .15s}
-  .cat-chip.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
-  @media print{
-    /* lista de precios */
-    .lista-overlay .lista-header button,.cur-btn,.cat-chip{display:none!important}
-    .lista-modal{box-shadow:none;max-height:none;border-radius:0}
-    /* PDF del resultado de la calculadora */
-    body.printing-pdf #header-auth,
-    body.printing-pdf #login-prompt,
-    body.printing-pdf .currency-bar,
-    body.printing-pdf .tabs,
-    body.printing-pdf .save-bar,
-    body.printing-pdf #error-calc,
-    body.printing-pdf .insight,
-    body.printing-pdf .pdf-btn { display:none!important }
-    body.printing-pdf .panel { display:none!important }
-    body.printing-pdf #tab-calc { display:block!important }
-    body.printing-pdf .card { display:none!important }
-    body.printing-pdf #resultados { display:block!important }
-    body.printing-pdf .results { box-shadow:none!important;border:1px solid #ddd!important }
-    body.printing-pdf .logo { margin-bottom:16px }
-    * { -webkit-print-color-adjust:exact; print-color-adjust:exact }
-  }
-
-  .mixta-grid{grid-template-columns:1fr 1fr}
-  @media(max-width:520px){.mixta-grid{grid-template-columns:1fr}.mixta-res-grid{grid-template-columns:1fr!important}}
-  .iva-btn{padding:5px 12px;border:1px solid #e0e0d8;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#666;font-family:inherit;transition:all .15s}
-  .iva-btn.active{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:600}
-  .prod-cat-tag{display:inline-block;font-size:10px;background:#f0f0e8;color:#888;border-radius:4px;padding:1px 6px;margin-left:4px;vertical-align:middle}
-  .prods-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  .toolbar-btn{padding:7px 12px;border:1px solid #e0e0d8;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#555;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px}
-  .toolbar-btn:hover{background:#f0faf5;border-color:#5DCAA5;color:#0F6E56}
-  .tabs-more-wrap{position:relative;display:inline-block}
-  .tabs-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid #e0e0d8;border-radius:10px;padding:6px;z-index:50;min-width:200px;box-shadow:0 4px 16px rgba(0,0,0,0.10)}
-  .dd-btn{display:block;width:100%;text-align:left;padding:9px 13px;border:none;background:none;font-size:13px;color:#444;cursor:pointer;border-radius:7px;font-family:inherit;transition:background 0.12s}
-  .dd-btn:hover{background:#f0faf5;color:#0F6E56}
-  .dd-btn.active{background:#e8f7f1;color:#0F6E56;font-weight:600}
-  .comp-tipo-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-  .comp-tipo-row span{font-size:12px;color:#888}
-</style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Costito — Calculá el precio real de lo que vendés</title>
+<meta name="description" content="Costito calcula el precio justo de tus productos teniendo en cuenta IVA, comisiones del canal e ingresos brutos. Hecho para comerciantes argentinos." />
+<meta name="theme-color" content="#1F8A5B" />
+<link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-<div class="app">
 
-  <div class="logo">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="logo-icon" style="background:none;padding:0">
-        <svg width="44" height="44" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="8" y="8" width="56" height="56" rx="14" fill="#1D9E75"/>
-          <text x="36" y="48" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="38" font-weight="800" fill="white">C</text>
-          <line x1="26" y1="34" x2="46" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          <line x1="26" y1="40" x2="46" y2="40" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div>
-        <div class="logo-text">Costito</div>
-        <div class="logo-sub">Calculá el precio real de lo que vendés</div>
-      </div>
+<header>
+  <div class="head-in">
+    <div class="logo">
+      <span class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/><path d="M13 13h4M13 16.5h4"/></svg>
+      </span>
+      <span>Costito<small>Almacén digital</small></span>
     </div>
-    <div id="header-auth">
-      <button id="header-login-btn" onclick="showAuthModal()" style="font-size:12px;color:#1D9E75;background:#e8f7f1;border:1px solid #5DCAA5;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit;font-weight:500">Iniciar sesión</button>
-      <div id="header-user" style="display:none;align-items:center;gap:8px">
-        <span id="header-plan-badge"></span>
-        <span id="user-email-display" style="font-size:12px;color:#0F6E56;font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-        <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
-      </div>
+    <div class="head-spacer"></div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <div class="cur" id="cur">
+      <button class="on" data-cur="ARS">$ ARS</button>
+      <button data-cur="USD">US$</button>
     </div>
   </div>
-  <div id="login-prompt" style="display:none;margin-bottom:14px">
-    <div style="background:#fff;border:1px solid #e8e8e0;border-radius:10px;padding:14px 16px">
-      <div style="font-size:13px;color:#555;margin-bottom:10px">Iniciá sesión para guardar tus productos y acceder desde cualquier dispositivo.</div>
-      <button class="login-prompt-btn" onclick="showAuthModal()" style="margin-bottom:8px">Iniciar sesión →</button>
-      <button onclick="continuarSinSesion()" style="width:100%;padding:8px;border:none;background:none;color:#aaa;font-size:12px;cursor:pointer;font-family:inherit">Continuar sin iniciar sesión</button>
-    </div>
-  </div>
+</header>
 
-  <!-- Barra de moneda -->
-  <div class="currency-bar">
-    <label>Moneda:</label>
-    <div class="currency-opts">
-      <button class="cur-btn active" id="cur-ars" onclick="setCurrency('ARS')">ARS $</button>
-      <button class="cur-btn" id="cur-usd" onclick="setCurrency('USD')">USD u$s</button>
-    </div>
-    <div class="cur-rate-wrap" id="cur-rate-wrap">
-      <label style="color:#888;font-size:12px">1 USD =</label>
-      <input type="number" id="cur-rate" placeholder="1200" value="1200" oninput="calcular()">
-      <label style="color:#888;font-size:12px">ARS</label>
-    </div>
-  </div>
-
-  <!-- Upgrade modal -->
-  <div class="upgrade-modal-overlay" id="upgrade-modal" style="display:none" onclick="if(event.target===this)cerrarUpgrade()">
-    <div class="upgrade-modal">
-      <div class="upgrade-icon">⭐</div>
-      <div class="upgrade-title">Pasate a Premium</div>
-      <div class="upgrade-sub">Llegaste al límite de 3 productos gratuitos. Con Premium guardás todo sin límites y accedés a herramientas profesionales.</div>
-      <div class="upgrade-features">
-        <div class="upgrade-feature">Productos ilimitados con categorías</div>
-        <div class="upgrade-feature">Lista de precios para clientes (link compartible)</div>
-        <div class="upgrade-feature">Exportar catálogo completo a Excel</div>
-        <div class="upgrade-feature">Alertas cuando suben comisiones</div>
-        <div class="upgrade-feature">Multi-moneda ARS / USD</div>
-      </div>
-      <a class="btn-upgrade" href="https://wa.me/5491100000000?text=Hola%2C%20quiero%20activar%20Costito%20Premium" target="_blank">Activar Premium por WhatsApp</a>
-      <button class="btn-upgrade-cancel" onclick="cerrarUpgrade()">Ahora no</button>
-    </div>
-  </div>
-
-  <!-- Lista de precios modal -->
-  <div class="lista-overlay" id="lista-modal" style="display:none" onclick="if(event.target===this)cerrarLista()">
-    <div class="lista-modal">
-      <div class="lista-header">
-        <div>
-          <div style="font-size:16px;font-weight:700;color:#085041">Lista de precios</div>
-          <div style="font-size:12px;color:#888;margin-top:2px" id="lista-fecha"></div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="toolbar-btn" onclick="window.print()">Exportar PDF</button>
-          <button class="toolbar-btn" onclick="cerrarLista()" style="color:#aaa">✕ Cerrar</button>
-        </div>
-      </div>
-      <div class="lista-body">
-        <div class="lista-canal-filter" id="lista-cats"></div>
-        <div id="lista-productos"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="auth-modal" style="display:none" onclick="if(event.target===this)closeAuthModal()">
-    <div class="modal">
-      <div class="modal-title">Acceder a Costito</div>
-      <div class="modal-sub">Entrá con tu cuenta de Google o con email y contraseña.</div>
-      <button class="btn-google" onclick="loginConGoogle()">
-        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
-        Continuar con Google
+<nav>
+  <div class="head-in" style="padding-top:0;padding-bottom:0;display:block">
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-tab="calc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h.01M8 15h2M12 15h2M16 15h.01M8 18h6"/></svg>
+        Calculadora
       </button>
-      <div class="auth-separator">o</div>
-      <div class="input-wrap" style="margin-bottom:8px">
-        <span class="input-prefix">@</span>
-        <input type="email" id="auth-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()" style="height:42px;font-size:15px">
-      </div>
-      <div class="input-wrap" style="margin-bottom:0">
-        <span class="input-prefix" style="font-size:16px">🔒</span>
-        <input type="password" id="auth-password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')loginConPassword()" style="height:42px;font-size:15px">
-      </div>
-      <button class="btn-primary" id="auth-btn" onclick="loginConPassword()">Ingresar con email</button>
-      <button class="btn-secondary" onclick="closeAuthModal()">Cancelar</button>
-      <div class="modal-msg" id="auth-msg"></div>
+      <button class="tab" data-tab="medios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>
+        Medios de pago
+      </button>
+      <button class="tab" data-tab="prod">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>
+        Mis productos
+      </button>
+      <button class="tab" data-tab="import" data-premium="1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 22V12"/></svg>
+        Importación
+        <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </button>
+      <button class="tab" data-tab="mixta" data-premium="1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="6"/><path d="M15 9a6 6 0 1 1-6 6"/></svg>
+        Compra mixta
+        <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </button>
+      <button class="tab" data-tab="servicios" data-premium="1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Servicios
+        <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </button>
     </div>
   </div>
+</nav>
 
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('calc')">Calculadora</button>
-    <button class="tab" onclick="showTab('medios')">Medios de pago</button>
-    <button class="tab" onclick="showTab('serv')">Precio de servicio</button>
-    <button class="tab" id="tab-btn-prods" onclick="showTab('prods')" style="display:none">Mis productos</button>
-    <div class="tabs-more-wrap">
-      <button class="tab" id="tabs-more-btn" onclick="toggleMasHerramientas(event)">Más herramientas <span id="mas-arrow" style="font-size:10px;vertical-align:middle">▼</span></button>
-      <div class="tabs-dropdown" id="tabs-dropdown" style="display:none">
-        <button class="dd-btn" onclick="showTab('import');closeMasDD()">Costo de importación</button>
-        <button class="dd-btn" onclick="showTab('mixta');closeMasDD()">Compra mixta</button>
-        <button class="dd-btn" onclick="showTab('conv');closeMasDD()">Markup vs margen</button>
-      </div>
-    </div>
-  </div>
+<div class="wrap">
 
-  <!-- TAB: CALCULADORA -->
-  <div id="tab-calc" class="panel active">
+  <!-- ============ CALCULADORA ============ -->
+  <section class="panel on" id="calc">
+    <h2 class="section-title">¿A cuánto lo vendés?</h2>
+    <p class="section-sub">Cargá lo que te costó y cuánto querés ganar. Nosotros le sumamos el IVA, la comisión del canal y los ingresos brutos. Te decimos el precio justo para publicar.</p>
 
     <div class="card">
-      <div class="section-title">Tu producto</div>
-      <div class="field-row">
-        <label class="field-label">Precio del proveedor (sin IVA)</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="costo" placeholder="0" oninput="calcular()"></div>
-        <div class="field-hint">El precio base que te cobra el proveedor, sin contar IVA. Después elegís si te corresponde sumarlo.</div>
+      <div class="card-h">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg></span>
+        <div><h3>El costo y tu ganancia</h3><p>Lo básico para arrancar</p></div>
       </div>
-      <div class="field-row">
-        <label class="field-label">¿Tenés que sumarle IVA? <span style="font-size:11px;color:#aaa;font-weight:400">(si sos Monotributista no podés descontarlo)</span></label>
-        <div class="iva-opts">
-          <button class="iva-opt active" id="iva-no" onclick="setIvaCosto('no')">Sin IVA</button>
-          <button class="iva-opt" id="iva-21" onclick="setIvaCosto('21')">+ IVA 21%</button>
-          <button class="iva-opt" id="iva-105" onclick="setIvaCosto('105')">+ IVA 10,5%</button>
-        </div>
+
+      <div class="field">
+        <label>¿Cuánto te costó? <span class="help"><span class="q">?</span><span class="tip">El precio que pagaste al proveedor, sin contar el IVA. Si te facturan con IVA, poné el neto.</span></span></label>
+        <div class="in"><span class="pre" id="pre1">$</span><input type="number" id="costo" value="10000" min="0" inputmode="decimal" placeholder="Ej: 10000" /></div>
       </div>
-      <div class="field-row">
-        <label class="field-label">Margen que querés ganar (sobre el precio)</label>
-        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="margen" placeholder="ej: 35" oninput="calcular()"></div>
+
+      <div class="field">
+        <label>IVA del proveedor <span class="help"><span class="q">?</span><span class="tip">El impuesto que te suma el proveedor sobre el costo. La mayoría de los productos llevan 21%. Algunos (libros, alimentos básicos) van al 10,5%.</span></span></label>
+        <div class="seg" id="ivaSeg"></div>
+      </div>
+
+      <div class="field">
+        <label>¿Cuánto querés ganar? <span class="help"><span class="q">?</span><span class="tip">Tu margen sobre el precio final de venta. Si ponés 40%, de cada $100 que vendés, $40 quedan para vos (antes de comisiones).</span></span></label>
+        <div class="in"><input type="number" id="margen" value="40" min="0" max="95" inputmode="decimal" placeholder="Ej: 40" /><span class="suf">% de margen</span></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="section-title">Canal de venta</div>
-
-      <div class="modalidad-switch">
-        <button class="mod-btn active" id="mod-online" onclick="setModalidad('online')">🛒 Venta online</button>
-        <button class="mod-btn" id="mod-local" onclick="setModalidad('local')">🏪 Venta en local</button>
+      <div class="card-h">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1"/><path d="M16 12h6M16 12a2 2 0 0 1 0-4h6v8h-6a2 2 0 0 1 0-4z"/></svg></span>
+        <div><h3>¿Dónde lo vendés?</h3><p>Cada canal se queda con su parte</p></div>
       </div>
 
-      <div class="plataformas-grid" id="plataformasGrid"></div>
-
-      <div id="submenuContainer"></div>
-
-      <div class="field-row">
-        <label class="field-label">Comisión nominal del canal (editable)</label>
-        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="comision" placeholder="ej: 13" step="0.01" oninput="calcular()"></div>
+      <div class="field">
+        <label>Canal de venta</label>
+        <div class="in sel"><select id="canal"></select></div>
       </div>
 
-      <label class="check-row" for="comIva">
-        <input type="checkbox" id="comIva" onchange="calcular()">
-        <span class="check-label">
-          La comisión paga IVA (21%)
-          <small>Activá esto para posnets que cobran "comisión + IVA" (Nave, Mercado Pago, posnet tradicional). Cuenta DNI ya viene con IVA incluido.</small>
-        </span>
+      <div class="field" id="customWrap" style="display:none">
+        <label>Comisión a mano</label>
+        <div class="in"><input type="number" id="comCustom" value="10" min="0" inputmode="decimal" /><span class="suf">%</span></div>
+      </div>
+
+      <label class="check" id="ivaComWrap">
+        <input type="checkbox" id="ivaCom" checked />
+        <span class="t"><b>La comisión paga IVA (21%)</b><span>Mercado Libre y casi todas las plataformas te cobran IVA sobre su comisión. Dejalo tildado salvo que sepas que no.</span></span>
       </label>
-    </div>
 
-    <div class="card">
-      <div class="section-title">Ingresos Brutos (IIBB)</div>
-      <div class="field-row">
-        <label class="field-label">Provincia donde operás</label>
-        <select id="iibb-provincia" class="select-field" onchange="calcular()">
-          <option value="0">No aplica / No inscripto en IIBB</option>
-          <option value="3">CABA — 3%</option>
-          <option value="3.5">Buenos Aires — 3,5%</option>
-          <option value="3">Córdoba — 3%</option>
-          <option value="3.5">Santa Fe — 3,5%</option>
-          <option value="3">Mendoza — 3%</option>
-          <option value="3">Tucumán — 3%</option>
-          <option value="3">Entre Ríos — 3%</option>
-          <option value="3.5">Misiones — 3,5%</option>
-          <option value="3.5">Salta — 3,5%</option>
-          <option value="3.5">Chaco — 3,5%</option>
-          <option value="3">Corrientes — 3%</option>
-          <option value="3.5">Santiago del Estero — 3,5%</option>
-          <option value="3">San Juan — 3%</option>
-          <option value="3">Jujuy — 3%</option>
-          <option value="3">Río Negro — 3%</option>
-          <option value="3">Neuquén — 3%</option>
-          <option value="3">Formosa — 3%</option>
-          <option value="3">Chubut — 3%</option>
-          <option value="2">San Luis — 2%</option>
-          <option value="3">Catamarca — 3%</option>
-          <option value="3">La Rioja — 3%</option>
-          <option value="3">Santa Cruz — 3%</option>
-          <option value="3">La Pampa — 3%</option>
-          <option value="0">Tierra del Fuego — 0%</option>
-        </select>
-        <div class="field-hint">Las alícuotas son aproximadas para comercio minorista 2026. Verificá con tu contador la alícuota exacta de tu actividad.</div>
+      <div class="field" style="margin-top:15px">
+        <label>Ingresos Brutos (IIBB) <span class="help"><span class="q">?</span><span class="tip">Impuesto provincial sobre tus ventas. Cambia según dónde estés inscripto. Si sos Monotributista en algunas provincias podés estar exento (0%).</span></span></label>
+        <div class="in sel"><select id="iibb"></select></div>
       </div>
     </div>
 
-    <div id="resultados" style="display:none">
-      <div class="results">
-        <div class="result-row"><span class="result-label">Precio del proveedor</span><span class="result-val" id="r-costo">—</span></div>
-        <div class="result-row" id="r-iva-row" style="display:none"><span class="result-label" id="r-iva-label">IVA sobre el costo</span><span class="result-val" id="r-iva-monto" style="color:#c0392b">—</span></div>
-        <div class="result-row" id="r-costo-total-row" style="display:none"><span class="result-label" style="font-weight:600">Costo real (con IVA)</span><span class="result-val" id="r-costo-total" style="font-weight:600">—</span></div>
-        <div class="result-row"><span class="result-label">Comisión nominal</span><span class="result-val" id="r-com-nom">—</span></div>
-        <div class="result-row" id="r-com-efe-row"><span class="result-label">Comisión efectiva (+ IVA)</span><span class="result-val" id="r-com-efe">—</span></div>
-        <div class="result-row"><span class="result-label">Lo que se queda la plataforma</span><span class="result-val" id="r-com-monto">—</span></div>
-        <div class="result-row" id="r-iibb-row" style="display:none"><span class="result-label" id="r-iibb-label">IIBB</span><span class="result-val" id="r-iibb-monto" style="color:#c0392b">—</span></div>
-        <div class="result-row"><span class="result-label">Tu ganancia neta</span><span class="result-val" id="r-ganancia" style="color:#1D9E75">—</span></div>
+    <!-- RESULTADO -->
+    <div class="tag-wrap">
+      <div class="tag">
+        <button class="copy" id="copyBtn" aria-label="Copiar precio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <div class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/></svg> Precio para publicar</div>
+        <div class="big"><span class="c" id="finCur">$</span><span id="finVal">—</span></div>
+        <div class="note" id="ganNote">Con esto ganás <b id="ganTxt">—</b> por unidad.</div>
       </div>
-      <div class="result-big">
-        <div>
-          <div class="result-big-label">Precio a publicar</div>
-          <div class="result-big-sub" id="r-publicado-sub"></div>
-        </div>
-        <div class="result-big-val" id="r-publicado">—</div>
-      </div>
-      <div class="insight" id="insight-msg"></div>
+    </div>
 
-      <div class="save-bar" id="save-bar">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input type="text" id="prod-nombre" placeholder="Nombre del producto (ej: Remera básica XL)" style="flex:2;margin-bottom:0">
-          <input type="text" id="prod-categoria" placeholder="Categoría (opcional)" style="flex:1;margin-bottom:0">
-        </div>
-        <button class="btn-save" onclick="guardarProducto()">Guardar producto</button>
+    <div class="card" style="margin-top:16px">
+      <div class="break" id="break">
+        <div class="li"><span class="k">Te costó (con IVA)</span><span class="v" id="bCosto">—</span></div>
+        <div class="li minus"><span class="k">Comisión del canal <span class="help"><span class="q">?</span><span class="tip">Lo que se queda la plataforma, ya con su IVA incluido.</span></span></span><span class="v" id="bCom">—</span></div>
+        <div class="li minus"><span class="k">Ingresos Brutos</span><span class="v" id="bIibb">—</span></div>
+        <div class="li plus"><span class="k">Tu ganancia neta</span><span class="v" id="bGan">—</span></div>
+        <div class="li tot"><span class="k">Precio a publicar</span><span class="v" id="bTotal">—</span></div>
       </div>
-
-      <button class="section-toggle" onclick="toggleComparador()">
-        Ver en todas las plataformas <span id="comp-arrow">▼</span>
+      <button class="btn-add" id="addBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Guardar en mis productos
       </button>
-      <div id="comparador-content" style="display:none;margin-top:8px">
-        <div class="comp-tipo-row">
-          <span>¿Qué vendés?</span>
-          <button class="iva-btn active" id="comp-tipo-general" onclick="setCompTipo('general')">Producto / servicio</button>
-          <button class="iva-btn" id="comp-tipo-alimento" onclick="setCompTipo('alimento')">Alimento / delivery</button>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="comp-table" id="comp-table">
-            <thead><tr><th>Plataforma</th><th>Comisión</th><th>Precio a publicar</th><th>Tu ganancia</th></tr></thead>
-            <tbody id="comp-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <button class="pdf-btn" id="pdf-btn" onclick="exportarPDF()">Exportar resultado en PDF</button>
     </div>
-    <div class="error-msg" id="error-calc">Completá costo, margen y comisión para ver el resultado.</div>
-  </div>
+  </section>
 
-  <!-- TAB: MEDIOS DE PAGO -->
-  <div id="tab-medios" class="panel">
+  <!-- ============ MEDIOS DE PAGO ============ -->
+  <section class="panel" id="medios">
+    <h2 class="section-title">Precio por cada medio de pago</h2>
+    <p class="section-sub">Poné tu precio en efectivo y mirá cuánto tenés que cobrar en cada medio para que te quede lo mismo en el bolsillo. Sin perder por las comisiones.</p>
 
     <div class="card">
-      <div class="section-title">Precio base (contado / efectivo)</div>
-      <div class="field-row">
-        <label class="field-label">¿Cuánto cobrás en efectivo o transferencia?</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="m-base" placeholder="ej: 10000" oninput="calcMedios()"></div>
-        <div class="field-hint">Este es tu precio de referencia. La tabla te muestra cuánto cobrar en cada otro medio para llevarte lo mismo.</div>
+      <div class="card-h">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        <div><h3>Tu precio de contado</h3><p>El de la lista, en efectivo</p></div>
       </div>
-    </div>
-
-    <div class="card" style="padding:0;overflow:hidden">
-      <div style="padding:16px 20px 10px;display:flex;justify-content:space-between;align-items:center">
-        <div class="section-title" style="margin-bottom:0">Precios por medio de pago</div>
-        <button class="add-btn" style="width:auto;margin:0;padding:6px 12px" onclick="addMedioPago()">+ Agregar método</button>
-      </div>
-      <div class="medios-wrap" style="border:none;border-top:1px solid #e8e8e0;border-radius:0">
-        <table class="medios-table">
-          <thead>
-            <tr>
-              <th>Medio de pago</th>
-              <th>Comisión</th>
-              <th>Precio a cobrar</th>
-              <th>Recargo</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="medios-body"></tbody>
-        </table>
-      </div>
-      <div style="padding:12px 20px 16px">
-        <button class="pdf-btn" onclick="exportarPDFMedios()" style="margin-top:0">Exportar lista de precios en PDF</button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- TAB: COMPRA MIXTA -->
-  <div id="tab-mixta" class="panel">
-
-    <div class="card">
-      <div class="section-title">Compra mixta: blanco + negro</div>
-      <p style="font-size:13px;color:#666;margin-bottom:20px;line-height:1.5">Calculá el costo real cuando comprás una parte con factura (con IVA) y otra en efectivo sin factura. Ideal para comercios que compran a mayoristas que facturan solo una parte.</p>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="mixta-grid">
-
-        <!-- Blanco -->
-        <div style="background:#f8f8f4;border-radius:10px;padding:16px;border:1px solid #e8e8e0">
-          <div style="font-size:13px;font-weight:700;color:#085041;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-            <span style="background:#085041;color:#fff;border-radius:4px;padding:1px 7px;font-size:11px">EN BLANCO</span> Con factura
-          </div>
-          <div class="field-row" style="margin-bottom:10px">
-            <label class="field-label">Precio en la factura</label>
-            <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="mx-precio-blanco" placeholder="ej: 5000" oninput="calcMixta()"></div>
-          </div>
-          <div class="field-row" style="margin-bottom:10px">
-            <label class="field-label">¿El precio de la factura ya tiene IVA?</label>
-            <div style="display:flex;gap:8px;margin-top:6px">
-              <button class="iva-btn active" id="mx-iva-si" onclick="setMxtIva('si')">Sí, tiene IVA</button>
-              <button class="iva-btn" id="mx-iva-no" onclick="setMxtIva('no')">No, es neto</button>
-            </div>
-            <div id="mx-iva-wrap" style="margin-top:8px;display:flex;gap:8px">
-              <button class="iva-btn active" id="mx-iva-21" onclick="setMxtIvaTasa('21')">IVA 21%</button>
-              <button class="iva-btn" id="mx-iva-105" onclick="setMxtIvaTasa('105')">IVA 10.5%</button>
-            </div>
-          </div>
-          <div class="field-row">
-            <label class="field-label">Unidades</label>
-            <div class="input-wrap"><span class="input-prefix">#</span><input type="number" id="mx-uds-blanco" placeholder="ej: 50" oninput="calcMixta()" min="0"></div>
-          </div>
-        </div>
-
-        <!-- Negro -->
-        <div style="background:#f8f8f4;border-radius:10px;padding:16px;border:1px solid #e8e8e0">
-          <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-            <span style="background:#555;color:#fff;border-radius:4px;padding:1px 7px;font-size:11px">EN NEGRO</span> Sin factura
-          </div>
-          <div class="field-row" style="margin-bottom:10px">
-            <label class="field-label">Precio que pagás en mano</label>
-            <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="mx-precio-negro" placeholder="ej: 4500" oninput="calcMixta()"></div>
-          </div>
-          <div class="field-hint" style="margin-bottom:10px">El precio en negro no tiene IVA — es costo directo.</div>
-          <div class="field-row">
-            <label class="field-label">Unidades</label>
-            <div class="input-wrap"><span class="input-prefix">#</span><input type="number" id="mx-uds-negro" placeholder="ej: 50" oninput="calcMixta()" min="0"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="mixta-resultado" style="display:none">
-      <div class="card" style="background:linear-gradient(135deg,#085041,#1D9E75);border:none">
-        <div style="color:#5DCAA5;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Costo promedio por unidad</div>
-        <div id="mx-costo-promedio" style="font-size:36px;font-weight:800;color:#fff;margin-bottom:16px">—</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" class="mixta-res-grid">
-          <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:12px">
-            <div style="font-size:11px;color:#a8e6cf;margin-bottom:4px">Costo blanco c/IVA</div>
-            <div id="mx-res-blanco" style="font-size:15px;font-weight:700;color:#fff">—</div>
-          </div>
-          <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:12px">
-            <div style="font-size:11px;color:#a8e6cf;margin-bottom:4px">Costo negro</div>
-            <div id="mx-res-negro" style="font-size:15px;font-weight:700;color:#fff">—</div>
-          </div>
-          <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:12px">
-            <div style="font-size:11px;color:#a8e6cf;margin-bottom:4px">Total unidades</div>
-            <div id="mx-res-uds" style="font-size:15px;font-weight:700;color:#fff">—</div>
-          </div>
-        </div>
-        <button onclick="usarCostoMixto()" style="margin-top:16px;width:100%;padding:11px;background:#fff;color:#085041;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Usar este costo en la calculadora →</button>
-      </div>
-    </div>
-    <div class="error-msg" id="error-mixta" style="display:none">Completá precios y unidades de ambas partes para ver el resultado.</div>
-
-  </div>
-
-  <!-- TAB: PRECIO DE SERVICIO -->
-  <div id="tab-serv" class="panel">
-
-    <div class="card">
-      <div class="section-title">¿Cuánto necesitás ganar?</div>
-      <div class="field-row">
-        <label class="field-label">Ingreso neto deseado por mes</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="s-ingreso" placeholder="ej: 500000" oninput="calcServ()"></div>
-        <div class="field-hint">Lo que querés llevarte vos después de pagar todo (impuestos, gastos, plataforma).</div>
-      </div>
-      <div class="field-row">
-        <label class="field-label">Categoría Monotributo</label>
-        <select id="s-monotributo" class="select-field" onchange="calcServ()">
-          <option value="0">No inscripto / Exento</option>
-          <option value="42400">Categoría A — $42.400/mes</option>
-          <option value="48250">Categoría B — $48.250/mes</option>
-          <option value="56500">Categoría C — $56.500/mes</option>
-          <option value="72400">Categoría D — $72.400/mes</option>
-          <option value="102500">Categoría E — $102.500/mes</option>
-          <option value="129000">Categoría F — $129.000/mes</option>
-          <option value="197100">Categoría G — $197.100/mes</option>
-          <option value="447300">Categoría H — $447.300/mes</option>
-          <option value="824800">Categoría I — $824.800/mes</option>
-          <option value="999000">Categoría J — $999.000/mes</option>
-          <option value="1381700">Categoría K — $1.381.700/mes</option>
-          <option value="0">Responsable Inscripto (sin cuota fija)</option>
-        </select>
-        <div class="field-hint">Cuotas actualizadas abril 2026 para servicios. Si no sabés tu categoría, elegí la que más se acerque a tu facturación anual.</div>
+      <div class="field">
+        <label>Precio base (efectivo)</label>
+        <div class="in"><span class="pre" id="pre2">$</span><input type="number" id="base" value="20000" min="0" inputmode="decimal" placeholder="Ej: 20000" /></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="section-title">Tu tiempo</div>
-      <div class="field-row">
-        <label class="field-label">Horas de trabajo por mes</label>
-        <div class="input-wrap"><span class="input-prefix">hs</span><input type="number" id="s-horas-total" placeholder="160" value="160" oninput="calcServ()"></div>
-        <div class="field-hint">Días hábiles × horas por día. Un mes típico tiene 160-180 horas.</div>
+      <div class="card-h">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 9h20"/></svg></span>
+        <div><h3>¿Cuánto cobrar en cada uno?</h3><p>Para que te quede lo mismo</p></div>
       </div>
-      <div class="field-row">
-        <label class="field-label">Tiempo NO facturable (reuniones, admin, conseguir clientes)</label>
-        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="s-no-facturable" placeholder="40" value="40" oninput="calcServ()"></div>
-        <div class="field-hint">Promedio real: 40-50% del tiempo. Si arrancás, subilo a 50% porque al principio conseguir clientes lleva mucho tiempo.</div>
-      </div>
-      <div id="s-horas-info" style="display:none;background:#f8f8f4;border-radius:8px;padding:12px;font-size:13px;color:#666;margin-top:4px">
-        Te quedan <strong id="s-horas-fact" style="color:#1D9E75"></strong> horas facturables por mes.
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Gastos fijos del negocio (por mes)</div>
-      <div id="s-gastos-items"></div>
-      <button class="add-btn" onclick="addGastoItem()">+ Agregar gasto</button>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Cómo cobrás</div>
-      <div class="field-row">
-        <label class="field-label">Comisión del medio de cobro</label>
-        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="s-comision" placeholder="ej: 0" value="0" step="0.01" oninput="calcServ()"></div>
-        <div class="field-hint">Transferencia bancaria: 0%. Mercado Pago: ~3%. Workana/Fiverr: 20%. Tarjeta 1 pago: ~2%.</div>
-      </div>
-      <div class="field-row">
-        <label class="field-label">Provincia (IIBB)</label>
-        <select id="s-iibb" class="select-field" onchange="calcServ()">
-          <option value="0">No aplica / No inscripto en IIBB</option>
-          <option value="3">CABA — 3%</option>
-          <option value="3.5">Buenos Aires — 3,5%</option>
-          <option value="3">Córdoba — 3%</option>
-          <option value="3.5">Santa Fe — 3,5%</option>
-          <option value="3">Mendoza — 3%</option>
-          <option value="3">Tucumán — 3%</option>
-          <option value="3">Entre Ríos — 3%</option>
-          <option value="3.5">Misiones — 3,5%</option>
-          <option value="3.5">Salta — 3,5%</option>
-          <option value="3.5">Chaco — 3,5%</option>
-          <option value="3">Corrientes — 3%</option>
-          <option value="3.5">Santiago del Estero — 3,5%</option>
-          <option value="3">San Juan — 3%</option>
-          <option value="3">Jujuy — 3%</option>
-          <option value="3">Río Negro — 3%</option>
-          <option value="3">Neuquén — 3%</option>
-          <option value="3">Formosa — 3%</option>
-          <option value="3">Chubut — 3%</option>
-          <option value="2">San Luis — 2%</option>
-          <option value="3">Catamarca — 3%</option>
-          <option value="3">La Rioja — 3%</option>
-          <option value="3">Santa Cruz — 3%</option>
-          <option value="3">La Pampa — 3%</option>
-          <option value="0">Tierra del Fuego — 0%</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="serv-resultados" style="display:none">
-      <div class="results">
-        <div class="result-row"><span class="result-label">Ingreso deseado</span><span class="result-val" id="sr-ingreso">—</span></div>
-        <div class="result-row"><span class="result-label">Gastos fijos</span><span class="result-val" id="sr-gastos">—</span></div>
-        <div class="result-row" id="sr-mono-row"><span class="result-label">Cuota Monotributo</span><span class="result-val" id="sr-mono">—</span></div>
-        <div class="result-row"><span class="result-label">Total a facturar por mes</span><span class="result-val" id="sr-total-fact" style="font-weight:600">—</span></div>
-        <div class="result-row"><span class="result-label">Horas facturables</span><span class="result-val" id="sr-horas">—</span></div>
-      </div>
-
-      <div class="result-big" style="margin-top:12px">
-        <div>
-          <div class="result-big-label">Precio hora mínimo</div>
-          <div class="result-big-sub">Para no perder plata</div>
-        </div>
-        <div class="result-big-val" id="sr-precio-min">—</div>
-      </div>
-
-      <div class="result-big" style="margin-top:8px;background:#085041">
-        <div>
-          <div class="result-big-label" style="color:#5DCAA5">Precio hora recomendado</div>
-          <div class="result-big-sub" style="color:#5DCAA5">Con 30% de colchón</div>
-        </div>
-        <div class="result-big-val" id="sr-precio-rec">—</div>
-      </div>
-
-      <div class="insight" id="sr-insight"></div>
-
-      <div class="card" style="margin-top:14px">
-        <div class="section-title">Estimador de proyecto</div>
-        <div class="field-row">
-          <label class="field-label">¿Cuántas horas tiene el proyecto?</label>
-          <div class="input-wrap"><span class="input-prefix">hs</span><input type="number" id="s-proyecto-hs" placeholder="ej: 20" oninput="calcProyecto()"></div>
-        </div>
-        <div id="s-proyecto-result" style="display:none;margin-top:12px">
-          <div class="result-row"><span class="result-label">Precio mínimo del proyecto</span><span class="result-val" id="sp-min">—</span></div>
-          <div class="result-row" style="border:none"><span class="result-label" style="font-weight:600">Precio recomendado del proyecto</span><span class="result-val" id="sp-rec" style="font-size:18px;color:#085041;font-weight:700">—</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="error-msg" id="error-serv">Completá ingreso deseado y horas para ver el resultado.</div>
-
-  </div>
-
-  <!-- TAB: IMPORTACION -->
-  <div id="tab-import" class="panel">
-
-    <div class="card" style="background:#fafaf5;border-color:#e8e8d8">
-      <button class="explainer-toggle" onclick="toggleExplainer()" id="explainerBtn">
-        <span style="font-size:15px;font-weight:600;color:#1a1a1a">¿Cómo se calcula el costo de importación?</span>
-        <span id="explainerArrow" style="color:#1D9E75;font-size:18px;transition:transform 0.2s">▼</span>
-      </button>
-      <div id="explainerContent" style="display:none;margin-top:14px">
-
-        <p style="font-size:14px;color:#444;line-height:1.6;margin-bottom:14px">El costo real de un producto importado <strong>no es lo que pagás al proveedor</strong>. Es todo lo que ponés para que el producto llegue a tu depósito listo para vender.</p>
-
-        <div class="explain-step">
-          <div class="explain-num">1</div>
-          <div>
-            <div class="explain-title">Precio FOB (lo que le pagás al proveedor)</div>
-            <div class="explain-text">FOB significa "Free On Board" — el precio del producto puesto en el puerto de origen. No incluye flete ni impuestos argentinos.</div>
-          </div>
-        </div>
-
-        <div class="explain-step">
-          <div class="explain-num">2</div>
-          <div>
-            <div class="explain-title">Flete internacional (5-12% del FOB típico)</div>
-            <div class="explain-text">Lo que cuesta traer la mercadería de China, EE.UU., Brasil, etc. hasta el puerto argentino. Por barco es más barato (más lento), por avión más caro (más rápido).</div>
-          </div>
-        </div>
-
-        <div class="explain-step">
-          <div class="explain-num">3</div>
-          <div>
-            <div class="explain-title">Aranceles de importación (0-35%)</div>
-            <div class="explain-text">Impuesto que cobra la Aduana cuando ingresa el producto. Depende de la categoría: electrónica suele ser ~16%, ropa ~35%, libros 0%. Se busca por código NCM.</div>
-          </div>
-        </div>
-
-        <div class="explain-step">
-          <div class="explain-num">4</div>
-          <div>
-            <div class="explain-title">Tasa estadística (3%) e IVA aduana (21%)</div>
-            <div class="explain-text">La tasa estadística va al gobierno por registrar la operación. El IVA de aduana se paga al ingresar — si sos Responsable Inscripto lo descontás después, si no, queda como costo.</div>
-          </div>
-        </div>
-
-        <div class="explain-step">
-          <div class="explain-num">5</div>
-          <div>
-            <div class="explain-title">Despachante de aduana (~2% o monto fijo)</div>
-            <div class="explain-text">Es el gestor que hace todo el trámite con la Aduana. No es opcional: sin despachante no podés sacar la mercadería del puerto.</div>
-          </div>
-        </div>
-
-        <div class="explain-step">
-          <div class="explain-num">6</div>
-          <div>
-            <div class="explain-title">Costos hormiga (flete local, depósito, packaging)</div>
-            <div class="explain-text">Llevarlo del puerto a tu depósito, almacenamiento si tarda en salir, reembalaje. Parece poco, pero suma.</div>
-          </div>
-        </div>
-
-        <div style="background:#e8f7f1;border-radius:8px;padding:14px;margin-top:14px">
-          <div style="font-size:13px;font-weight:600;color:#0F6E56;margin-bottom:8px">Ejemplo simple</div>
-          <div style="font-size:13px;color:#0F6E56;line-height:1.7">
-            Importás 100 mochilas a USD 10 cada una desde China:<br>
-            • FOB: USD 1.000<br>
-            • Flete (8%): USD 80<br>
-            • Aranceles (16%): USD 160<br>
-            • Tasa estadística (3%): USD 30<br>
-            • Despachante: USD 50<br>
-            • Flete local: USD 30<br>
-            <strong style="display:block;margin-top:6px">Costo final: USD 1.350 → USD 13,50 por mochila</strong>
-            La mochila no te costó USD 10, te costó USD 13,50. Vender pensando en USD 10 = perder plata.
-          </div>
-        </div>
-
-        <p style="font-size:12px;color:#888;margin-top:14px;font-style:italic">⚠️ Estos porcentajes son aproximados. El % real depende del producto, origen y categoría arancelaria. Para cifras exactas, consultá con un despachante.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Precio de origen</div>
-      <div class="field-row">
-        <label class="field-label">Costo FOB / precio al proveedor (por unidad)</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="fob" placeholder="0" oninput="calcImp()"></div>
-      </div>
-      <div class="field-row">
-        <label class="field-label">Cantidad de unidades</label>
-        <div class="input-wrap"><span class="input-prefix">#</span><input type="number" id="qty" placeholder="1" value="1" oninput="calcImp()"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Costos adicionales</div>
-      <div id="imp-items"></div>
-      <button class="add-btn" onclick="addImpItem()">+ Agregar ítem</button>
-      <div style="font-size:12px;color:#aaa">Podés cargar en % sobre el FOB total o en $ fijo</div>
-    </div>
-
-    <div class="imp-total" id="imp-total" style="display:none">
-      <div class="imp-total-label">Costo unitario final (landed cost)</div>
-      <div class="imp-total-val" id="imp-total-val">—</div>
-      <div class="imp-total-sub" id="imp-total-sub"></div>
-      <button class="use-btn" onclick="usarEnCalc()">Usar este costo en la calculadora →</button>
-    </div>
-  </div>
-
-  <!-- TAB: MIS PRODUCTOS -->
-  <div id="tab-prods" class="panel">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="section-title" style="margin-bottom:0">Mis productos guardados</div>
-        <div id="prods-plan-badge"></div>
-      </div>
-      <div class="prods-toolbar" id="prods-toolbar" style="display:none">
-        <button class="toolbar-btn" onclick="mostrarListaPrecios()">📋 Lista de precios <span class="pro-badge">PRO</span></button>
-        <button class="toolbar-btn" onclick="exportarCSV()">⬇ Exportar Excel <span class="pro-badge">PRO</span></button>
-      </div>
-      <div id="prods-list">
-        <div class="empty-state">Todavía no guardaste ningún producto.<br>Calculá un precio y usá el botón "Guardar producto".</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB: MARKUP VS MARGEN -->
-  <div id="tab-conv" class="panel">
-    <div class="card">
-      <div class="section-title">Convertir markup → margen</div>
-      <div class="field-row">
-        <label class="field-label">Markup que tenés (% que le sumás al costo)</label>
-        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="markup-in" placeholder="ej: 80" oninput="convertMarkup()"></div>
-      </div>
-      <div id="markup-result" style="display:none">
-        <div class="conv-box">
-          <div class="conv-label">Tu margen real es</div>
-          <div class="conv-result" id="markup-out">—</div>
-        </div>
-        <div class="insight" id="markup-insight"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Convertir margen → markup</div>
-      <div class="field-row">
-        <label class="field-label">Margen que querés lograr</label>
-        <div class="input-wrap"><span class="input-prefix">%</span><input type="number" id="margen-in" placeholder="ej: 35" oninput="convertMargen()"></div>
-      </div>
-      <div id="margen-result" style="display:none">
-        <div class="conv-box">
-          <div class="conv-label">Necesitás un markup de</div>
-          <div class="conv-result" id="margen-out">—</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Tabla de equivalencias</div>
-      <table class="markup-table">
-        <thead><tr><th>Markup</th><th>Margen real</th><th>Qué significa</th></tr></thead>
-        <tbody id="equiv-table"></tbody>
+      <table class="tbl">
+        <thead><tr><th>Medio</th><th>Comisión</th><th>Cobrás</th></tr></thead>
+        <tbody id="mediosBody"></tbody>
       </table>
     </div>
-  </div>
+  </section>
+
+  <!-- ============ MIS PRODUCTOS ============ -->
+  <section class="panel" id="prod">
+    <h2 class="section-title">Mis productos</h2>
+    <p class="section-sub">Tu lista de precios calculados, siempre a mano. Se guardan en este dispositivo. Llevátela en PDF para imprimir o en Excel para seguir trabajándola.</p>
+
+    <div class="card">
+      <div class="plist" id="plist"></div>
+      <div class="export">
+        <button id="expPdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 18h4"/></svg> Bajar PDF</button>
+        <button id="expCsv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13l3 5M11 13l-3 5"/></svg> Bajar Excel</button>
+      </div>
+    </div>
+
+    <!-- PREMIUM upsell -->
+    <div class="premium">
+      <div class="tagline">Costito Premium</div>
+      <h3>Sumá importación, compra mixta y precio de tus servicios</h3>
+      <p>Desbloqueá la calculadora de importación (FOB + flete + aranceles), la compra en blanco y negro, y el precio por hora si sos freelance. Te lo activamos por WhatsApp en 2 minutos.</p>
+      <a class="wa" id="waBtn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.1-.3.2-.5s0-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.7.7-.9 1.6-.6 2.6.4 1.5 1.4 2.8 2.7 3.7 1 .7 2.1 1.1 3.2 1.2.5 0 1-.1 1.4-.4.4-.3.7-.8.8-1.2.1-.2 0-.4-.1-.5z"/></svg>
+        Hablar por WhatsApp
+      </a>
+    </div>
+
+    <footer class="foot">
+      Hecho en Argentina, para los que la pelean todos los días. <br/>
+      <b>Costito</b> · calculá tranquilo, vendé seguro. · <span id="comDate"></span>
+    </footer>
+  </section>
+
+  <!-- ============ PANELES PREMIUM (gated) ============ -->
+  <section class="panel" id="import">
+    <h2 class="section-title">Costo de importación</h2>
+    <p class="section-sub">FOB, flete, aranceles, tasa estadística, IVA aduana y despachante. Te calculamos el costo real puesto en tu depósito.</p>
+    <div class="card" id="gate-import"></div>
+  </section>
+
+  <section class="panel" id="mixta">
+    <h2 class="section-title">Compra mixta (blanco y negro)</h2>
+    <p class="section-sub">Cuando una parte va con factura y otra no, el costo promedio cambia. Te lo calculamos sin que tengas que hacer la cuenta a mano.</p>
+    <div class="card" id="gate-mixta"></div>
+  </section>
+
+  <section class="panel" id="servicios">
+    <h2 class="section-title">Precio de tus servicios</h2>
+    <p class="section-sub">Si trabajás por hora o por proyecto, calculá cuánto cobrar contemplando monotributo, horas reales y la ganancia que querés.</p>
+    <div class="card" id="gate-servicios"></div>
+  </section>
 
 </div>
 
-<script>
-const CANALES = {
-  online: [
-    {id:'ml_arg', name:'Mercado Libre AR', com:14, ivaDefault:false},
-    {id:'tiendanube', name:'Tienda Nube', com:5, ivaDefault:false},
-    {id:'rappi', name:'Rappi', com:30, ivaDefault:false, tipo:'delivery'},
-    {id:'pedidosya', name:'PedidosYa', com:28, ivaDefault:false, tipo:'delivery'},
-    {id:'online_custom', name:'Personalizado', com:null, ivaDefault:false}
-  ],
-  local: [
-    {id:'efectivo', name:'Efectivo', com:0, ivaDefault:false},
-    {id:'cuentadni', name:'Cuenta DNI', com:0.6, ivaDefault:false},
-    {id:'nave', name:'Nave (Galicia)', ivaDefault:true, submenu:[
-      {id:'sal', name:'Saldo / QR', com:0.8},
-      {id:'deb', name:'Débito', com:0.8},
-      {id:'c1', name:'Crédito 1 pago', com:1.8},
-      {id:'c3', name:'Crédito 3 cuotas', com:2.5},
-      {id:'c6', name:'Crédito 6 cuotas', com:3.5},
-      {id:'c12', name:'Crédito 12 cuotas', com:4.5}
-    ]},
-    {id:'mp_qr', name:'Mercado Pago QR', ivaDefault:true, submenu:[
-      {id:'sal', name:'Saldo MP', com:0.6},
-      {id:'deb', name:'Débito', com:0.8},
-      {id:'c1', name:'Crédito 1 pago', com:2.99},
-      {id:'c3', name:'Crédito 3 cuotas', com:3.49},
-      {id:'c6', name:'Crédito 6 cuotas', com:3.99},
-      {id:'c12', name:'Crédito 12 cuotas', com:4.49}
-    ]},
-    {id:'modo', name:'Modo', ivaDefault:true, submenu:[
-      {id:'sal', name:'Saldo / QR', com:0.8},
-      {id:'deb', name:'Débito', com:1.2},
-      {id:'c1', name:'Crédito 1 pago', com:2.99}
-    ]},
-    {id:'credicoop', name:'Credicoop / SiPago', ivaDefault:true, submenu:[
-      {id:'deb', name:'Débito', com:0.8},
-      {id:'c1', name:'Crédito 1 pago', com:1.8},
-      {id:'c3', name:'Crédito 3 cuotas', com:2.5}
-    ]},
-    {id:'posnet', name:'Posnet tradicional', ivaDefault:true, submenu:[
-      {id:'deb', name:'Débito', com:1.5},
-      {id:'c1', name:'Crédito 1 pago', com:1.8},
-      {id:'c3', name:'Crédito 3 cuotas', com:3.5},
-      {id:'c6', name:'Crédito 6 cuotas', com:5.5},
-      {id:'c12', name:'Crédito 12 cuotas', com:7.5}
-    ]},
-    {id:'local_custom', name:'Personalizado', com:null, ivaDefault:true}
-  ]
-};
-
-let modalidad = 'online';
-let selectedCanal = null;
-let selectedSub = null;
-let ivaCosto = 'no';
-let compTipo = 'general';
-let todosLosProductos = [];
-let filtroCategoria = null;
-
-function setIvaCosto(v){
-  ivaCosto = v;
-  ['no','21','105'].forEach(x => document.getElementById('iva-'+x).classList.toggle('active', x === v));
-  calcular();
-}
-
-let impItems = [
-  {id:1, label:'Flete internacional', tipo:'pct', valor:8},
-  {id:2, label:'Aranceles de importación', tipo:'pct', valor:16},
-  {id:3, label:'Tasa estadística', tipo:'pct', valor:3},
-  {id:4, label:'IVA aduana (si no descontás)', tipo:'pct', valor:0},
-  {id:5, label:'Despachante', tipo:'pct', valor:2},
-  {id:6, label:'Flete local + almacenamiento', tipo:'fijo', valor:0}
-];
-let nextId = 10;
-
-function fmt(n){
-  return '$' + n.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-function pct(n){return n.toFixed(2) + '%'}
-
-function setModalidad(m){
-  modalidad = m;
-  document.getElementById('mod-online').classList.toggle('active', m === 'online');
-  document.getElementById('mod-local').classList.toggle('active', m === 'local');
-  selectedCanal = null;
-  selectedSub = null;
-  document.getElementById('comision').value = '';
-  document.getElementById('comIva').checked = false;
-  buildCanales();
-  document.getElementById('submenuContainer').innerHTML = '';
-  selectCanal(CANALES[m][0]);
-}
-
-function buildCanales(){
-  const g = document.getElementById('plataformasGrid');
-  g.innerHTML = '';
-  CANALES[modalidad].forEach(c => {
-    const b = document.createElement('button');
-    b.className = 'plat-btn';
-    b.id = 'plat-' + c.id;
-    let comStr;
-    if(c.submenu) comStr = 'Elegí medio de pago';
-    else if(c.com === null) comStr = 'Ingresá %';
-    else if(c.com === 0) comStr = 'Sin comisión';
-    else comStr = c.com + '% ' + (c.ivaDefault ? '+ IVA' : '');
-    b.innerHTML = '<div class="plat-name">' + c.name + '</div><div class="plat-com">' + comStr + '</div>';
-    b.onclick = function(){ selectCanal(c); };
-    g.appendChild(b);
-  });
-}
-
-function selectCanal(c){
-  selectedCanal = c;
-  selectedSub = null;
-  document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('plat-' + c.id);
-  if(btn) btn.classList.add('active');
-
-  document.getElementById('comIva').checked = c.ivaDefault || false;
-
-  const sc = document.getElementById('submenuContainer');
-  if(c.submenu){
-    let html = '<div class="submenu"><div class="submenu-label">Medio de pago</div><div class="submenu-grid">';
-    c.submenu.forEach(s => {
-      html += '<button class="sub-btn" id="sub-' + s.id + '" onclick="selectSub(\'' + s.id + '\')">' + s.name + '<br><span style="font-size:11px;opacity:0.85">' + s.com + '%</span></button>';
-    });
-    html += '</div></div>';
-    sc.innerHTML = html;
-    selectSub(c.submenu[0].id);
-  } else {
-    sc.innerHTML = '';
-    if(c.com !== null){
-      document.getElementById('comision').value = c.com;
-    } else {
-      document.getElementById('comision').value = '';
-      document.getElementById('comision').focus();
-    }
-    calcular();
-  }
-}
-
-function selectSub(subId){
-  selectedSub = subId;
-  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('sub-' + subId);
-  if(btn) btn.classList.add('active');
-  const sub = selectedCanal.submenu.find(s => s.id === subId);
-  if(sub){
-    document.getElementById('comision').value = sub.com;
-  }
-  calcular();
-}
-
-function calcular(){
-  const costoBase = parseFloat(document.getElementById('costo').value);
-  const margen = parseFloat(document.getElementById('margen').value) / 100;
-  const comNominal = parseFloat(document.getElementById('comision').value) / 100;
-  const comIva = document.getElementById('comIva').checked;
-  const err = document.getElementById('error-calc');
-  const res = document.getElementById('resultados');
-
-  if(isNaN(costoBase) || isNaN(margen) || isNaN(comNominal) || costoBase <= 0){
-    err.style.display = 'block';
-    err.textContent = 'Completá costo, margen y comisión para ver el resultado.';
-    res.style.display = 'none';
-    return;
-  }
-
-  const ivaRate = ivaCosto === '21' ? 0.21 : ivaCosto === '105' ? 0.105 : 0;
-  const ivaMontoBase = costoBase * ivaRate;
-  const costo = costoBase + ivaMontoBase;
-
-  const iibbRate = parseFloat(document.getElementById('iibb-provincia').value) / 100 || 0;
-  const comEfectiva = comIva ? comNominal * 1.21 : comNominal;
-  const divisor = 1 - comEfectiva - margen - iibbRate;
-
-  if(divisor <= 0){
-    err.textContent = 'La suma de comisión + IIBB + margen supera el 100%. Bajá el margen o cambiá el canal.';
-    err.style.display = 'block';
-    res.style.display = 'none';
-    return;
-  }
-  err.style.display = 'none';
-
-  const precio = costo / divisor;
-  const comisionMonto = precio * comEfectiva;
-  const iibbMonto = precio * iibbRate;
-  const ganancia = precio - costo - comisionMonto - iibbMonto;
-
-  document.getElementById('r-costo').textContent = fmtC(costoBase);
-  const ivaRow = document.getElementById('r-iva-row');
-  const costoTotalRow = document.getElementById('r-costo-total-row');
-  if(ivaRate > 0){
-    document.getElementById('r-iva-label').textContent = 'IVA ' + (ivaCosto === '21' ? '21%' : '10,5%') + ' sobre el costo';
-    document.getElementById('r-iva-monto').textContent = '+' + fmtC(ivaMontoBase);
-    document.getElementById('r-costo-total').textContent = fmtC(costo);
-    ivaRow.style.display = 'flex';
-    costoTotalRow.style.display = 'flex';
-  } else {
-    ivaRow.style.display = 'none';
-    costoTotalRow.style.display = 'none';
-  }
-  document.getElementById('r-com-nom').textContent = pct(comNominal * 100);
-
-  const efeRow = document.getElementById('r-com-efe-row');
-  if(comIva){
-    efeRow.style.display = 'flex';
-    document.getElementById('r-com-efe').textContent = pct(comEfectiva * 100);
-  } else {
-    efeRow.style.display = 'none';
-  }
-
-  document.getElementById('r-com-monto').textContent = fmtC(comisionMonto);
-  const iibbRow = document.getElementById('r-iibb-row');
-  if(iibbRate > 0){
-    const sel = document.getElementById('iibb-provincia');
-    const provName = sel.options[sel.selectedIndex].text.split(' — ')[0];
-    document.getElementById('r-iibb-label').textContent = 'IIBB ' + provName;
-    document.getElementById('r-iibb-monto').textContent = '-' + fmtC(iibbMonto);
-    iibbRow.style.display = 'flex';
-  } else {
-    iibbRow.style.display = 'none';
-  }
-  document.getElementById('r-ganancia').textContent = fmt(ganancia) + ' (' + pct(margen * 100) + ' del precio)';
-  document.getElementById('r-publicado').textContent = fmt(precio);
-
-  const platName = selectedCanal ? selectedCanal.name : 'la plataforma';
-  let subStr = '';
-  if(selectedCanal && selectedCanal.submenu && selectedSub){
-    const sub = selectedCanal.submenu.find(s => s.id === selectedSub);
-    if(sub) subStr = ' · ' + sub.name;
-  }
-  document.getElementById('r-publicado-sub').textContent = platName + subStr;
-
-  let insightStr = 'De cada ' + fmt(precio) + ' que cobrás, ' + platName + ' se queda con ' + fmt(comisionMonto);
-  if(iibbRate > 0) insightStr += ', IIBB se lleva ' + fmt(iibbMonto);
-  insightStr += ', tu costo es ' + fmt(costo) + ' y tu ganancia neta es ' + fmt(ganancia) + '.';
-  if(comIva) insightStr += ' La comisión nominal es ' + pct(comNominal * 100) + ', pero con IVA pagás ' + pct(comEfectiva * 100) + '.';
-  document.getElementById('insight-msg').textContent = insightStr;
-
-  res.style.display = 'block';
-  buildComparadorTable(costo, margen, iibbRate, comIva);
-}
-
-function buildComparadorTable(costo, margen, iibbRate, comIva){
-  const tbody = document.getElementById('comp-body');
-  tbody.innerHTML = '';
-  const filas = [];
-  const todos = CANALES.online.concat(CANALES.local);
-  todos.forEach(function(c){
-    if(c.com === null) return;
-    if(c.tipo === 'delivery' && compTipo !== 'alimento') return;
-    if(c.submenu){
-      c.submenu.forEach(function(s){
-        filas.push({name: c.name + ' · ' + s.name, com: s.com, ivaDefault: c.ivaDefault});
-      });
-    } else {
-      filas.push({name: c.name, com: c.com, ivaDefault: c.ivaDefault});
-    }
-  });
-  let minPrecio = Infinity, maxGanancia = -Infinity;
-  const rows = filas.map(function(f){
-    const comEf = (comIva || f.ivaDefault) ? f.com/100 * 1.21 : f.com/100;
-    const div = 1 - comEf - margen - iibbRate;
-    if(div <= 0) return null;
-    const precio = costo / div;
-    const ganancia = precio - costo - precio*comEf - precio*iibbRate;
-    if(precio < minPrecio) minPrecio = precio;
-    if(ganancia > maxGanancia) maxGanancia = ganancia;
-    return {name: f.name, com: f.com, precio, ganancia};
-  });
-  rows.forEach(function(r){
-    if(!r) return;
-    const tr = document.createElement('tr');
-    const isBest = Math.abs(r.ganancia - maxGanancia) < 0.01;
-    if(isBest) tr.className = 'best';
-    tr.innerHTML = '<td>' + r.name + (isBest ? '<span class="comp-badge">mejor</span>' : '') + '</td>'
-      + '<td>' + r.com + '%</td>'
-      + '<td>' + fmt(r.precio) + '</td>'
-      + '<td>' + fmt(r.ganancia) + '</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-function toggleComparador(){
-  const c = document.getElementById('comparador-content');
-  const a = document.getElementById('comp-arrow');
-  const open = c.style.display !== 'none';
-  c.style.display = open ? 'none' : 'block';
-  a.textContent = open ? '▼' : '▲';
-}
-
-function exportarPDF(){
-  document.body.classList.add('printing-pdf');
-  window.print();
-  document.body.classList.remove('printing-pdf');
-}
-
-function renderImpItems(){
-  const c = document.getElementById('imp-items');
-  c.innerHTML = '';
-  impItems.forEach(function(item){
-    const d = document.createElement('div');
-    d.className = 'imp-item';
-    d.innerHTML = '<input type="text" placeholder="Concepto" value="' + item.label + '" oninput="updateImpLabel(' + item.id + ',this.value)">'
-      + '<select onchange="updateImpTipo(' + item.id + ',this.value)"><option value="pct"' + (item.tipo === 'pct' ? ' selected' : '') + '>%</option><option value="fijo"' + (item.tipo === 'fijo' ? ' selected' : '') + '>$</option></select>'
-      + '<input type="number" value="' + item.valor + '" placeholder="0" oninput="updateImpValor(' + item.id + ',this.value)">'
-      + '<button class="remove-btn" onclick="removeImpItem(' + item.id + ')">×</button>';
-    c.appendChild(d);
-  });
-}
-
-function updateImpLabel(id, v){ var i = impItems.find(x => x.id === id); if(i) i.label = v; }
-function updateImpTipo(id, v){ var i = impItems.find(x => x.id === id); if(i){ i.tipo = v; calcImp(); } }
-function updateImpValor(id, v){ var i = impItems.find(x => x.id === id); if(i){ i.valor = parseFloat(v) || 0; calcImp(); } }
-
-function addImpItem(){
-  impItems.push({id:nextId++, label:'', tipo:'pct', valor:0});
-  renderImpItems();
-  calcImp();
-}
-
-function removeImpItem(id){
-  impItems = impItems.filter(i => i.id !== id);
-  renderImpItems();
-  calcImp();
-}
-
-function calcImp(){
-  const fob = parseFloat(document.getElementById('fob').value) || 0;
-  const qty = parseFloat(document.getElementById('qty').value) || 1;
-  if(fob <= 0){ document.getElementById('imp-total').style.display = 'none'; return; }
-  const totalFob = fob * qty;
-  let totalExtra = 0;
-  impItems.forEach(function(item){
-    if(item.tipo === 'pct') totalExtra += totalFob * (item.valor / 100);
-    else totalExtra += item.valor;
-  });
-  const totalLanded = totalFob + totalExtra;
-  const unitario = totalLanded / qty;
-  document.getElementById('imp-total-val').textContent = fmt(unitario) + ' / unidad';
-  document.getElementById('imp-total-sub').textContent = 'Total landed: ' + fmt(totalLanded) + ' para ' + qty + ' unidades';
-  document.getElementById('imp-total').style.display = 'block';
-}
-
-function usarEnCalc(){
-  const fob = parseFloat(document.getElementById('fob').value) || 0;
-  const qty = parseFloat(document.getElementById('qty').value) || 1;
-  const totalFob = fob * qty;
-  let totalExtra = 0;
-  impItems.forEach(function(item){
-    if(item.tipo === 'pct') totalExtra += totalFob * (item.valor / 100);
-    else totalExtra += item.valor;
-  });
-  const unitario = (totalFob + totalExtra) / qty;
-  document.getElementById('costo').value = unitario.toFixed(2);
-  showTab('calc');
-  calcular();
-}
-
-function convertMarkup(){
-  const mu = parseFloat(document.getElementById('markup-in').value);
-  const r = document.getElementById('markup-result');
-  if(isNaN(mu) || mu < 0){ r.style.display = 'none'; return; }
-  const margen = mu / (1 + mu / 100) * 100;
-  document.getElementById('markup-out').textContent = pct(margen);
-  document.getElementById('markup-insight').textContent = 'Si creés que ganás ' + mu + '% sobre el costo, tu margen real sobre el precio es ' + pct(margen) + '. La diferencia importa cuando entran comisiones de plataformas.';
-  r.style.display = 'block';
-}
-
-function convertMargen(){
-  const mg = parseFloat(document.getElementById('margen-in').value);
-  const r = document.getElementById('margen-result');
-  if(isNaN(mg) || mg <= 0 || mg >= 100){ r.style.display = 'none'; return; }
-  const markup = (mg / (100 - mg)) * 100;
-  document.getElementById('margen-out').textContent = pct(markup);
-  r.style.display = 'block';
-}
-
-function buildEquivTable(){
-  const datos = [[20,16.7,'Margen bajo'],[30,23.1,'Margen bajo'],[50,33.3,'Margen moderado'],[60,37.5,'Margen moderado'],[80,44.4,'Margen bueno'],[100,50,'Vendés al doble del costo'],[200,66.7,'Ganás 2× el costo']];
-  const tb = document.getElementById('equiv-table');
-  datos.forEach(function(row){
-    const tr = document.createElement('tr');
-    if(row[0] === 100) tr.className = 'highlight';
-    tr.innerHTML = '<td>' + row[0] + '%</td><td>' + row[1] + '%</td><td>' + row[2] + '</td>';
-    tb.appendChild(tr);
-  });
-}
-
-function showTab(id){
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  const primaryMap = {calc:0, medios:1, serv:2, prods:3};
-  const tabs = document.querySelectorAll('.tab');
-  const secondary = ['import','conv','mixta'];
-  if(primaryMap[id] !== undefined && tabs[primaryMap[id]]) tabs[primaryMap[id]].classList.add('active');
-  const moreBtn = document.getElementById('tabs-more-btn');
-  const ddBtns = document.querySelectorAll('#tabs-dropdown .dd-btn');
-  if(secondary.includes(id)){
-    if(moreBtn) moreBtn.classList.add('active');
-    const secMap = {import:0, mixta:1, conv:2};
-    ddBtns.forEach((b,i) => b.classList.toggle('active', i === secMap[id]));
-  } else {
-    ddBtns.forEach(b => b.classList.remove('active'));
-  }
-}
-
-function toggleMasHerramientas(e){
-  e.stopPropagation();
-  const dd = document.getElementById('tabs-dropdown');
-  const open = dd.style.display !== 'none';
-  dd.style.display = open ? 'none' : 'block';
-  document.getElementById('mas-arrow').textContent = open ? '▼' : '▲';
-}
-
-function closeMasDD(){
-  const dd = document.getElementById('tabs-dropdown');
-  if(dd) dd.style.display = 'none';
-  const arr = document.getElementById('mas-arrow');
-  if(arr) arr.textContent = '▼';
-}
-
-function setCompTipo(t){
-  compTipo = t;
-  ['general','alimento'].forEach(x => document.getElementById('comp-tipo-'+x).classList.toggle('active', x === t));
-  const c = document.getElementById('comparador-content');
-  if(c && c.style.display !== 'none'){
-    const costo = parseFloat(document.getElementById('costo').value);
-    const margen = parseFloat(document.getElementById('margen').value)/100;
-    const iibbRate = parseFloat(document.getElementById('iibb-provincia').value)/100 || 0;
-    const comIva = document.getElementById('comIva').checked;
-    const ivaRate = ivaCosto === '21' ? 0.21 : ivaCosto === '105' ? 0.105 : 0;
-    const costoConIva = costo * (1 + ivaRate);
-    if(!isNaN(costoConIva) && !isNaN(margen)) buildComparadorTable(costoConIva, margen, iibbRate, comIva);
-  }
-}
-
-// ── MEDIOS DE PAGO ────────────────────────────────────────────────────────
-let nextMedioId = 100;
-let mediosPago = [
-  {id:1,  cat:'Sin costo',          nombre:'Efectivo',                    com:0,    fijo:true},
-  {id:2,  cat:'Sin costo',          nombre:'Transferencia / CBU',          com:0,    fijo:true},
-  {id:3,  cat:'QR / Billeteras',    nombre:'Cuenta DNI',                   com:0.6,  fijo:false},
-  {id:4,  cat:'QR / Billeteras',    nombre:'Mercado Pago QR – Saldo',      com:0.6,  fijo:false},
-  {id:5,  cat:'QR / Billeteras',    nombre:'Nave (Galicia) QR – Saldo',    com:0.8,  fijo:false},
-  {id:6,  cat:'QR / Billeteras',    nombre:'Modo QR – Saldo',              com:0.8,  fijo:false},
-  {id:7,  cat:'Débito',             nombre:'Débito Visa / Mastercard',     com:1.5,  fijo:false},
-  {id:8,  cat:'Crédito 1 pago',     nombre:'Crédito 1 pago (Visa/MC)',     com:2.99, fijo:false},
-  {id:9,  cat:'Crédito 1 pago',     nombre:'Naranja X 1 pago',             com:3.5,  fijo:false},
-  {id:10, cat:'Cuotas sin interés', nombre:'3 cuotas sin interés',          com:6,    fijo:false},
-  {id:11, cat:'Cuotas sin interés', nombre:'6 cuotas sin interés',          com:11,   fijo:false},
-  {id:12, cat:'Cuotas sin interés', nombre:'9 cuotas sin interés',          com:15,   fijo:false},
-  {id:13, cat:'Cuotas sin interés', nombre:'12 cuotas sin interés',         com:18,   fijo:false},
-  {id:14, cat:'Cuotas sin interés', nombre:'18 cuotas sin interés',         com:22,   fijo:false},
-  {id:15, cat:'Cuotas sin interés', nombre:'24 cuotas sin interés',         com:26,   fijo:false},
-];
-
-function addMedioPago(){
-  mediosPago.push({id:nextMedioId++, cat:'Personalizado', nombre:'', com:0, fijo:false});
-  renderMedios();
-  calcMedios();
-}
-
-function removeMedioPago(id){
-  mediosPago = mediosPago.filter(m => m.id !== id);
-  renderMedios();
-  calcMedios();
-}
-
-function updateMedioNombre(id, v){ const m = mediosPago.find(x=>x.id===id); if(m) m.nombre = v; }
-function updateMedioCom(id, v){ const m = mediosPago.find(x=>x.id===id); if(m){ m.com = parseFloat(v)||0; calcMedios(); } }
-
-function renderMedios(){
-  const tbody = document.getElementById('medios-body');
-  const base = parseFloat(document.getElementById('m-base').value) || 0;
-  tbody.innerHTML = '';
-
-  // Agrupar por categoría manteniendo orden de aparición
-  const cats = [];
-  const grupos = {};
-  mediosPago.forEach(function(m){
-    if(!grupos[m.cat]){ grupos[m.cat] = []; cats.push(m.cat); }
-    grupos[m.cat].push(m);
-  });
-
-  cats.forEach(function(cat){
-    // Fila de categoría
-    const catRow = document.createElement('tr');
-    catRow.className = 'medios-cat-row';
-    catRow.innerHTML = '<td colspan="5">' + cat + '</td>';
-    tbody.appendChild(catRow);
-
-    grupos[cat].forEach(function(m){
-      const com = m.com / 100;
-      const div = 1 - com;
-      const precioACobrar = div > 0 && base > 0 ? base / div : null;
-      const recargoPesos = precioACobrar ? precioACobrar - base : null;
-      const recargoPct = com > 0 ? (com / div) * 100 : 0;
-
-      const tr = document.createElement('tr');
-      if(m.com === 0) tr.className = 'medios-free';
-
-      const nombreCell = m.fijo
-        ? '<td style="font-weight:600">' + escHtml(m.nombre) + '</td>'
-        : '<td><input class="m-input-name" value="' + escHtml(m.nombre) + '" placeholder="Nombre del medio" oninput="updateMedioNombre(' + m.id + ',this.value)"></td>';
-
-      const comCell = m.fijo
-        ? '<td><span class="medios-pct-zero">0%</span></td>'
-        : '<td><input class="m-input-com" type="number" value="' + m.com + '" step="0.1" min="0" oninput="updateMedioCom(' + m.id + ',this.value)"> %</td>';
-
-      const precioCell = base > 0 && precioACobrar !== null
-        ? '<td class="medios-price">' + fmt(precioACobrar) + '</td>'
-        : '<td style="color:#ccc">—</td>';
-
-      const recargoCell = base > 0 && recargoPesos !== null && recargoPesos > 0
-        ? '<td><div class="medios-recargo-neg">+' + fmt(recargoPesos) + '</div></td>'
-        : '<td><span style="color:#1D9E75;font-size:12px">base</span></td>';
-
-      const pctCell = recargoPct > 0
-        ? '<td><span class="medios-pct">+' + recargoPct.toFixed(1) + '%</span></td>'
-        : '<td><span class="medios-pct-zero">0%</span></td>';
-
-      const delCell = m.fijo
-        ? '<td></td>'
-        : '<td><button class="m-del" onclick="removeMedioPago(' + m.id + ')" title="Eliminar">×</button></td>';
-
-      tr.innerHTML = nombreCell + comCell + precioCell + recargoCell + pctCell + delCell;
-      tbody.appendChild(tr);
-    });
-  });
-}
-
-function calcMedios(){ renderMedios(); }
-
-// ── COMPRA MIXTA ──────────────────────────────────────────────────────────
-let mxtIvaIncluido = 'si';
-let mxtIvaTasa = '21';
-let mxtCostoPromedio = 0;
-
-function setMxtIva(v){
-  mxtIvaIncluido = v;
-  document.getElementById('mx-iva-si').classList.toggle('active', v==='si');
-  document.getElementById('mx-iva-no').classList.toggle('active', v==='no');
-  document.getElementById('mx-iva-wrap').style.display = v==='no' ? 'flex' : 'none';
-  calcMixta();
-}
-
-function setMxtIvaTasa(v){
-  mxtIvaTasa = v;
-  document.getElementById('mx-iva-21').classList.toggle('active', v==='21');
-  document.getElementById('mx-iva-105').classList.toggle('active', v==='105');
-  calcMixta();
-}
-
-function calcMixta(){
-  const precioBlanco = parseFloat(document.getElementById('mx-precio-blanco').value);
-  const udsBlanco    = parseFloat(document.getElementById('mx-uds-blanco').value);
-  const precioNegro  = parseFloat(document.getElementById('mx-precio-negro').value);
-  const udsNegro     = parseFloat(document.getElementById('mx-uds-negro').value);
-  const err = document.getElementById('error-mixta');
-  const res = document.getElementById('mixta-resultado');
-
-  if(!precioBlanco || !udsBlanco || !precioNegro || !udsNegro || udsBlanco<=0 || udsNegro<=0){
-    err.style.display = 'block'; res.style.display = 'none'; return;
-  }
-  err.style.display = 'none';
-
-  // Costo real del blanco (con IVA siempre — si ya lo tiene, directo; si no, sumarlo)
-  const tasa = mxtIvaTasa === '21' ? 0.21 : 0.105;
-  const costoBlanco = mxtIvaIncluido === 'si' ? precioBlanco : precioBlanco * (1 + tasa);
-
-  const totalBlanco = costoBlanco * udsBlanco;
-  const totalNegro  = precioNegro * udsNegro;
-  const totalUds    = udsBlanco + udsNegro;
-  const promedio    = (totalBlanco + totalNegro) / totalUds;
-
-  mxtCostoPromedio = promedio;
-  document.getElementById('mx-costo-promedio').textContent = fmt(promedio);
-  document.getElementById('mx-res-blanco').textContent = fmt(costoBlanco) + ' c/u';
-  document.getElementById('mx-res-negro').textContent   = fmt(precioNegro) + ' c/u';
-  document.getElementById('mx-res-uds').textContent     = totalUds + ' unidades';
-  res.style.display = 'block';
-}
-
-function usarCostoMixto(){
-  if(!mxtCostoPromedio) return;
-  document.getElementById('costo').value = mxtCostoPromedio.toFixed(2);
-  setIvaCosto('no'); // el costo mixto ya tiene IVA absorbido
-  showTab('calc');
-  calcular();
-}
-
-// ── CALCULADORA DE SERVICIOS ──────────────────────────────────────────────
-let gastoItems = [
-  {id:1, label:'Celular e internet', valor:15000},
-  {id:2, label:'Software y herramientas', valor:10000},
-  {id:3, label:'Coworking / alquiler', valor:0},
-  {id:4, label:'Transporte', valor:0},
-];
-let nextGastoId = 10;
-let precioHoraMin = 0;
-let precioHoraRec = 0;
-
-function renderGastoItems(){
-  const c = document.getElementById('s-gastos-items');
-  c.innerHTML = '';
-  gastoItems.forEach(function(g){
-    const d = document.createElement('div');
-    d.className = 'imp-item';
-    d.innerHTML = '<input type="text" placeholder="Concepto" value="' + escHtml(g.label) + '" oninput="updateGastoLabel(' + g.id + ',this.value)">'
-      + '<span style="font-size:13px;color:#888;padding:0 6px;flex-shrink:0">$</span>'
-      + '<input type="number" value="' + g.valor + '" placeholder="0" style="flex:1" oninput="updateGastoValor(' + g.id + ',this.value)">'
-      + '<button class="remove-btn" onclick="removeGastoItem(' + g.id + ')">×</button>';
-    c.appendChild(d);
-  });
-}
-
-function updateGastoLabel(id, v){ const g = gastoItems.find(x => x.id===id); if(g) g.label = v; }
-function updateGastoValor(id, v){ const g = gastoItems.find(x => x.id===id); if(g){ g.valor = parseFloat(v)||0; calcServ(); } }
-function addGastoItem(){ gastoItems.push({id:nextGastoId++, label:'', valor:0}); renderGastoItems(); }
-function removeGastoItem(id){ gastoItems = gastoItems.filter(g => g.id !== id); renderGastoItems(); calcServ(); }
-
-function calcServ(){
-  const ingreso = parseFloat(document.getElementById('s-ingreso').value) || 0;
-  const monotributo = parseFloat(document.getElementById('s-monotributo').value) || 0;
-  const horasTotal = parseFloat(document.getElementById('s-horas-total').value) || 160;
-  const pctNoFact = parseFloat(document.getElementById('s-no-facturable').value) || 40;
-  const comision = (parseFloat(document.getElementById('s-comision').value) || 0) / 100;
-  const iibb = (parseFloat(document.getElementById('s-iibb').value) || 0) / 100;
-  const errEl = document.getElementById('error-serv');
-  const resEl = document.getElementById('serv-resultados');
-
-  if(ingreso <= 0){
-    errEl.style.display = 'block';
-    resEl.style.display = 'none';
-    return;
-  }
-  errEl.style.display = 'none';
-
-  const totalGastos = gastoItems.reduce((s, g) => s + (g.valor||0), 0);
-  const horasFact = horasTotal * (1 - pctNoFact/100);
-
-  document.getElementById('s-horas-info').style.display = 'block';
-  document.getElementById('s-horas-fact').textContent = horasFact.toFixed(0) + ' hs';
-
-  const totalNecesidades = ingreso + totalGastos + monotributo;
-  const divisor = 1 - comision - iibb;
-
-  if(divisor <= 0 || horasFact <= 0){
-    errEl.textContent = 'Revisá los porcentajes de comisión e IIBB.';
-    errEl.style.display = 'block';
-    resEl.style.display = 'none';
-    return;
-  }
-
-  const totalAFacturar = totalNecesidades / divisor;
-  precioHoraMin = totalAFacturar / horasFact;
-  precioHoraRec = precioHoraMin * 1.30;
-
-  document.getElementById('sr-ingreso').textContent = fmt(ingreso);
-  document.getElementById('sr-gastos').textContent = fmt(totalGastos);
-  const monoRow = document.getElementById('sr-mono-row');
-  if(monotributo > 0){
-    document.getElementById('sr-mono').textContent = fmt(monotributo);
-    monoRow.style.display = 'flex';
-  } else {
-    monoRow.style.display = 'none';
-  }
-  document.getElementById('sr-total-fact').textContent = fmt(totalAFacturar);
-  document.getElementById('sr-horas').textContent = horasFact.toFixed(0) + ' hs / mes';
-  document.getElementById('sr-precio-min').textContent = fmt(precioHoraMin) + '/h';
-  document.getElementById('sr-precio-rec').textContent = fmt(precioHoraRec) + '/h';
-
-  const comPct = (comision*100).toFixed(1);
-  const iibbPct = (iibb*100).toFixed(1);
-  let insight = 'Para ganar ' + fmt(ingreso) + ' netos, necesitás facturar ' + fmt(totalAFacturar) + ' por mes trabajando ' + horasFact.toFixed(0) + ' horas cobrables.';
-  if(comision > 0) insight += ' La plataforma se lleva ' + comPct + '% de cada cobro.';
-  if(iibb > 0) insight += ' IIBB suma un ' + iibbPct + '% más.';
-  insight += ' El precio recomendado incluye un 30% de colchón para meses flojos o vacaciones.';
-  document.getElementById('sr-insight').textContent = insight;
-
-  resEl.style.display = 'block';
-  calcProyecto();
-}
-
-function calcProyecto(){
-  const hs = parseFloat(document.getElementById('s-proyecto-hs').value);
-  const res = document.getElementById('s-proyecto-result');
-  if(!hs || hs <= 0 || precioHoraMin === 0){ res.style.display = 'none'; return; }
-  document.getElementById('sp-min').textContent = fmt(precioHoraMin * hs);
-  document.getElementById('sp-rec').textContent = fmt(precioHoraRec * hs);
-  res.style.display = 'block';
-}
-
-// ── Moneda ───────────────────────────────────────────────────────────────
-let currency = 'ARS';
-function setCurrency(c){
-  currency = c;
-  document.getElementById('cur-ars').classList.toggle('active', c==='ARS');
-  document.getElementById('cur-usd').classList.toggle('active', c==='USD');
-  const rw = document.getElementById('cur-rate-wrap');
-  rw.style.display = c==='USD' ? 'flex' : 'none';
-  calcular();
-}
-function fmtC(n){
-  if(currency==='USD'){
-    const rate = parseFloat(document.getElementById('cur-rate').value)||1200;
-    return 'u$s ' + (n/rate).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  }
-  return fmt(n);
-}
-
-// ── Supabase ──────────────────────────────────────────────────────────────
-const SUPA_URL = 'https://pedpqmrxzftddvgfwlxx.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlZHBxbXJ4emZ0ZGR2Z2Z3bHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzODI0MzksImV4cCI6MjA5Njk1ODQzOX0.9TldQoWXjY13gLHpyhOc1kaoi513l-OARG5XH0Xzdog';
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-let currentUser = null;
-let realtimeChannel = null;
-let isPremium = false;
-const FREE_LIMIT = 3;
-
-async function loadProfile(){
-  if(!currentUser) return;
-  const { data } = await sb.from('profiles').select('is_premium').eq('id', currentUser.id).single();
-  isPremium = data?.is_premium || false;
-  updatePremiumUI();
-}
-
-function updatePremiumUI(){
-  const badge = document.getElementById('prods-plan-badge');
-  const toolbar = document.getElementById('prods-toolbar');
-  const headerBadge = document.getElementById('header-plan-badge');
-  if(badge) badge.innerHTML = isPremium
-    ? '<span style="font-size:12px;background:#085041;color:#5DCAA5;border-radius:6px;padding:3px 10px;font-weight:700">PREMIUM ✓</span>'
-    : '<span style="font-size:12px;color:#aaa">Plan gratuito · 3 productos</span>';
-  if(toolbar) toolbar.style.display = isPremium ? 'flex' : 'none';
-  if(headerBadge) headerBadge.innerHTML = isPremium
-    ? '<span style="font-size:10px;background:#085041;color:#5DCAA5;border-radius:4px;padding:2px 7px;font-weight:700;letter-spacing:.03em">PRO</span>'
-    : '<span style="font-size:10px;background:#f0f0e8;color:#999;border-radius:4px;padding:2px 7px">Gratis</span>';
-}
-
-function cerrarUpgrade(){ document.getElementById('upgrade-modal').style.display = 'none'; }
-function mostrarUpgrade(){ document.getElementById('upgrade-modal').style.display = 'flex'; }
-
-async function initAuth(){
-  const { data: { session } } = await sb.auth.getSession();
-  handleSession(session);
-  sb.auth.onAuthStateChange((_e, session) => handleSession(session));
-}
-
-async function handleSession(session){
-  currentUser = session?.user ?? null;
-  const loggedIn = !!currentUser;
-  document.getElementById('header-login-btn').style.display = loggedIn ? 'none' : 'inline-block';
-  document.getElementById('header-user').style.display = loggedIn ? 'flex' : 'none';
-  document.getElementById('login-prompt').style.display = loggedIn ? 'none' : 'block';
-  document.getElementById('save-bar').style.display = loggedIn ? 'block' : 'none';
-  document.getElementById('tab-btn-prods').style.display = loggedIn ? 'block' : 'none';
-  if(loggedIn){
-    document.getElementById('user-email-display').textContent = currentUser.email;
-    closeAuthModal();
-    await loadProfile();
-    loadProductos();
-    suscribirRealtime();
-  } else {
-    isPremium = false;
-    updatePremiumUI();
-    if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel = null; }
-  }
-}
-
-async function loginConGoogle(){
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: 'https://costito.vercel.app' }
-  });
-  if(error) showAuthMsg('No se pudo conectar con Google. Intentá de nuevo.', 'err');
-}
-
-async function loginConPassword(){
-  const email = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
-  const btn = document.getElementById('auth-btn');
-  if(!email || !password){ showAuthMsg('Ingresá tu email y contraseña.', 'err'); return; }
-  btn.disabled = true; btn.textContent = 'Ingresando...';
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  btn.disabled = false; btn.textContent = 'Ingresar';
-  if(error) showAuthMsg('Email o contraseña incorrectos.', 'err');
-}
-
-function showAuthMsg(text, type){
-  const m = document.getElementById('auth-msg');
-  m.textContent = text; m.className = 'modal-msg ' + type; m.style.display = 'block';
-}
-function continuarSinSesion(){ document.getElementById('login-prompt').style.display = 'none'; }
-function showAuthModal(){ document.getElementById('auth-modal').style.display = 'flex'; }
-function closeAuthModal(){
-  document.getElementById('auth-modal').style.display = 'none';
-  document.getElementById('auth-msg').style.display = 'none';
-  document.getElementById('auth-email').value = '';
-  document.getElementById('auth-password').value = '';
-}
-async function logout(){ await sb.auth.signOut(); }
-
-// ── Realtime ──────────────────────────────────────────────────────────────
-function suscribirRealtime(){
-  if(realtimeChannel) sb.removeChannel(realtimeChannel);
-  realtimeChannel = sb.channel('productos-' + currentUser.id)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'productos' }, loadProductos)
-    .subscribe();
-}
-
-// ── CRUD productos ────────────────────────────────────────────────────────
-async function loadProductos(){
-  const { data } = await sb.from('productos').select('*').order('updated_at', { ascending: false });
-  todosLosProductos = data || [];
-  filtroCategoria = null;
-  renderProductos(todosLosProductos);
-}
-
-function renderProductos(lista){
-  const el = document.getElementById('prods-list');
-  if(!lista.length){
-    el.innerHTML = '<div class="empty-state">Todavía no guardaste ningún producto.<br>Calculá un precio y usá el botón "Guardar producto".</div>';
-    return;
-  }
-
-  const cats = [...new Set(lista.map(p => p.categoria).filter(Boolean))].sort();
-  let chipsHTML = '';
-  if(cats.length){
-    chipsHTML = '<div class="lista-canal-filter" style="margin-bottom:12px">'
-      + '<button class="cat-chip' + (!filtroCategoria ? ' active' : '') + '" onclick="filtrarPorCategoria(null)">Todos</button>'
-      + cats.map(c => '<button class="cat-chip' + (filtroCategoria === c ? ' active' : '') + '" onclick="filtrarPorCategoria(' + JSON.stringify(c) + ')">' + escHtml(c) + '</button>').join('')
-      + '</div>';
-  }
-
-  const filtrada = filtroCategoria ? lista.filter(p => p.categoria === filtroCategoria) : lista;
-
-  el.innerHTML = chipsHTML;
-  filtrada.forEach(function(p){
-    const d = document.createElement('div');
-    d.className = 'prod-item';
-    const catTag = p.categoria ? '<span class="prod-cat-tag">' + escHtml(p.categoria) + '</span>' : '';
-    d.innerHTML = '<div style="flex:1;min-width:0">'
-      + '<div class="prod-name">' + escHtml(p.nombre || 'Sin nombre') + catTag + '</div>'
-      + '<div class="prod-meta">' + escHtml(p.canal_nombre || '') + (p.margen ? ' · Margen ' + p.margen + '%' : '') + '</div>'
-      + '</div>'
-      + '<div class="prod-precio">' + (p.precio_publicar ? fmtC(p.precio_publicar) : '—') + '</div>'
-      + '<button class="prod-del" title="Eliminar" onclick="event.stopPropagation();eliminarProducto(\'' + p.id + '\')">×</button>';
-    d.onclick = function(){ cargarProducto(p); };
-    el.appendChild(d);
-  });
-}
-
-function filtrarPorCategoria(cat){
-  filtroCategoria = cat;
-  renderProductos(todosLosProductos);
-}
-
-async function guardarProducto(){
-  if(!currentUser){ showAuthModal(); return; }
-  if(!isPremium){
-    const { count } = await sb.from('productos').select('*', {count:'exact',head:true}).eq('user_id', currentUser.id);
-    if(count >= FREE_LIMIT){ mostrarUpgrade(); return; }
-  }
-  const nombre = (document.getElementById('prod-nombre').value.trim()) || 'Sin nombre';
-  const categoria = (document.getElementById('prod-categoria').value.trim()) || '';
-  const costoBase = parseFloat(document.getElementById('costo').value) || 0;
-  const margenVal = parseFloat(document.getElementById('margen').value) || 0;
-  const comisionVal = parseFloat(document.getElementById('comision').value) || 0;
-  const comIvaVal = document.getElementById('comIva').checked;
-  const iibbSel = document.getElementById('iibb-provincia');
-  const iibbRateVal = parseFloat(iibbSel.value) || 0;
-  const iibbProv = iibbSel.options[iibbSel.selectedIndex].text;
-  const ivaRate = ivaCosto === '21' ? 0.21 : ivaCosto === '105' ? 0.105 : 0;
-  const costoReal = costoBase * (1 + ivaRate);
-  const comEf = comIvaVal ? comisionVal/100*1.21 : comisionVal/100;
-  const div = 1 - comEf - margenVal/100 - iibbRateVal/100;
-  const precio = div > 0 ? costoReal / div : null;
-  const ganancia = precio ? precio - costoReal - precio*comEf - precio*(iibbRateVal/100) : null;
-  const { error } = await sb.from('productos').insert({
-    user_id: currentUser.id, nombre, categoria,
-    costo: costoBase, iva_costo: ivaCosto, margen: margenVal,
-    canal_id: selectedCanal?.id || '', canal_nombre: selectedCanal?.name || '',
-    sub_id: selectedSub || null, comision: comisionVal, com_iva: comIvaVal,
-    iibb_rate: iibbRateVal, iibb_provincia: iibbProv,
-    precio_publicar: precio, ganancia
-  });
-  if(error){ alert('Error al guardar: ' + error.message); return; }
-  document.getElementById('prod-nombre').value = '';
-  document.getElementById('prod-categoria').value = '';
-  await loadProductos();
-  showTab('prods');
-}
-
-async function eliminarProducto(id){
-  if(!confirm('¿Eliminás este producto?')) return;
-  await sb.from('productos').delete().eq('id', id);
-}
-
-function cargarProducto(p){
-  document.getElementById('costo').value = p.costo;
-  setIvaCosto(p.iva_costo || 'no');
-  document.getElementById('margen').value = p.margen;
-  document.getElementById('comision').value = p.comision;
-  document.getElementById('comIva').checked = p.com_iva;
-  const sel = document.getElementById('iibb-provincia');
-  for(let i = 0; i < sel.options.length; i++){
-    if(parseFloat(sel.options[i].value) === p.iibb_rate){ sel.selectedIndex = i; break; }
-  }
-  showTab('calc');
-  calcular();
-}
-
-function exportarCSV(){
-  if(!currentUser) return;
-  sb.from('productos').select('*').order('categoria').order('nombre').then(function({ data }){
-    if(!data || !data.length){ alert('No tenés productos guardados.'); return; }
-    const cols = ['Nombre','Categoría','Costo','IVA costo','Margen %','Canal','Comisión %','IVA com.','IIBB %','Provincia','Precio publicar','Ganancia'];
-    const rows = data.map(function(p){
-      return [
-        p.nombre || '',
-        p.categoria || '',
-        p.costo || 0,
-        p.iva_costo || 'no',
-        p.margen || 0,
-        p.canal_nombre || '',
-        p.comision || 0,
-        p.com_iva ? 'Sí' : 'No',
-        p.iibb_rate || 0,
-        p.iibb_provincia || '',
-        p.precio_publicar ? p.precio_publicar.toFixed(2) : '',
-        p.ganancia ? p.ganancia.toFixed(2) : ''
-      ].map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
-    });
-    const csv = '﻿' + cols.map(function(c){ return '"'+c+'"'; }).join(',') + '\n' + rows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'costito-productos.csv'; a.click();
-    URL.revokeObjectURL(url);
-  });
-}
-
-function mostrarListaPrecios(){
-  if(!currentUser) return;
-  sb.from('productos').select('*').order('categoria').order('nombre').then(function({ data }){
-    const body = document.getElementById('lista-body');
-    if(!data || !data.length){
-      body.innerHTML = '<p style="color:#888;text-align:center">No tenés productos guardados.</p>';
-    } else {
-      let html = '';
-      let lastCat = null;
-      data.forEach(function(p){
-        const cat = p.categoria || 'Sin categoría';
-        if(cat !== lastCat){
-          html += '<div class="lista-cat-header">' + escHtml(cat) + '</div>';
-          lastCat = cat;
-        }
-        html += '<div class="lista-row">'
-          + '<span class="lista-nombre">' + escHtml(p.nombre || 'Sin nombre') + '</span>'
-          + '<span class="lista-precio">' + (p.precio_publicar ? fmtC(p.precio_publicar) : '—') + '</span>'
-          + '</div>';
-      });
-      body.innerHTML = html;
-    }
-    document.getElementById('lista-modal').style.display = 'flex';
-  });
-}
-
-function cerrarLista(){ document.getElementById('lista-modal').style.display = 'none'; }
-
-function exportarPDFMedios(){
-  const base = parseFloat(document.getElementById('m-base').value) || 0;
-  if(!base){ alert('Primero ingresá tu precio base en efectivo.'); return; }
-
-  // Agrupar medios por categoría
-  const grupos = {};
-  mediosPago.forEach(function(m){
-    if(!grupos[m.cat]) grupos[m.cat] = [];
-    const com = m.com / 100;
-    const precio = m.fijo ? base : (base / (1 - com));
-    const recargo = precio - base;
-    grupos[m.cat].push({ nombre: m.nombre, com: m.com, precio, recargo, fijo: m.fijo });
-  });
-
-  const fecha = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' });
-  const baseFmt = base.toLocaleString('es-AR', { style:'currency', currency:'ARS', maximumFractionDigits:0 });
-
-  let tablas = '';
-  Object.entries(grupos).forEach(function([cat, items]){
-    const filas = items.map(function(it){
-      const pFmt = it.precio.toLocaleString('es-AR', { style:'currency', currency:'ARS', maximumFractionDigits:0 });
-      const rFmt = (it.recargo > 0 ? '+' : '') + it.recargo.toLocaleString('es-AR', { style:'currency', currency:'ARS', maximumFractionDigits:0 });
-      const rColor = it.recargo > 0 ? '#c0392b' : '#1D9E75';
-      const recStr = it.fijo ? '<span style="color:#1D9E75;font-weight:600">Sin recargo</span>' : '<span style="color:' + rColor + ';font-weight:600">' + rFmt + '</span>';
-      return '<tr><td style="padding:11px 16px;font-size:14px;color:#1a1a1a;border-bottom:1px solid #f0f0ec">' + escHtml(it.nombre) + '</td>'
-        + '<td style="padding:11px 16px;text-align:center;font-size:13px;color:#888;border-bottom:1px solid #f0f0ec">' + (it.fijo ? '—' : it.com + '%') + '</td>'
-        + '<td style="padding:11px 16px;text-align:right;font-size:15px;font-weight:700;color:#085041;border-bottom:1px solid #f0f0ec">' + pFmt + '</td>'
-        + '<td style="padding:11px 16px;text-align:right;font-size:13px;border-bottom:1px solid #f0f0ec">' + recStr + '</td></tr>';
-    }).join('');
-    tablas += '<div style="margin-bottom:24px">'
-      + '<div style="background:#1D9E75;color:#fff;padding:8px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-radius:6px 6px 0 0">' + escHtml(cat) + '</div>'
-      + '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 6px 6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-      + '<thead><tr style="background:#f8f8f4">'
-      + '<th style="padding:9px 16px;text-align:left;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em">Medio de pago</th>'
-      + '<th style="padding:9px 16px;text-align:center;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em">Comisión</th>'
-      + '<th style="padding:9px 16px;text-align:right;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em">Precio a cobrar</th>'
-      + '<th style="padding:9px 16px;text-align:right;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em">Recargo</th>'
-      + '</tr></thead><tbody>' + filas + '</tbody></table></div>';
-  });
-
-  const html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
-    + '<title>Lista de precios — Costito</title>'
-    + '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f0;padding:32px}@media print{body{padding:0;background:#fff}.no-print{display:none!important}}</style>'
-    + '</head><body>'
-    + '<div style="max-width:700px;margin:0 auto">'
-
-    // Header
-    + '<div style="background:#085041;border-radius:12px;padding:28px 32px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">'
-    + '<div style="display:flex;align-items:center;gap:14px">'
-    + '<div style="background:#1D9E75;border-radius:10px;width:48px;height:48px;display:flex;align-items:center;justify-content:center">'
-    + '<svg width="32" height="32" viewBox="0 0 72 72" fill="none"><rect x="8" y="8" width="56" height="56" rx="14" fill="#1D9E75"/><text x="36" y="48" text-anchor="middle" font-family="sans-serif" font-size="38" font-weight="800" fill="white">C</text><line x1="26" y1="34" x2="46" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="26" y1="40" x2="46" y2="40" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>'
-    + '</div>'
-    + '<div><div style="color:#fff;font-size:22px;font-weight:700">Lista de precios</div>'
-    + '<div style="color:#5DCAA5;font-size:13px;margin-top:2px">por medio de pago</div></div>'
-    + '</div>'
-    + '<div style="text-align:right"><div style="color:#5DCAA5;font-size:12px">Generado el</div>'
-    + '<div style="color:#fff;font-size:14px;font-weight:600">' + fecha + '</div></div>'
-    + '</div>'
-
-    // Precio base
-    + '<div style="background:#fff;border-radius:10px;padding:20px 24px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-    + '<div><div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.06em;font-weight:600">Precio base (efectivo / transferencia)</div>'
-    + '<div style="font-size:28px;font-weight:800;color:#085041;margin-top:4px">' + baseFmt + '</div></div>'
-    + '<div style="background:#e8f7f1;border-radius:8px;padding:10px 16px;text-align:center">'
-    + '<div style="font-size:11px;color:#1D9E75;font-weight:600">Sin comisión</div>'
-    + '<div style="font-size:11px;color:#888;margin-top:2px">referencia</div></div>'
-    + '</div>'
-
-    // Tablas por categoría
-    + tablas
-
-    // Footer
-    + '<div style="text-align:center;margin-top:8px;padding:16px">'
-    + '<div style="font-size:11px;color:#bbb">Calculado con <strong style="color:#1D9E75">Costito</strong> · costito.vercel.app</div>'
-    + '</div>'
-
-    + '<div class="no-print" style="text-align:center;margin-top:20px">'
-    + '<button onclick="window.print()" style="background:#1D9E75;color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:15px;font-weight:600;cursor:pointer">Imprimir / Guardar PDF</button>'
-    + '</div>'
-    + '</div>'
-    + '</body></html>';
-
-  const w = window.open('', '_blank', 'width=800,height=900');
-  w.document.write(html);
-  w.document.close();
-}
-
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function toggleExplainer(){
-  const c = document.getElementById('explainerContent');
-  const b = document.getElementById('explainerBtn');
-  if(c.style.display === 'none'){
-    c.style.display = 'block';
-    b.classList.add('open');
-  } else {
-    c.style.display = 'none';
-    b.classList.remove('open');
-  }
-}
-
-buildCanales();
-selectCanal(CANALES.online[0]);
-renderImpItems();
-renderGastoItems();
-renderMedios();
-buildEquivTable();
-initAuth();
-document.addEventListener('click', function(){ closeMasDD(); });
-</script>
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span id="toastMsg">Listo</span></div>
+
+<script src="js/data.js"></script>
+<script src="js/calc.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
