@@ -37,6 +37,31 @@
   }
 
   // ============================================================
+  // API COMPARTIDA (la usa premium.js)
+  // ============================================================
+  // Se expone una superficie chica para que las calculadoras Premium
+  // (en premium.js) reutilicen formato, toast y el estado de moneda
+  // sin duplicar lógica ni romper el encapsulamiento.
+  window.Costito = {
+    D, Calc,
+    fmt, money, conv, symbol, setHTML, escapeHtml,
+    toast: (m) => toast(m),
+    waUrl: () => 'https://wa.me/' + D.premium.whatsapp + '?text=' + encodeURIComponent(D.premium.mensaje),
+    isPremium: () => localStorage.getItem('costito_premium') === '1',
+    setPremium(on) {
+      localStorage.setItem('costito_premium', on ? '1' : '0');
+      document.dispatchEvent(new CustomEvent('costito:premiumchange'));
+    },
+    // Carga un costo (ARS) en la calculadora principal y va a esa tab
+    usarComoCosto(ars) {
+      $('costo').value = Math.round(ars);
+      document.querySelector('[data-tab="calc"]').click();
+      $('costo').dispatchEvent(new Event('input'));
+      toast('Costo cargado en la calculadora');
+    },
+  };
+
+  // ============================================================
   // TEMA (claro / oscuro)
   // ============================================================
   function applyTheme(t) {
@@ -103,6 +128,7 @@
     $('pre2').textContent = symbol();
     $('finCur').textContent = symbol();
     calc(); medios(); renderProds();
+    document.dispatchEvent(new CustomEvent('costito:rerender'));
   });
 
   // ============================================================
@@ -303,43 +329,10 @@
   });
 
   // ============================================================
-  // PREMIUM: WhatsApp + gates
+  // PREMIUM: botón WhatsApp del tab Productos
+  // (las calculadoras Premium y sus gates viven en premium.js)
   // ============================================================
-  const waUrl = 'https://wa.me/' + D.premium.whatsapp + '?text=' + encodeURIComponent(D.premium.mensaje);
-  $('waBtn').href = waUrl;
-
-  const gates = {
-    'gate-import': {
-      titulo: 'Calculá tu costo de importación',
-      desc: 'Sumá FOB, flete, aranceles, tasa estadística, IVA aduana y despachante para saber el costo real puesto en tu depósito.',
-      feats: ['FOB + flete internacional', 'Aranceles y tasa estadística', 'IVA aduana y despachante', 'Costo unitario final'],
-    },
-    'gate-mixta': {
-      titulo: 'Compra en blanco y negro',
-      desc: 'Calculá el costo promedio real cuando una parte de la compra va con factura y otra no.',
-      feats: ['Mezcla blanco / negro', 'Costo promedio ponderado', 'Margen real sobre la mezcla'],
-    },
-    'gate-servicios': {
-      titulo: 'Poné precio a tu trabajo',
-      desc: 'Si cobrás por hora o por proyecto, calculá tu tarifa contemplando monotributo y horas reales.',
-      feats: ['Precio por hora', 'Contempla monotributo', 'Horas facturables reales'],
-    },
-  };
-  function renderGates() {
-    const check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-    const lock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
-    const wa = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.3A10 10 0 1 0 12 2z"/></svg>';
-    Object.keys(gates).forEach((id) => {
-      const g = gates[id];
-      setHTML($(id), '<div class="gate">' +
-        '<div class="lock-ico">' + lock + '</div>' +
-        '<h3>' + g.titulo + '</h3>' +
-        '<p>' + g.desc + '</p>' +
-        '<div class="feat">' + g.feats.map((f) => '<div class="f">' + check + f + '</div>').join('') + '</div>' +
-        '<a class="wa" href="' + waUrl + '" target="_blank" rel="noopener" style="background:var(--naranja)">' + wa + ' Activar Premium por WhatsApp</a>' +
-        '</div>');
-    });
-  }
+  $('waBtn').href = 'https://wa.me/' + D.premium.whatsapp + '?text=' + encodeURIComponent(D.premium.mensaje);
 
   // ============================================================
   // TOAST
@@ -365,6 +358,5 @@
   calc();
   medios();
   renderProds();
-  renderGates();
   updateTabFades();
 })();

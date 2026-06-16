@@ -260,6 +260,22 @@ nav.can-right::after{opacity:1}
 footer.foot{text-align:center;padding:26px 0 0;color:var(--tinta-soft);font-size:12.5px;line-height:1.6}
 footer.foot b{color:var(--verde);font-family:var(--serif)}
 
+/* ---------- PREMIUM: filas de ítems de importación ---------- */
+.imp-row{display:grid;grid-template-columns:1fr 84px 92px 34px;gap:8px;align-items:center;margin-bottom:9px}
+.in-bare{background:var(--crema);border:1.5px solid var(--linea);border-radius:10px;padding:10px 11px;
+  font-family:var(--sans);font-size:14px;font-weight:600;color:var(--tinta);outline:none;width:100%;
+  -moz-appearance:textfield;transition:.15s}
+.in-bare:focus{border-color:var(--naranja);box-shadow:0 0 0 3px rgba(242,96,63,.13)}
+.in-bare::-webkit-outer-spin-button,.in-bare::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+select.in-bare{cursor:pointer;-webkit-appearance:none;appearance:none}
+.imp-del{background:transparent;border:1.5px solid var(--linea);border-radius:10px;color:var(--tinta-soft);
+  height:40px;cursor:pointer;font-size:20px;line-height:1;transition:.15s}
+.imp-del:hover{border-color:var(--naranja);color:var(--naranja)}
+@media(max-width:480px){
+  .imp-row{grid-template-columns:1fr 72px 78px 32px;gap:6px}
+  .in-bare{padding:9px 8px;font-size:13px}
+}
+
 /* ---------- TOAST ---------- */
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--verde);
   color:var(--on-verde);font-weight:600;font-size:14px;padding:13px 20px;border-radius:12px;z-index:60;opacity:0;

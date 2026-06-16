@@ -75,6 +75,77 @@ const CostitoCalc = {
     const m = Math.min(Number(margen) || 0, 99);
     return m / (1 - m / 100); // devuelve markup en %
   },
+
+  /* ---------- PREMIUM: Costo de importación (landed cost) ----------
+     Suma sobre el FOB todos los ítems, que pueden ser un % del FOB
+     (flete, aranceles, tasa estadística, IVA aduana) o un monto fijo
+     en pesos (despachante, etc.). Devuelve el costo total y el unitario. */
+  landedCost({ fob = 0, qty = 1, items = [] }) {
+    fob = Number(fob) || 0;
+    qty = Math.max(Number(qty) || 1, 1);
+    const base = fob * qty; // FOB total
+
+    let totalPct = 0, totalFijo = 0;
+    items.forEach((it) => {
+      const v = Number(it.valor) || 0;
+      if (it.tipo === 'fijo') totalFijo += v;
+      else totalPct += (v / 100) * base; // % se aplica sobre el FOB total
+    });
+
+    const total = base + totalPct + totalFijo;
+    return {
+      fobTotal: base,
+      cargos: totalPct + totalFijo,
+      total,                       // costo total puesto en depósito
+      unitario: total / qty,       // costo por unidad
+    };
+  },
+
+  /* ---------- PREMIUM: Compra mixta (blanco / negro) ----------
+     Parte con factura (blanco, puede sumar IVA) y parte sin (negro).
+     Devuelve el costo promedio ponderado por unidad. */
+  compraMixta({ precioBlanco = 0, udsBlanco = 0, ivaBlanco = 0, precioNegro = 0, udsNegro = 0 }) {
+    const pB = Number(precioBlanco) || 0;
+    const uB = Number(udsBlanco) || 0;
+    const iva = (Number(ivaBlanco) || 0) / 100;
+    const pN = Number(precioNegro) || 0;
+    const uN = Number(udsNegro) || 0;
+
+    const totalUds = uB + uN;
+    if (totalUds <= 0) return { ok: false, motivo: 'Cargá al menos una unidad en blanco o en negro.' };
+
+    const costoBlanco = pB * (1 + iva) * uB;
+    const costoNegro = pN * uN;
+    const costoTotal = costoBlanco + costoNegro;
+
+    return {
+      ok: true,
+      totalUds,
+      costoTotal,
+      costoPromedio: costoTotal / totalUds,
+      pctBlanco: (uB / totalUds) * 100,
+      pctNegro: (uN / totalUds) * 100,
+    };
+  },
+
+  /* ---------- PREMIUM: Precio de servicios (por hora) ----------
+     Cuánto cobrar la hora para llegar al ingreso neto deseado al mes,
+     cubriendo el costo fijo del monotributo, con tus horas facturables. */
+  precioServicio({ ingresoDeseado = 0, horasMes = 0, monotributo = 0, horasProyecto = 0 }) {
+    const ingreso = Number(ingresoDeseado) || 0;
+    const horas = Number(horasMes) || 0;
+    const mono = Number(monotributo) || 0;
+    if (horas <= 0) return { ok: false, motivo: 'Decinos cuántas horas por mes podés facturar.' };
+
+    const precioHora = (ingreso + mono) / horas;
+    const hp = Number(horasProyecto) || 0;
+    return {
+      ok: true,
+      precioHora,
+      precioProyecto: hp > 0 ? precioHora * hp : null,
+      costoCubierto: ingreso + mono,
+    };
+  },
 };
 
 // Exponer para tests en Node si algún día se agregan

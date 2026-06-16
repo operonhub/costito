@@ -54,6 +54,16 @@ const COSTITO_DATA = {
     { n: 'Transferencia',      c: 0,    col: 'var(--verde-2)', ico: '<path d="M7 10l5-5 5 5M12 5v14"/>' },
   ],
 
+  // Ítems precargados de la calculadora de importación (editables por el usuario).
+  // tipo: 'pct' = porcentaje sobre el FOB total · 'fijo' = monto fijo en pesos.
+  importItemsDefault: [
+    { label: 'Flete internacional', tipo: 'pct',  valor: 12 },
+    { label: 'Aranceles',           tipo: 'pct',  valor: 16 },
+    { label: 'Tasa estadística',    tipo: 'pct',  valor: 3  },
+    { label: 'IVA aduana',          tipo: 'pct',  valor: 21 },
+    { label: 'Despachante',         tipo: 'fijo', valor: 50000 },
+  ],
+
   // Configuración del upsell Premium
   premium: {
     // Número en formato internacional sin + ni espacios (se completa en producción)
