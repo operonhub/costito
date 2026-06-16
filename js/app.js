@@ -56,13 +56,36 @@
   // ============================================================
   // NAVEGACIÓN ENTRE TABS
   // ============================================================
-  $('tabs').addEventListener('click', (e) => {
+  const tabsEl = $('tabs');
+  const navEl = tabsEl.closest('nav');
+
+  // Muestra/oculta los degradés según haya más tabs hacia cada lado
+  function updateTabFades() {
+    const max = tabsEl.scrollWidth - tabsEl.clientWidth;
+    navEl.classList.toggle('can-left', tabsEl.scrollLeft > 2);
+    navEl.classList.toggle('can-right', tabsEl.scrollLeft < max - 2);
+  }
+  tabsEl.addEventListener('scroll', updateTabFades, { passive: true });
+  window.addEventListener('resize', updateTabFades);
+
+  // En desktop la rueda vertical no scrollea contenedores horizontales:
+  // la traducimos a scroll horizontal para poder llegar a las tabs de la derecha.
+  tabsEl.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      tabsEl.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  tabsEl.addEventListener('click', (e) => {
     const b = e.target.closest('.tab');
     if (!b) return;
     document.querySelectorAll('.tab').forEach((t) => t.classList.remove('on'));
     b.classList.add('on');
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove('on'));
     $(b.dataset.tab).classList.add('on');
+    // Centrar la tab clickeada (útil cuando estaba cortada en el borde)
+    b.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
@@ -343,4 +366,5 @@
   medios();
   renderProds();
   renderGates();
+  updateTabFades();
 })();
