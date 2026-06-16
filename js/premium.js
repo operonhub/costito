@@ -30,7 +30,15 @@
       '<h3>' + g.titulo + '</h3><p>' + g.desc + '</p>' +
       '<div class="feat">' + g.feats.map((f) => '<div class="f">' + ICO.check + f + '</div>').join('') + '</div>' +
       '<a class="wa" href="' + C.waUrl() + '" target="_blank" rel="noopener">' + ICO.wa + ' Activar Premium por WhatsApp</a>' +
+      // Desbloqueo de demo (temporal, pre-launch). Se reemplaza por el gating real con el backend.
+      '<button class="gate-demo" type="button">Ver cómo funciona (demo)</button>' +
       '</div></div>';
+  }
+
+  // Cinta que aclara que se está viendo el demo, con botón para volver a bloquear.
+  function demoRibbon() {
+    return '<div class="demo-ribbon"><span><b>Modo demo Premium.</b> Así lo verían tus clientes con la suscripción activa.</span>' +
+      '<button class="demo-lock" type="button">Bloquear</button></div>';
   }
 
   // Encabezado de card reutilizable
@@ -54,6 +62,7 @@
       return;
     }
     C.setHTML($('body-import'),
+      demoRibbon() +
       '<div class="card">' + cardHead('Lo que pagás en origen', 'FOB y cantidad') +
         '<div class="row2">' +
           '<div class="field"><label>FOB por unidad</label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="imp-fob" value="10000" min="0" inputmode="decimal" /></div></div>' +
@@ -139,6 +148,7 @@
       return;
     }
     C.setHTML($('body-mixta'),
+      demoRibbon() +
       '<div class="card">' + cardHead('La parte en blanco', 'Con factura') +
         '<div class="row2">' +
           '<div class="field"><label>Precio por unidad</label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="mx-pb" value="8000" min="0" inputmode="decimal" /></div></div>' +
@@ -209,6 +219,7 @@
       return;
     }
     C.setHTML($('body-servicios'),
+      demoRibbon() +
       '<div class="card">' + cardHead('Cuánto querés ganar', 'Por mes, limpio') +
         '<div class="field"><label>Ingreso neto que querés al mes</label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="s-ingreso" value="800000" min="0" inputmode="decimal" /></div></div>' +
         '<div class="field"><label>Monotributo (costo fijo mensual) <span class="help"><span class="q">?</span><span class="tip">Lo que pagás de monotributo por mes. Se reparte entre tus horas para que no te lo comas vos.</span></span></label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="s-mono" value="35000" min="0" inputmode="decimal" /></div></div>' +
@@ -255,6 +266,12 @@
   function recalcAll() {
     if (C.isPremium()) { recalcImport(); recalcMixta(); recalcServicios(); }
   }
+
+  // Botones de demo (pre-launch): desbloquear desde el gate, bloquear desde la cinta.
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('gate-demo')) C.setPremium(true);
+    if (e.target.classList.contains('demo-lock')) C.setPremium(false);
+  });
 
   // Al cambiar el estado Premium → reconstruir (gate ↔ calculadora)
   document.addEventListener('costito:premiumchange', buildAll);
