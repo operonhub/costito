@@ -20,8 +20,8 @@
   --on-verde:#F3FBF6;
   --dot:rgba(31,138,91,.06);
   --shadow:0 2px 0 rgba(31,138,91,.04), 0 8px 24px -12px rgba(20,80,55,.3);
-  --serif:Georgia,'Times New Roman',serif;
-  --sans:'Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Inter','Segoe UI',system-ui,sans-serif;
 }
 
 /* ---------- TEMA OSCURO (Bosque Nocturno) ---------- */
@@ -43,7 +43,8 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--crema);color:var(--tinta);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+html,body{background:var(--crema);color:var(--tinta);font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  font-optical-sizing:auto;text-rendering:optimizeLegibility}
 html{transition:background .3s ease}
 body{
   min-height:100vh;

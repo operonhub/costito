@@ -86,13 +86,13 @@ precio = costoConIva / (1 - comEfectiva - IIBB - margen)
 
 - **Color primario:** `var(--verde)` (#1F8A5B claro / #2F6B45 oscuro)
 - **Acento:** `var(--naranja)`
-- **Tipografía:** serif (Georgia) para títulos/precios, sans (Trebuchet) para el resto
+- **Tipografía:** **Fraunces** (serif) para títulos, logo y precios; **Inter** (sans) para el resto. Se cargan desde Google Fonts en el `<head>`. Spec completo de marca en `MARCA.md`. Nunca hardcodear fuentes: usar `var(--serif)`/`var(--sans)`.
 - **Mobile-first:** todo tiene que verse bien en celular (probar a 375px)
 - **Border radius:** 11-18px
 
 ## Cosas que NO hay que hacer
 
-- ❌ No agregar dependencias npm/cdn sin justificación fuerte
+- ❌ No agregar dependencias npm/cdn sin justificación fuerte (única excepción aprobada: Google Fonts — Fraunces + Inter — por marca)
 - ❌ No hardcodear colores — usar variables CSS (rompe el dark mode)
 - ❌ No traducir copy a español neutro — usar argentino
 - ❌ No mezclar markup y margen en la calculadora principal
