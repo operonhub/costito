@@ -63,16 +63,22 @@
     return '$ ARS';
   }
 
+  function helpTip(nota) {
+    return nota
+      ? '<span class="help"><span class="q">?</span><span class="tip">' + esc(nota) + '</span></span>'
+      : '<span></span>';
+  }
+
   function renderImpSection(items, sec) {
     return '<div id="imp-sec-' + sec + '">' +
       items.map((it, i) =>
         '<div class="imp-row">' +
-          '<input class="in-bare imp-label" data-sec="' + sec + '" data-i="' + i + '" value="' + esc(it.label) + '" title="' + esc(it.nota || '') + '" />' +
+          '<input class="in-bare imp-label" data-sec="' + sec + '" data-i="' + i + '" value="' + esc(it.label) + '" />' +
           '<select class="in-bare imp-tipo" data-sec="' + sec + '" data-i="' + i + '">' +
             IMP_TIPOS[sec].map((t) => '<option value="' + t + '"' + (it.tipo === t ? ' selected' : '') + '>' + tipoLabel(t) + '</option>').join('') +
           '</select>' +
           '<input class="in-bare imp-valor" type="number" data-sec="' + sec + '" data-i="' + i + '" value="' + (Number(it.valor) || 0) + '" min="0" inputmode="decimal" />' +
-          (it.nota ? '<span class="help" title="' + esc(it.nota) + '"><span class="q">?</span></span>' : '<span></span>') +
+          helpTip(it.nota) +
           '<button class="imp-del" data-sec="' + sec + '" data-i="' + i + '" aria-label="Borrar">×</button>' +
         '</div>'
       ).join('') +
@@ -93,23 +99,26 @@
 
       // — BLOQUE 1: Datos generales —
       '<div class="card">' + cardHead('Datos del pedido', 'FOB, cantidad y tipo de cambio') +
+        '<p class="imp-desc"><b>FOB</b> (Free On Board) es el precio que te cobra el proveedor en origen. No incluye el envío ni el seguro — eso va aparte en el siguiente bloque.</p>' +
         '<div class="row3">' +
           '<div class="field"><label>FOB por unidad (USD)</label><div class="in"><span class="pre">U$S</span><input type="number" id="imp-fob" value="0" min="0" step="0.01" inputmode="decimal" /></div></div>' +
           '<div class="field"><label>Cantidad</label><div class="in"><input type="number" id="imp-qty" value="100" min="1" inputmode="numeric" /><span class="suf">u.</span></div></div>' +
-          '<div class="field"><label>Tipo de cambio <span class="help"><span class="q">?</span><span class="tip">ARS por dólar al momento de pagar al proveedor.</span></span></label><div class="in"><span class="pre">$</span><input type="number" id="imp-tc" value="' + (D.cotizacionUSD || 1000) + '" min="1" inputmode="decimal" /></div></div>' +
+          '<div class="field"><label>Tipo de cambio <span class="help"><span class="q">?</span><span class="tip">ARS por dólar al momento de pagar al proveedor. Usamos este valor para convertir todos los costos en USD a pesos.</span></span></label><div class="in"><span class="pre">$</span><input type="number" id="imp-tc" value="' + (D.cotizacionUSD || 1000) + '" min="1" inputmode="decimal" /></div></div>' +
         '</div>' +
       '</div>' +
 
       // — BLOQUE 2: Origen → CIF —
       '<div class="card">' + cardHead('Costos de origen', 'Flete y seguro hasta Buenos Aires') +
+        '<p class="imp-desc">Estos costos se suman al FOB para obtener el <b>valor CIF</b> (Cost, Insurance, Freight). El CIF es la base que usa la aduana argentina para calcular todos los impuestos del bloque siguiente.</p>' +
         '<div class="imp-sec-head"><span>Concepto</span><span>Tipo</span><span>Valor</span><span></span><span></span></div>' +
         renderImpSection(impOrigen, 'origen') +
         '<button class="btn-add imp-add-btn" data-sec="origen" style="background:transparent;color:var(--verde);border:1.5px dashed var(--linea);box-shadow:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Agregar</button>' +
-        '<div class="imp-sub"><span>Valor CIF (FOB + origen)</span><span id="imp-cif">—</span></div>' +
+        '<div class="imp-sub"><span>Valor CIF = base para aduana</span><span id="imp-cif">—</span></div>' +
       '</div>' +
 
       // — BLOQUE 3: Aduana —
-      '<div class="card">' + cardHead('Gastos de aduana', 'Se pagan cuando llega la mercadería') +
+      '<div class="card">' + cardHead('Gastos de aduana', 'Se pagan cuando llega la mercadería a Argentina') +
+        '<p class="imp-desc">Todos los porcentajes se calculan sobre el CIF. Los exactos dependen de la <b>posición arancelaria</b> del producto — consultá con tu despachante. Los montos fijos (despachante, depósito) ingresalos en pesos.</p>' +
         '<div class="imp-sec-head"><span>Concepto</span><span>Tipo</span><span>Valor</span><span></span><span></span></div>' +
         renderImpSection(impAduana, 'aduana') +
         '<button class="btn-add imp-add-btn" data-sec="aduana" style="background:transparent;color:var(--verde);border:1.5px dashed var(--linea);box-shadow:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Agregar</button>' +
@@ -117,7 +126,8 @@
       '</div>' +
 
       // — BLOQUE 4: Logística interna —
-      '<div class="card">' + cardHead('Logística interna', 'Desde Buenos Aires hasta tu depósito') +
+      '<div class="card">' + cardHead('Logística interna', 'Desde el depósito aduanero hasta vos') +
+        '<p class="imp-desc">Lo que cuesta mover la mercadería desde aduana hasta tu depósito o local. Puede ser un camión, una encomienda o un servicio de logística. Ingresá el costo total en pesos.</p>' +
         '<div class="imp-sec-head"><span>Concepto</span><span></span><span>Valor ARS</span><span></span><span></span></div>' +
         renderImpSection(impInterno, 'interno') +
         '<button class="btn-add imp-add-btn" data-sec="interno" style="background:transparent;color:var(--verde);border:1.5px dashed var(--linea);box-shadow:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Agregar</button>' +
@@ -152,12 +162,12 @@
     if (!el) return;
     C.setHTML(el, getImpSection(sec).map((it, i) =>
       '<div class="imp-row">' +
-        '<input class="in-bare imp-label" data-sec="' + sec + '" data-i="' + i + '" value="' + esc(it.label) + '" title="' + esc(it.nota || '') + '" />' +
+        '<input class="in-bare imp-label" data-sec="' + sec + '" data-i="' + i + '" value="' + esc(it.label) + '" />' +
         '<select class="in-bare imp-tipo" data-sec="' + sec + '" data-i="' + i + '">' +
           IMP_TIPOS[sec].map((t) => '<option value="' + t + '"' + (it.tipo === t ? ' selected' : '') + '>' + tipoLabel(t) + '</option>').join('') +
         '</select>' +
         '<input class="in-bare imp-valor" type="number" data-sec="' + sec + '" data-i="' + i + '" value="' + (Number(it.valor) || 0) + '" min="0" inputmode="decimal" />' +
-        (it.nota ? '<span class="help" title="' + esc(it.nota) + '"><span class="q">?</span></span>' : '<span></span>') +
+        helpTip(it.nota) +
         '<button class="imp-del" data-sec="' + sec + '" data-i="' + i + '" aria-label="Borrar">×</button>' +
       '</div>'
     ).join(''));

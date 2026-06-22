@@ -265,6 +265,9 @@ footer.foot b{color:var(--verde);font-family:var(--serif)}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
 .imp-sec-head{display:grid;grid-template-columns:1fr 60px 92px 28px 34px;gap:8px;padding:0 2px 5px;
   font-size:11.5px;font-weight:700;color:var(--tinta-soft);text-transform:uppercase;letter-spacing:.04em}
+.imp-desc{font-size:13px;color:var(--tinta-soft);line-height:1.55;margin-bottom:14px;padding:10px 13px;
+  background:var(--crema-2);border-radius:10px;border-left:3px solid var(--verde)}
+.imp-desc b{color:var(--tinta);font-weight:700}
 .imp-sub{display:flex;justify-content:space-between;align-items:center;
   margin-top:10px;padding:9px 12px;background:var(--crema-2);border-radius:10px;
   font-size:14px;font-weight:700;color:var(--tinta)}
