@@ -54,15 +54,27 @@ const COSTITO_DATA = {
     { n: 'Transferencia',      c: 0,    col: 'var(--verde-2)', ico: '<path d="M7 10l5-5 5 5M12 5v14"/>' },
   ],
 
-  // Ítems precargados de la calculadora de importación (editables por el usuario).
-  // tipo: 'pct' = porcentaje sobre el FOB total · 'fijo' = monto fijo en pesos.
-  importItemsDefault: [
-    { label: 'Flete internacional', tipo: 'pct',  valor: 12 },
-    { label: 'Aranceles',           tipo: 'pct',  valor: 16 },
-    { label: 'Tasa estadística',    tipo: 'pct',  valor: 3  },
-    { label: 'IVA aduana',          tipo: 'pct',  valor: 21 },
-    { label: 'Despachante',         tipo: 'fijo', valor: 50000 },
-  ],
+  // Ítems precargados de la calculadora de importación.
+  // Separados en 3 bloques que reflejan el proceso real de una importación.
+  // origen: sobre el FOB en USD (tipo 'usd' = monto USD total, 'pct' = % del FOB)
+  // aduana: los cargos en aduana argentina (tipo 'pct' = % sobre CIF, 'fijo' = ARS)
+  // interno: logística dentro de Argentina (tipo 'fijo' = ARS)
+  importDefault: {
+    origen: [
+      { label: 'Flete internacional', tipo: 'usd', valor: 0,   nota: 'Total del envío en USD' },
+      { label: 'Seguro de carga',     tipo: 'pct', valor: 0.5, nota: '~0,5% del FOB. Cotizá con el despachante.' },
+    ],
+    aduana: [
+      { label: 'Aranceles',           tipo: 'pct', valor: 16,   nota: '% sobre el valor CIF. Depende de la posición arancelaria.' },
+      { label: 'IVA aduana (10,5%)',  tipo: 'pct', valor: 10.5, nota: 'Tasa reducida para la mayoría de productos. Puede ser 21% si aplica.' },
+      { label: 'Tasa estadística',    tipo: 'pct', valor: 3,    nota: '% sobre CIF. Verificar con despachante.' },
+      { label: 'Honorarios despachante', tipo: 'fijo', valor: 0, nota: 'Monto fijo en ARS. Pedí cotización.' },
+      { label: 'Depósito fiscal',     tipo: 'fijo', valor: 0,   nota: 'ARS. Solo si hay demoras en aduana.' },
+    ],
+    interno: [
+      { label: 'Flete interno',       tipo: 'fijo', valor: 0,   nota: 'ARS. Costo de mover la mercadería al depósito.' },
+    ],
+  },
 
   // Configuración del upsell Premium
   premium: {

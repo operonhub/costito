@@ -48,87 +48,175 @@
   }
 
   // ============================================================
-  // 1) IMPORTACIÓN (landed cost)
+  // 1) IMPORTACIÓN (landed cost — 3 bloques)
   // ============================================================
-  let impItems = D.importItemsDefault.map((it) => ({ ...it }));
+  const impD = D.importDefault;
+  let impOrigen  = impD.origen.map((it) => ({ ...it }));
+  let impAduana  = impD.aduana.map((it) => ({ ...it }));
+  let impInterno = impD.interno.map((it) => ({ ...it }));
+
+  const IMP_TIPOS = { origen: ['usd', 'pct'], aduana: ['pct', 'fijo'], interno: ['fijo'] };
+
+  function tipoLabel(tipo) {
+    if (tipo === 'usd') return 'USD';
+    if (tipo === 'pct') return '%';
+    return '$ ARS';
+  }
+
+  function renderImpSection(items, sec) {
+    return '<div id="imp-sec-' + sec + '">' +
+      items.map((it, i) =>
+        '<div class="imp-row">' +
+          '<input class="in-bare imp-label" data-sec="' + sec + '" data-i="' + i + '" value="' + esc(it.label) + '" title="' + esc(it.nota || '') + '" />' +
+          '<select class="in-bare imp-tipo" data-sec="' + sec + '" data-i="' + i + '">' +
+            IMP_TIPOS[sec].map((t) => '<option value="' + t + '"' + (it.tipo === t ? ' selected' : '') + '>' + tipoLabel(t) + '</option>').join('') +
+          '</select>' +
+          '<input class="in-bare imp-valor" type="number" data-sec="' + sec + '" data-i="' + i + '" value="' + (Number(it.valor) || 0) + '" min="0" inputmode="decimal" />' +
+          (it.nota ? '<span class="help" title="' + esc(it.nota) + '"><span class="q">?</span></span>' : '<span></span>') +
+          '<button class="imp-del" data-sec="' + sec + '" data-i="' + i + '" aria-label="Borrar">×</button>' +
+        '</div>'
+      ).join('') +
+    '</div>';
+  }
 
   function buildImport() {
     if (!C.isPremium()) {
       C.setHTML($('body-import'), gateHTML({
         titulo: 'Calculá tu costo de importación',
-        desc: 'Sumá FOB, flete, aranceles, tasa estadística, IVA aduana y despachante para saber el costo real puesto en tu depósito.',
-        feats: ['FOB + flete internacional', 'Aranceles y tasa estadística', 'IVA aduana y despachante', 'Costo unitario final'],
+        desc: 'FOB, flete, aranceles, IVA aduana y flete interno: todo junto para saber el costo real puesto en tu depósito.',
+        feats: ['FOB + flete + seguro = valor CIF', 'Aranceles e IVA aduana sobre el CIF', 'Flete interno hasta tu depósito', 'Costo unitario final en ARS'],
       }));
       return;
     }
     C.setHTML($('body-import'),
       demoRibbon() +
-      '<div class="card">' + cardHead('Lo que pagás en origen', 'FOB y cantidad') +
-        '<div class="row2">' +
-          '<div class="field"><label>FOB por unidad</label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="imp-fob" value="10000" min="0" inputmode="decimal" /></div></div>' +
+
+      // — BLOQUE 1: Datos generales —
+      '<div class="card">' + cardHead('Datos del pedido', 'FOB, cantidad y tipo de cambio') +
+        '<div class="row3">' +
+          '<div class="field"><label>FOB por unidad (USD)</label><div class="in"><span class="pre">U$S</span><input type="number" id="imp-fob" value="0" min="0" step="0.01" inputmode="decimal" /></div></div>' +
           '<div class="field"><label>Cantidad</label><div class="in"><input type="number" id="imp-qty" value="100" min="1" inputmode="numeric" /><span class="suf">u.</span></div></div>' +
-        '</div></div>' +
-      '<div class="card">' + cardHead('Costos del proceso', 'Editá, sumá o borrá lo que quieras') +
-        '<div id="imp-items"></div>' +
-        '<button class="btn-add" id="imp-add" style="background:transparent;color:var(--verde);border:1.5px dashed var(--linea);box-shadow:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Agregar costo</button>' +
+          '<div class="field"><label>Tipo de cambio <span class="help"><span class="q">?</span><span class="tip">ARS por dólar al momento de pagar al proveedor.</span></span></label><div class="in"><span class="pre">$</span><input type="number" id="imp-tc" value="' + (D.cotizacionUSD || 1000) + '" min="1" inputmode="decimal" /></div></div>' +
+        '</div>' +
       '</div>' +
+
+      // — BLOQUE 2: Origen → CIF —
+      '<div class="card">' + cardHead('Costos de origen', 'Flete y seguro hasta Buenos Aires') +
+        '<div class="imp-sec-head"><span>Concepto</span><span>Tipo</span><span>Valor</span><span></span><span></span></div>' +
+        renderImpSection(impOrigen, 'origen') +
+        '<button class="btn-add imp-add-btn" data-sec="origen" style="background:transparent;color:var(--verde);border:1.5px dashed var(--linea);box-shadow:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Agregar</button>' +
+        '<div class="imp-sub"><span>Valor CIF (FOB + origen)</span><span id="imp-cif">—</span></div>' +
+      '</div>' +
+
+      // — BLOQUE 3: Aduana —
+      '<div class="card">' + cardHead('Gastos de aduana', 'Se pagan cuando llega la mercadería') +
+        '<div class="imp-sec-head"><span>Concepto</span><span>Tipo</span><span>Valor</span><span></span><span></span></div>' +
+        renderImpSection(impAduana, 'aduana') +
+        '<button class="btn-add imp-add-btn" data-sec="aduana" style="background:transparent;color:var(--verde);border:1.5px dashed var(--linea);box-shadow:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Agregar</button>' +
+        '<div class="imp-sub"><span>Total aduana</span><span id="imp-aduana-total">—</span></div>' +
+      '</div>' +
+
+      // — BLOQUE 4: Logística interna —
+      '<div class="card">' + cardHead('Logística interna', 'Desde Buenos Aires hasta tu depósito') +
+        '<div class="imp-sec-head"><span>Concepto</span><span></span><span>Valor ARS</span><span></span><span></span></div>' +
+        renderImpSection(impInterno, 'interno') +
+        '<button class="btn-add imp-add-btn" data-sec="interno" style="background:transparent;color:var(--verde);border:1.5px dashed var(--linea);box-shadow:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Agregar</button>' +
+      '</div>' +
+
+      // — Resumen —
       '<div class="card"><div class="break">' +
-        '<div class="li"><span class="k">FOB total</span><span class="v" id="imp-fobtotal">—</span></div>' +
-        '<div class="li minus"><span class="k">Cargos (flete, aduana, etc.)</span><span class="v" id="imp-cargos">—</span></div>' +
-        '<div class="li tot"><span class="k">Costo total puesto en depósito</span><span class="v" id="imp-total">—</span></div>' +
+        '<div class="li"><span class="k">Valor CIF (puesto en Buenos Aires)</span><span class="v" id="imp-cif2">—</span></div>' +
+        '<div class="li"><span class="k">Gastos de aduana</span><span class="v" id="imp-aduana2">—</span></div>' +
+        '<div class="li"><span class="k">Logística interna</span><span class="v" id="imp-interno2">—</span></div>' +
+        '<div class="li tot"><span class="k">Costo landed total</span><span class="v" id="imp-total">—</span></div>' +
       '</div></div>' +
+
       '<div class="tag-wrap"><div class="tag">' +
         '<div class="lbl">' + ICO.check + ' Costo por unidad</div>' +
         '<div class="big"><span class="c">' + C.symbol() + '</span><span id="imp-unit">—</span></div>' +
-        '<div class="note">Ya con todos los cargos de importación adentro.</div>' +
+        '<div class="note">Con todos los costos de importación incluidos.</div>' +
       '</div></div>' +
       '<button class="btn-add" id="imp-usar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Usar este costo en la calculadora</button>'
     );
-    renderImpItems();
     recalcImport();
   }
 
-  function renderImpItems() {
-    C.setHTML($('imp-items'), impItems.map((it, i) =>
+  function getImpSection(sec) {
+    if (sec === 'origen')  return impOrigen;
+    if (sec === 'aduana')  return impAduana;
+    if (sec === 'interno') return impInterno;
+  }
+
+  function rerenderSection(sec) {
+    const el = document.getElementById('imp-sec-' + sec);
+    if (!el) return;
+    C.setHTML(el, getImpSection(sec).map((it, i) =>
       '<div class="imp-row">' +
-        '<input class="in-bare imp-label" data-i="' + i + '" value="' + esc(it.label) + '" />' +
-        '<select class="in-bare imp-tipo" data-i="' + i + '">' +
-          '<option value="pct"' + (it.tipo === 'pct' ? ' selected' : '') + '>% FOB</option>' +
-          '<option value="fijo"' + (it.tipo === 'fijo' ? ' selected' : '') + '>$ fijo</option>' +
+        '<input class="in-bare imp-label" data-sec="' + sec + '" data-i="' + i + '" value="' + esc(it.label) + '" title="' + esc(it.nota || '') + '" />' +
+        '<select class="in-bare imp-tipo" data-sec="' + sec + '" data-i="' + i + '">' +
+          IMP_TIPOS[sec].map((t) => '<option value="' + t + '"' + (it.tipo === t ? ' selected' : '') + '>' + tipoLabel(t) + '</option>').join('') +
         '</select>' +
-        '<input class="in-bare imp-valor" type="number" data-i="' + i + '" value="' + (Number(it.valor) || 0) + '" min="0" inputmode="decimal" />' +
-        '<button class="imp-del" data-i="' + i + '" aria-label="Borrar">×</button>' +
+        '<input class="in-bare imp-valor" type="number" data-sec="' + sec + '" data-i="' + i + '" value="' + (Number(it.valor) || 0) + '" min="0" inputmode="decimal" />' +
+        (it.nota ? '<span class="help" title="' + esc(it.nota) + '"><span class="q">?</span></span>' : '<span></span>') +
+        '<button class="imp-del" data-sec="' + sec + '" data-i="' + i + '" aria-label="Borrar">×</button>' +
       '</div>'
     ).join(''));
   }
 
   function recalcImport() {
-    const r = Calc.landedCost({ fob: $('imp-fob').value, qty: $('imp-qty').value, items: impItems });
-    $('imp-fobtotal').textContent = money(r.fobTotal);
-    $('imp-cargos').textContent = '+ ' + money(r.cargos);
-    $('imp-total').textContent = money(r.total);
-    $('imp-unit').textContent = C.fmt(C.conv(r.unitario));
-    $('body-import')._unit = r.unitario; // guardamos para "usar en calc"
+    const r = Calc.landedCost({
+      fob: $('imp-fob').value,
+      qty: $('imp-qty').value,
+      tc:  $('imp-tc').value,
+      origen:  impOrigen,
+      aduana:  impAduana,
+      interno: impInterno,
+    });
+    const fmt = (v) => money(v);
+    if ($('imp-cif'))       $('imp-cif').textContent        = 'U$S ' + r.cifUSD.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '  (' + fmt(r.cifARS) + ')';
+    if ($('imp-cif2'))      $('imp-cif2').textContent       = fmt(r.cifARS);
+    if ($('imp-aduana-total')) $('imp-aduana-total').textContent = fmt(r.aduanaARS);
+    if ($('imp-aduana2'))   $('imp-aduana2').textContent    = fmt(r.aduanaARS);
+    if ($('imp-interno2'))  $('imp-interno2').textContent   = fmt(r.internoARS);
+    if ($('imp-total'))     $('imp-total').textContent      = fmt(r.total);
+    if ($('imp-unit'))      $('imp-unit').textContent       = C.fmt(C.conv(r.unitario));
+    $('body-import')._unit = r.unitario;
   }
 
   // Delegación de eventos (se ata una sola vez; sobrevive a los rebuilds)
   $('body-import').addEventListener('input', (e) => {
     const t = e.target;
-    if (t.id === 'imp-fob' || t.id === 'imp-qty') return recalcImport();
-    if (t.classList.contains('imp-valor')) { impItems[+t.dataset.i].valor = t.value; recalcImport(); }
-    if (t.classList.contains('imp-label')) { impItems[+t.dataset.i].label = t.value; }
+    if (['imp-fob', 'imp-qty', 'imp-tc'].includes(t.id)) return recalcImport();
+    if (t.classList.contains('imp-valor')) {
+      getImpSection(t.dataset.sec)[+t.dataset.i].valor = t.value;
+      recalcImport();
+    }
+    if (t.classList.contains('imp-label')) {
+      getImpSection(t.dataset.sec)[+t.dataset.i].label = t.value;
+    }
   });
   $('body-import').addEventListener('change', (e) => {
-    if (e.target.classList.contains('imp-tipo')) { impItems[+e.target.dataset.i].tipo = e.target.value; recalcImport(); }
+    const t = e.target;
+    if (t.classList.contains('imp-tipo')) {
+      getImpSection(t.dataset.sec)[+t.dataset.i].tipo = t.value;
+      recalcImport();
+    }
   });
   $('body-import').addEventListener('click', (e) => {
-    if (e.target.id === 'imp-add' || e.target.closest('#imp-add')) {
-      impItems.push({ label: 'Nuevo costo', tipo: 'pct', valor: 0 });
-      renderImpItems(); recalcImport();
+    const addBtn = e.target.closest('.imp-add-btn');
+    if (addBtn) {
+      const sec = addBtn.dataset.sec;
+      const defTipo = sec === 'origen' ? 'usd' : sec === 'interno' ? 'fijo' : 'pct';
+      getImpSection(sec).push({ label: 'Nuevo costo', tipo: defTipo, valor: 0, nota: '' });
+      rerenderSection(sec);
+      recalcImport();
     }
-    if (e.target.classList.contains('imp-del')) {
-      impItems.splice(+e.target.dataset.i, 1);
-      renderImpItems(); recalcImport();
+    const delBtn = e.target.closest('.imp-del');
+    if (delBtn) {
+      const sec = delBtn.dataset.sec;
+      getImpSection(sec).splice(+delBtn.dataset.i, 1);
+      rerenderSection(sec);
+      recalcImport();
     }
     if (e.target.id === 'imp-usar' || e.target.closest('#imp-usar')) {
       C.usarComoCosto($('body-import')._unit || 0);

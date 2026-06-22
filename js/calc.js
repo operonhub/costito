@@ -77,27 +77,57 @@ const CostitoCalc = {
   },
 
   /* ---------- PREMIUM: Costo de importación (landed cost) ----------
-     Suma sobre el FOB todos los ítems, que pueden ser un % del FOB
-     (flete, aranceles, tasa estadística, IVA aduana) o un monto fijo
-     en pesos (despachante, etc.). Devuelve el costo total y el unitario. */
-  landedCost({ fob = 0, qty = 1, items = [] }) {
+     Estructura en 3 bloques que refleja el proceso real:
+       Bloque 1 (origen): FOB + flete + seguro → CIF en USD
+       Bloque 2 (aduana): aranceles + IVA + tasa estadística + despachante → en ARS
+       Bloque 3 (interno): flete y logística dentro de Argentina → en ARS
+     tc = tipo de cambio ARS/USD que usó el usuario para pagar.
+     origen items: tipo 'usd' (USD total) o 'pct' (% del FOB total).
+     aduana items: tipo 'pct' (% sobre CIF en ARS) o 'fijo' (ARS).
+     interno items: tipo 'fijo' (ARS). */
+  landedCost({ fob = 0, qty = 1, tc = 1000, origen = [], aduana = [], interno = [] }) {
     fob = Number(fob) || 0;
     qty = Math.max(Number(qty) || 1, 1);
-    const base = fob * qty; // FOB total
+    tc  = Number(tc)  || 1;
 
-    let totalPct = 0, totalFijo = 0;
-    items.forEach((it) => {
+    const fobTotalUSD = fob * qty;
+    const fobTotalARS = fobTotalUSD * tc;
+
+    // CIF: FOB + flete internacional + seguro (todos en USD → convertir a ARS)
+    let origenUSD = 0;
+    origen.forEach((it) => {
       const v = Number(it.valor) || 0;
-      if (it.tipo === 'fijo') totalFijo += v;
-      else totalPct += (v / 100) * base; // % se aplica sobre el FOB total
+      if (it.tipo === 'usd') origenUSD += v;
+      else origenUSD += (v / 100) * fobTotalUSD; // % del FOB
+    });
+    const cifUSD = fobTotalUSD + origenUSD;
+    const cifARS = cifUSD * tc;
+
+    // Aduana: % sobre CIF en ARS, o montos fijos en ARS
+    let aduanaARS = 0;
+    aduana.forEach((it) => {
+      const v = Number(it.valor) || 0;
+      if (it.tipo === 'fijo') aduanaARS += v;
+      else aduanaARS += (v / 100) * cifARS; // % sobre CIF
     });
 
-    const total = base + totalPct + totalFijo;
+    // Interno: montos fijos en ARS
+    let internoARS = 0;
+    interno.forEach((it) => {
+      internoARS += Number(it.valor) || 0;
+    });
+
+    const total = cifARS + aduanaARS + internoARS;
     return {
-      fobTotal: base,
-      cargos: totalPct + totalFijo,
-      total,                       // costo total puesto en depósito
-      unitario: total / qty,       // costo por unidad
+      fobTotalUSD,
+      fobTotalARS,
+      origenUSD,
+      cifUSD,
+      cifARS,
+      aduanaARS,
+      internoARS,
+      total,
+      unitario: total / qty,
     };
   },
 
