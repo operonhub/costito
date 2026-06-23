@@ -1,76 +1,93 @@
 /* ============================================================
-   COSTITO — Splash + Auth (login dentro de la app)
-   ------------------------------------------------------------
-   La app entra DIRECTO a la calculadora; el login es opcional y
-   vive adentro (botón de cuenta en el header). No hay "auth gate".
-
-   CostitoAuth es una capa desacoplada: la UI llama a una interfaz
-   estable y la implementación es hoy un STUB local (localStorage).
-   Cuando se conecte Supabase / Google se reemplaza SOLO el cuerpo
-   de signInWithEmail / signInWithGoogle / signOut — la UI no cambia.
+   COSTITO — Splash + Auth (Supabase)
    ============================================================ */
 
 /* ---------- 1) SPLASH DE ENTRADA ---------- */
 (function splash() {
   const el = document.getElementById('splash');
   if (!el) return;
-
-  // Se muestra una vez por sesión de pestaña (no en cada reload).
-  // Para mostrarlo SIEMPRE, borrar este bloque de sessionStorage.
   if (sessionStorage.getItem('costito_splash')) { el.remove(); return; }
   sessionStorage.setItem('costito_splash', '1');
-
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const hold = reduce ? 350 : 1250; // tiempo en pantalla antes de desvanecer
-
+  const hold = reduce ? 350 : 1250;
   setTimeout(() => {
     el.classList.add('gone');
-    setTimeout(() => el.remove(), 550); // coincide con la transición CSS
+    setTimeout(() => el.remove(), 550);
   }, hold);
 })();
 
-/* ---------- 2) CAPA AUTH (interfaz estable, impl. reemplazable) ---------- */
+/* ---------- 2) CAPA AUTH (Supabase) ---------- */
 window.CostitoAuth = (function () {
-  const LS = 'costito_session';
+  const SUPABASE_URL = 'https://pedpqmrxzftddvgfwlxx.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8boyR6fKSt7suaWyF038tw_heNNiiD1';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
   let listeners = [];
 
-  function getUser() {
-    try { return JSON.parse(localStorage.getItem(LS)) || null; } catch (e) { return null; }
-  }
-  function emit(u) { listeners.forEach((f) => { try { f(u); } catch (e) {} }); }
-  function setUser(u) {
-    if (u) localStorage.setItem(LS, JSON.stringify(u));
-    else localStorage.removeItem(LS);
-    emit(u);
-  }
-  function onChange(cb) { listeners.push(cb); return () => { listeners = listeners.filter((f) => f !== cb); }; }
-
-  function makeUser(email) {
-    const name = email.split('@')[0].replace(/[._-]+/g, ' ').trim();
+  function makeUser(sbUser) {
+    if (!sbUser) return null;
+    const email = sbUser.email;
+    const name = (sbUser.user_metadata && sbUser.user_metadata.full_name)
+      ? sbUser.user_metadata.full_name
+      : email.split('@')[0].replace(/[._-]+/g, ' ').trim();
     const initials = name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || email[0].toUpperCase();
     return { email, name, initials };
   }
 
-  // ===== STUB — reemplazar por Supabase =====
-  // signUp -> supabase.auth.signUp({email, password})
-  // login  -> supabase.auth.signInWithPassword({email, password})
-  function signInWithEmail(email, pass /*, mode */) {
-    return new Promise((resolve, reject) => {
-      email = (email || '').trim().toLowerCase();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return reject(new Error('Ingresá un email válido.'));
-      if (!pass || pass.length < 6) return reject(new Error('La contraseña necesita al menos 6 caracteres.'));
-      // PLACEHOLDER: todavía no verifica contra ningún backend.
-      setTimeout(() => { const u = makeUser(email); setUser(u); resolve(u); }, 450); // simula latencia
+  function emit(u) { listeners.forEach((f) => { try { f(u); } catch (e) {} }); }
+  function getUser() { return currentUser; }
+  function onChange(cb) { listeners.push(cb); return () => { listeners = listeners.filter((f) => f !== cb); }; }
+
+  // Supabase emite INITIAL_SESSION al cargar — sincroniza el estado apenas resuelve
+  sb.auth.onAuthStateChange((_event, session) => {
+    currentUser = makeUser(session ? session.user : null);
+    emit(currentUser);
+  });
+
+  function translateError(msg) {
+    if (!msg) return 'Algo salió mal, intentá de nuevo.';
+    if (msg.includes('Invalid login credentials')) return 'Email o contraseña incorrectos.';
+    if (msg.includes('Email not confirmed'))       return 'Confirmá tu email antes de ingresar.';
+    if (msg.includes('User already registered'))   return 'Ya existe una cuenta con ese email. Intentá entrar.';
+    if (msg.includes('Password should be'))        return 'La contraseña necesita al menos 6 caracteres.';
+    if (msg.includes('rate limit') || msg.includes('too many')) return 'Demasiados intentos. Esperá unos minutos.';
+    return msg;
+  }
+
+  function signInWithEmail(email, pass, mode) {
+    email = (email || '').trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+      return Promise.reject(new Error('Ingresá un email válido.'));
+    if (!pass || pass.length < 6)
+      return Promise.reject(new Error('La contraseña necesita al menos 6 caracteres.'));
+
+    const action = mode === 'signup'
+      ? sb.auth.signUp({ email, password: pass })
+      : sb.auth.signInWithPassword({ email, password: pass });
+
+    return action.then(({ data, error }) => {
+      if (error) throw new Error(translateError(error.message));
+      // signUp sin confirmación de email: data.session es null
+      if (mode === 'signup' && data.user && !data.session) {
+        throw new Error('Te mandamos un email de confirmación. Revisá tu bandeja.');
+      }
+      return makeUser(data.user);
     });
   }
 
-  // ===== STUB — se implementa en el próximo paso =====
-  // -> supabase.auth.signInWithOAuth({ provider: 'google' })
   function signInWithGoogle() {
-    return Promise.reject(new Error('GOOGLE_PENDIENTE'));
+    return sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname },
+    }).then(({ error }) => {
+      if (error) throw new Error(translateError(error.message));
+    });
   }
 
-  function signOut() { setUser(null); }
+  function signOut() {
+    return sb.auth.signOut();
+  }
 
   return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut };
 })();
@@ -88,7 +105,6 @@ window.CostitoAuth = (function () {
 
   let mode = 'login'; // 'login' | 'signup'
 
-  // -- Estado del header según haya sesión --
   function renderAccount(u) {
     if (u) {
       btn.classList.add('logged');
@@ -104,7 +120,6 @@ window.CostitoAuth = (function () {
     }
   }
 
-  // -- Modal --
   function openModal() {
     setMode('login');
     $('authError').textContent = '';
@@ -127,11 +142,9 @@ window.CostitoAuth = (function () {
     $('authError').textContent = '';
   }
 
-  // -- Menú de cuenta logueada --
   function toggleMenu() { menu.classList.toggle('on'); }
   function closeMenu() { menu.classList.remove('on'); }
 
-  // -- Eventos --
   btn.addEventListener('click', () => {
     if (Auth.getUser()) toggleMenu();
     else openModal();
@@ -141,7 +154,6 @@ window.CostitoAuth = (function () {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeMenu(); } });
 
-  // Cerrar el menú al clickear afuera
   document.addEventListener('click', (e) => {
     if (menu.classList.contains('on') && !e.target.closest('.acct-wrap')) closeMenu();
   });
@@ -169,8 +181,7 @@ window.CostitoAuth = (function () {
 
   $('authGoogle').addEventListener('click', () => {
     Auth.signInWithGoogle().catch((err) => {
-      if (err.message === 'GOOGLE_PENDIENTE') toast('El acceso con Google lo activamos en el próximo paso 🙌');
-      else $('authError').textContent = err.message;
+      $('authError').textContent = err.message;
     });
   });
 
@@ -180,7 +191,6 @@ window.CostitoAuth = (function () {
     toast('Cerraste sesión. Tus productos siguen guardados en este dispositivo.');
   });
 
-  // Init + reaccionar a cambios de sesión
   Auth.onChange(renderAccount);
   renderAccount(Auth.getUser());
 })();
