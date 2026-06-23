@@ -224,10 +224,7 @@
         </div>
       </div>
       <div id="m-canal-local-wrap">
-        <div class="field" style="margin-top:10px">
-          <label>¿Con qué cobrás?</label>
-          <div class="in sel"><select id="m-procesador-sel"></select></div>
-        </div>
+        <div class="proc-checks" id="m-proc-checks"></div>
       </div>
       <div id="m-canal-internet-wrap" style="display:none">
         <div class="field" style="margin-top:10px">
@@ -253,6 +250,10 @@
         <thead><tr><th>Medio</th><th>Comisión</th><th>Cobrás</th></tr></thead>
         <tbody id="mediosBody"></tbody>
       </table>
+      <button class="btn-export" id="mediosPdfBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 18h4"/></svg>
+        Guardar lista PDF
+      </button>
     </div>
   </section>
 
@@ -314,6 +315,24 @@
     </a>
   </footer>
 
+</div>
+
+<!-- Modal: guardar producto -->
+<div class="overlay" id="saveOverlay">
+  <div class="modal-box">
+    <h3 class="modal-title">¿Cómo se llama el producto?</h3>
+    <p class="modal-hint">Ingresá el nombre para guardarlo en tu lista de precios.</p>
+    <div class="in" style="margin:14px 0">
+      <input type="text" id="modalNombre" placeholder="Ej: Remera talle M" maxlength="80" />
+    </div>
+    <div class="modal-btns">
+      <button id="modalCancel">Cancelar</button>
+      <button id="modalConfirm" class="btn-prim-modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span id="toastMsg">Listo</span></div>

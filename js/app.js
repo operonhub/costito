@@ -18,7 +18,7 @@
 
   // Claves de localStorage
   const LS = {
-    theme: 'costito_theme', cur: 'costito_cur', prods: 'costito_productos',
+    theme: 'costito_theme', cur: 'costito_cur', prods: 'costito_productos', procs: 'costito_procs',
     dolarTipo: 'costito_dolar_tipo', dolarCache: 'costito_dolar_cache',
   };
 
@@ -193,7 +193,7 @@
   // Estado del selector de canal en la tab Medios de pago
   const mediosState = {
     tipo: 'local',
-    procesadorId: PROCESADORES_LOCAL[0].id,
+    selectedProcIds: JSON.parse(localStorage.getItem(LS.procs) || 'null') || [PROCESADORES_LOCAL[0].id],
     plataformaId: PLATAFORMAS_INTERNET[0].id,
     procOnlineId: null,
   };
@@ -257,10 +257,13 @@
     ).join(''));
     updateProcOnlineOptions(false);
 
-    // Medios tab — procesadores
-    setHTML($('m-procesador-sel'), PROCESADORES_LOCAL.map((p) =>
-      '<option value="' + p.id + '">' + p.nombre + '</option>'
-    ).join(''));
+    // Medios tab — procesadores (checkboxes multi-select)
+    setHTML($('m-proc-checks'), PROCESADORES_LOCAL.map((p) => {
+      const on = mediosState.selectedProcIds.includes(p.id);
+      return '<label class="proc-check' + (on ? ' on' : '') + '">' +
+        '<input type="checkbox" value="' + p.id + '"' + (on ? ' checked' : '') + ' />' +
+        '<span>' + p.nombre + '</span></label>';
+    }).join(''));
 
     // Medios tab — plataformas
     setHTML($('m-plataforma-sel'), PLATAFORMAS_INTERNET.map((p) =>
@@ -371,8 +374,13 @@
 
     // Nota contextual para medios
     if (mediosState.tipo === 'local') {
-      const proc = PROCESADORES_LOCAL.find((p) => p.id === mediosState.procesadorId);
-      $('m-canal-nota').textContent = proc ? proc.nota || '' : '';
+      const n = mediosState.selectedProcIds.length;
+      if (n > 1) {
+        $('m-canal-nota').textContent = n + ' procesadores seleccionados — la tabla los combina.';
+      } else {
+        const proc = PROCESADORES_LOCAL.find((p) => p.id === mediosState.selectedProcIds[0]);
+        $('m-canal-nota').textContent = proc ? proc.nota || '' : '';
+      }
     } else {
       const plat = PLATAFORMAS_INTERNET.find((p) => p.id === mediosState.plataformaId);
       $('m-canal-nota').textContent = plat ? plat.nota || '' : '';
@@ -503,8 +511,29 @@
     let items = [];
 
     if (mediosState.tipo === 'local') {
-      const proc = PROCESADORES_LOCAL.find((p) => p.id === mediosState.procesadorId) || PROCESADORES_LOCAL[0];
-      items = proc.medios.map((m) => ({ label: m.label, comision: m.comision, isBase: m.comision === 0 }));
+      let selectedProcs = PROCESADORES_LOCAL.filter((p) => mediosState.selectedProcIds.includes(p.id));
+      if (!selectedProcs.length) selectedProcs = [PROCESADORES_LOCAL[0]];
+      const showHeader = selectedProcs.length > 1;
+      const rows = [];
+      selectedProcs.forEach((proc) => {
+        if (showHeader) rows.push({ header: proc.nombre });
+        proc.medios.forEach((m) => rows.push({ label: m.label, comision: m.comision, isBase: m.comision === 0 }));
+      });
+      setHTML($('mediosBody'), rows.map((m) => {
+        if (m.header) return '<tr class="proc-header"><td colspan="3">' + m.header + '</td></tr>';
+        if (m.comision === null) {
+          return '<tr><td>' + m.label + '</td><td>—</td>' +
+            '<td style="color:var(--tinta-soft);font-size:12px">Ingresá la comisión</td></tr>';
+        }
+        const res = Calc.precioPorMedio(base, m.comision);
+        const pct = m.comision > 0 ? String(m.comision).replace('.', ',') + '%' : '—';
+        const reca = res.recargo > 0 ? '<div class="reca">+' + res.recargo.toFixed(1).replace('.', ',') + '%</div>' : '';
+        return '<tr class="' + (m.isBase ? 'base' : '') + '">' +
+          '<td><div class="m">' + m.label + '</div></td>' +
+          '<td><span class="pct">' + pct + '</span></td>' +
+          '<td><div class="price">' + money(res.precio) + '</div>' + reca + '</td></tr>';
+      }).join(''));
+      return;
     } else {
       const plat = PLATAFORMAS_INTERNET.find((p) => p.id === mediosState.plataformaId) || PLATAFORMAS_INTERNET[0];
       if (plat.submodo && plat.procesadores_online) {
@@ -545,9 +574,20 @@
     syncMediosUI();
   });
 
-  // Medios tab — procesador local
-  $('m-procesador-sel').addEventListener('change', () => {
-    mediosState.procesadorId = $('m-procesador-sel').value;
+  // Medios tab — checkboxes de procesadores (multi-select)
+  $('m-proc-checks').addEventListener('change', (e) => {
+    const cb = e.target.closest('input[type=checkbox]');
+    if (!cb) return;
+    cb.closest('label').classList.toggle('on', cb.checked);
+    const checked = Array.from($('m-proc-checks').querySelectorAll('input:checked')).map((el) => el.value);
+    // Asegurar al menos uno seleccionado
+    if (!checked.length) {
+      cb.checked = true;
+      cb.closest('label').classList.add('on');
+      checked.push(cb.value);
+    }
+    mediosState.selectedProcIds = checked;
+    localStorage.setItem(LS.procs, JSON.stringify(checked));
     syncMediosUI();
   });
 
@@ -593,21 +633,45 @@
     ).join(''));
   }
 
-  // Guardar el cálculo actual
-  $('addBtn').addEventListener('click', () => {
+  // ============================================================
+  // MODAL: guardar producto
+  // ============================================================
+  let pendingCalcResult = null;
+
+  function showSaveModal() {
     const r = Calc.precioPublicado(leerInputs());
     if (!r.ok) return;
-    const nombre = (prompt('¿Cómo se llama este producto?', '') || '').trim() || 'Producto sin nombre';
+    pendingCalcResult = r;
+    $('modalNombre').value = '';
+    $('saveOverlay').classList.add('on');
+    setTimeout(() => $('modalNombre').focus(), 60);
+  }
+
+  function closeSaveModal() {
+    $('saveOverlay').classList.remove('on');
+    pendingCalcResult = null;
+  }
+
+  function confirmSave() {
+    if (!pendingCalcResult) return;
+    const nombre = $('modalNombre').value.trim() || 'Producto sin nombre';
     state.productos.unshift({
       id: Date.now(),
       nombre,
       sub: canalNombreDisplay() + ' · margen ' + $('margen').value + '% · ' + new Date().toLocaleDateString('es-AR'),
-      precioARS: r.precio,
+      precioARS: pendingCalcResult.precio,
     });
     persistProds();
     renderProds();
+    closeSaveModal();
     toast('Guardado en mis productos');
-  });
+  }
+
+  $('addBtn').addEventListener('click', showSaveModal);
+  $('modalConfirm').addEventListener('click', confirmSave);
+  $('modalCancel').addEventListener('click', closeSaveModal);
+  $('saveOverlay').addEventListener('click', (e) => { if (e.target === $('saveOverlay')) closeSaveModal(); });
+  $('modalNombre').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmSave(); });
 
   // Borrar producto (delegación)
   $('plist').addEventListener('click', (e) => {
@@ -638,10 +702,116 @@
     toast('Excel (CSV) descargado');
   });
 
-  $('expPdf').addEventListener('click', () => {
+  $('expPdf').addEventListener('click', printProductosPdf);
+  $('mediosPdfBtn').addEventListener('click', printMediosPdf);
+
+  // ============================================================
+  // PDF FORMATEADO — Mis productos
+  // ============================================================
+  function printProductosPdf() {
     if (!state.productos.length) return toast('No hay productos para exportar');
-    window.print(); // el navegador permite "Guardar como PDF"
-  });
+    const date = new Date().toLocaleDateString('es-AR');
+    const rows = state.productos.map((p) =>
+      '<tr><td><div class="n">' + escapeHtml(p.nombre) + '</div><div class="d">' + escapeHtml(p.sub) + '</div></td>' +
+      '<td class="pr">' + money(p.precioARS) + '</td></tr>'
+    ).join('');
+    const html = '<!DOCTYPE html><html lang="es-AR"><head><meta charset="UTF-8">' +
+      '<title>Costito — Mis Productos</title><style>' +
+      'body{font-family:Arial,Helvetica,sans-serif;max-width:680px;margin:30px auto;color:#19271F}' +
+      '.logo{font-size:22px;font-weight:700;color:#1F8A5B;margin-bottom:2px}' +
+      '.sub{color:#5E7268;font-size:12px;margin-bottom:22px}' +
+      'table{width:100%;border-collapse:collapse}' +
+      'th{background:#1F8A5B;color:#fff;padding:10px 14px;text-align:left;font-size:12px;font-weight:600}' +
+      'th:last-child{text-align:right}' +
+      'td{padding:11px 14px;border-bottom:1px solid #E9F5EE;vertical-align:top}' +
+      '.n{font-weight:700;font-size:14px}.d{color:#5E7268;font-size:11px;margin-top:2px}' +
+      '.pr{text-align:right;font-weight:700;color:#1F8A5B;font-size:15px;white-space:nowrap}' +
+      'footer{margin-top:28px;color:#5E7268;font-size:11px;text-align:center;' +
+      'border-top:1px solid #CBE5D6;padding-top:10px}' +
+      '@media print{body{margin:10px}}' +
+      '</style></head><body>' +
+      '<div class="logo">Costito</div>' +
+      '<div class="sub">Lista de productos · ' + date + '</div>' +
+      '<table><thead><tr><th>Producto</th><th>Precio</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<footer>Calculado con Costito · costito.vercel.app</footer>' +
+      '</body></html>';
+    abrirVentanaPdf(html);
+  }
+
+  // ============================================================
+  // PDF FORMATEADO — Medios de pago
+  // ============================================================
+  function printMediosPdf() {
+    const base = parseFloat($('base').value) || 0;
+    const date = new Date().toLocaleDateString('es-AR');
+    let sectionsHtml = '';
+
+    if (mediosState.tipo === 'local') {
+      let procs = PROCESADORES_LOCAL.filter((p) => mediosState.selectedProcIds.includes(p.id));
+      if (!procs.length) procs = [PROCESADORES_LOCAL[0]];
+      procs.forEach((proc) => {
+        const rowsHtml = proc.medios.map((m) => {
+          if (m.comision === null) return '<tr><td>' + m.label + '</td><td>—</td><td>—</td></tr>';
+          const res = Calc.precioPorMedio(base, m.comision);
+          const pct = m.comision > 0 ? String(m.comision).replace('.', ',') + '%' : '—';
+          return '<tr><td>' + m.label + '</td><td>' + pct + '</td>' +
+            '<td class="pr">' + money(res.precio) + '</td></tr>';
+        }).join('');
+        sectionsHtml += '<h2>' + proc.nombre + '</h2>' +
+          '<table><thead><tr><th>Medio de pago</th><th>Comisión</th><th>Cobrás</th></tr></thead>' +
+          '<tbody>' + rowsHtml + '</tbody></table>';
+      });
+    } else {
+      const plat = PLATAFORMAS_INTERNET.find((p) => p.id === mediosState.plataformaId) || PLATAFORMAS_INTERNET[0];
+      let com = plat.editable ? null : plat.comision_base;
+      let label = plat.nombre;
+      if (plat.submodo && plat.procesadores_online) {
+        const proc = plat.procesadores_online.find((p) => p.id === mediosState.procOnlineId) || plat.procesadores_online[0];
+        if (proc) { com = proc.comision !== null ? (plat.comision_base || 0) + proc.comision : null; label += ' + ' + proc.label; }
+      }
+      const rowHtml = com !== null
+        ? (() => { const res = Calc.precioPorMedio(base, com); const pct = com > 0 ? String(com).replace('.', ',') + '%' : '—';
+            return '<tr><td>' + label + '</td><td>' + pct + '</td><td class="pr">' + money(res.precio) + '</td></tr>'; })()
+        : '<tr><td colspan="3">—</td></tr>';
+      sectionsHtml = '<h2>' + plat.nombre + '</h2>' +
+        '<table><thead><tr><th>Canal</th><th>Comisión</th><th>Cobrás</th></tr></thead><tbody>' + rowHtml + '</tbody></table>';
+    }
+
+    const baseStr = money(base);
+    const html = '<!DOCTYPE html><html lang="es-AR"><head><meta charset="UTF-8">' +
+      '<title>Costito — Medios de pago</title><style>' +
+      'body{font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:30px auto;color:#19271F}' +
+      '.logo{font-size:22px;font-weight:700;color:#1F8A5B;margin-bottom:2px}' +
+      '.sub{color:#5E7268;font-size:12px;margin-bottom:16px}' +
+      '.base-box{background:#E9F5EE;border-radius:8px;padding:11px 15px;margin-bottom:22px;font-size:13px}' +
+      '.base-box b{color:#1F8A5B}' +
+      'h2{font-size:13px;font-weight:700;color:#1F8A5B;margin:20px 0 6px;' +
+      'border-bottom:2px solid #E9F5EE;padding-bottom:4px}' +
+      'table{width:100%;border-collapse:collapse;margin-bottom:4px}' +
+      'th{background:#1F8A5B;color:#fff;padding:8px 12px;text-align:left;font-size:11.5px;font-weight:600}' +
+      'th:last-child{text-align:right}' +
+      'td{padding:8px 12px;border-bottom:1px solid #E9F5EE;font-size:13px}' +
+      '.pr{text-align:right;font-weight:700;color:#1F8A5B}' +
+      'footer{margin-top:28px;color:#5E7268;font-size:11px;text-align:center;' +
+      'border-top:1px solid #CBE5D6;padding-top:10px}' +
+      '@media print{body{margin:10px}}' +
+      '</style></head><body>' +
+      '<div class="logo">Costito</div>' +
+      '<div class="sub">Lista de precios por medio de pago · ' + date + '</div>' +
+      '<div class="base-box">Precio base (efectivo / transferencia): <b>' + baseStr + '</b></div>' +
+      sectionsHtml +
+      '<footer>Calculado con Costito · costito.vercel.app</footer>' +
+      '</body></html>';
+    abrirVentanaPdf(html);
+  }
+
+  function abrirVentanaPdf(html) {
+    const w = window.open('', '_blank', 'width=740,height=820');
+    if (!w) return toast('Activá las ventanas emergentes para guardar el PDF');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+  }
 
   // ============================================================
   // PREMIUM: botón WhatsApp del tab Productos
