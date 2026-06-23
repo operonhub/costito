@@ -18,27 +18,27 @@
   const esc = C.escapeHtml;
   const money = C.money;
 
-  // ---------- GATE (compartido) ----------
   const ICO = {
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
-    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
-    wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.3A10 10 0 1 0 12 2z"/></svg>',
   };
-  function gateHTML(g) {
-    return '<div class="card"><div class="gate">' +
-      '<div class="lock-ico">' + ICO.lock + '</div>' +
-      '<h3>' + g.titulo + '</h3><p>' + g.desc + '</p>' +
-      '<div class="feat">' + g.feats.map((f) => '<div class="f">' + ICO.check + f + '</div>').join('') + '</div>' +
-      '<a class="wa" href="' + C.waUrl() + '" target="_blank" rel="noopener">' + ICO.wa + ' Activar Premium por WhatsApp</a>' +
-      // Desbloqueo de demo (temporal, pre-launch). Se reemplaza por el gating real con el backend.
-      '<button class="gate-demo" type="button">Ver cómo funciona (demo)</button>' +
-      '</div></div>';
-  }
 
-  // Cinta que aclara que se está viendo el demo, con botón para volver a bloquear.
-  function demoRibbon() {
-    return '<div class="demo-ribbon"><span><b>Modo demo Premium.</b> Así lo verían tus clientes con la suscripción activa.</span>' +
-      '<button class="demo-lock" type="button">Bloquear</button></div>';
+  // Formateo de inputs de monto (igual que bindMoneyInput en app.js)
+  function fmtInput(id, onInput) {
+    const el = $(id);
+    if (!el) return;
+    el.setAttribute('type', 'text');
+    el.setAttribute('inputmode', 'numeric');
+    const v0 = C.parseNum(el.value);
+    if (v0 > 0) el.value = v0.toLocaleString('es-AR');
+    el.addEventListener('blur', () => {
+      const v = C.parseNum(el.value);
+      el.value = v > 0 ? v.toLocaleString('es-AR') : '';
+    });
+    el.addEventListener('focus', () => {
+      const v = C.parseNum(el.value);
+      if (v > 0) el.value = String(v);
+    });
+    if (onInput) el.addEventListener('input', onInput);
   }
 
   // Encabezado de card reutilizable
@@ -86,16 +86,7 @@
   }
 
   function buildImport() {
-    if (!C.isPremium()) {
-      C.setHTML($('body-import'), gateHTML({
-        titulo: 'Calculá tu costo de importación',
-        desc: 'FOB, flete, aranceles, IVA aduana y flete interno: todo junto para saber el costo real puesto en tu depósito.',
-        feats: ['FOB + flete + seguro = valor CIF', 'Aranceles e IVA aduana sobre el CIF', 'Flete interno hasta tu depósito', 'Costo unitario final en ARS'],
-      }));
-      return;
-    }
     C.setHTML($('body-import'),
-      demoRibbon() +
 
       // — BLOQUE 1: Datos generales —
       '<div class="card">' + cardHead('Datos del pedido', 'FOB, cantidad y tipo de cambio') +
@@ -148,6 +139,8 @@
       '</div></div>' +
       '<button class="btn-add" id="imp-usar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Usar este costo en la calculadora</button>'
     );
+    fmtInput('imp-fob', recalcImport);
+    fmtInput('imp-tc',  recalcImport);
     recalcImport();
   }
 
@@ -175,9 +168,9 @@
 
   function recalcImport() {
     const r = Calc.landedCost({
-      fob: $('imp-fob').value,
+      fob: C.parseNum($('imp-fob').value),
       qty: $('imp-qty').value,
-      tc:  $('imp-tc').value,
+      tc:  C.parseNum($('imp-tc').value),
       origen:  impOrigen,
       aduana:  impAduana,
       interno: impInterno,
@@ -237,16 +230,7 @@
   // 2) COMPRA MIXTA (blanco / negro)
   // ============================================================
   function buildMixta() {
-    if (!C.isPremium()) {
-      C.setHTML($('body-mixta'), gateHTML({
-        titulo: 'Compra en blanco y negro',
-        desc: 'Calculá el costo promedio real cuando una parte de la compra va con factura y otra no.',
-        feats: ['Mezcla blanco / negro', 'Costo promedio ponderado', 'Margen real sobre la mezcla'],
-      }));
-      return;
-    }
     C.setHTML($('body-mixta'),
-      demoRibbon() +
       '<div class="card">' + cardHead('La parte en blanco', 'Con factura') +
         '<div class="row2">' +
           '<div class="field"><label>Precio por unidad</label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="mx-pb" value="8000" min="0" inputmode="decimal" /></div></div>' +
@@ -271,14 +255,16 @@
       '</div></div>' +
       '<button class="btn-add" id="mx-usar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Usar este costo en la calculadora</button>'
     );
+    fmtInput('mx-pb', recalcMixta);
+    fmtInput('mx-pn', recalcMixta);
     recalcMixta();
   }
 
   function recalcMixta() {
     const r = Calc.compraMixta({
-      precioBlanco: $('mx-pb').value, udsBlanco: $('mx-ub').value,
+      precioBlanco: C.parseNum($('mx-pb').value), udsBlanco: $('mx-ub').value,
       ivaBlanco: $('mx-iva').checked ? 21 : 0,
-      precioNegro: $('mx-pn').value, udsNegro: $('mx-un').value,
+      precioNegro: C.parseNum($('mx-pn').value), udsNegro: $('mx-un').value,
     });
     if (!r.ok) {
       $('mx-prom').textContent = '—';
@@ -308,16 +294,7 @@
   // 3) SERVICIOS (precio por hora)
   // ============================================================
   function buildServicios() {
-    if (!C.isPremium()) {
-      C.setHTML($('body-servicios'), gateHTML({
-        titulo: 'Poné precio a tu trabajo',
-        desc: 'Si cobrás por hora o por proyecto, calculá tu tarifa contemplando monotributo y horas reales.',
-        feats: ['Precio por hora', 'Contempla monotributo', 'Horas facturables reales'],
-      }));
-      return;
-    }
     C.setHTML($('body-servicios'),
-      demoRibbon() +
       '<div class="card">' + cardHead('Cuánto querés ganar', 'Por mes, limpio') +
         '<div class="field"><label>Ingreso neto que querés al mes</label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="s-ingreso" value="800000" min="0" inputmode="decimal" /></div></div>' +
         '<div class="field"><label>Monotributo (costo fijo mensual) <span class="help"><span class="q">?</span><span class="tip">Lo que pagás de monotributo por mes. Se reparte entre tus horas para que no te lo comas vos.</span></span></label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="s-mono" value="35000" min="0" inputmode="decimal" /></div></div>' +
@@ -334,13 +311,15 @@
         '<div class="note" id="s-note">Lo que tenés que cobrar la hora para llegar a tu objetivo.</div>' +
       '</div></div>'
     );
+    fmtInput('s-ingreso', recalcServicios);
+    fmtInput('s-mono',    recalcServicios);
     recalcServicios();
   }
 
   function recalcServicios() {
     const r = Calc.precioServicio({
-      ingresoDeseado: $('s-ingreso').value, horasMes: $('s-horas').value,
-      monotributo: $('s-mono').value, horasProyecto: $('s-hproy').value,
+      ingresoDeseado: C.parseNum($('s-ingreso').value), horasMes: $('s-horas').value,
+      monotributo: C.parseNum($('s-mono').value), horasProyecto: $('s-hproy').value,
     });
     if (!r.ok) {
       $('s-hora').textContent = '—';
@@ -361,20 +340,10 @@
   // ORQUESTACIÓN
   // ============================================================
   function buildAll() { buildImport(); buildMixta(); buildServicios(); }
-  function recalcAll() {
-    if (C.isPremium()) { recalcImport(); recalcMixta(); recalcServicios(); }
-  }
+  function recalcAll() { recalcImport(); recalcMixta(); recalcServicios(); }
 
-  // Botones de demo (pre-launch): desbloquear desde el gate, bloquear desde la cinta.
-  document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('gate-demo')) C.setPremium(true);
-    if (e.target.classList.contains('demo-lock')) C.setPremium(false);
-  });
-
-  // Al cambiar el estado Premium → reconstruir (gate ↔ calculadora)
-  document.addEventListener('costito:premiumchange', buildAll);
   // Al cambiar la moneda → reconstruir para refrescar prefijos y montos
-  document.addEventListener('costito:rerender', () => { if (C.isPremium()) buildAll(); });
+  document.addEventListener('costito:rerender', buildAll);
 
   buildAll();
 })();

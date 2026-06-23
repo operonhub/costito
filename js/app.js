@@ -53,7 +53,7 @@
   // sin duplicar lógica ni romper el encapsulamiento.
   window.Costito = {
     D, Calc,
-    fmt, money, conv, symbol, setHTML, escapeHtml,
+    fmt, money, conv, symbol, setHTML, escapeHtml, parseNum,
     toast: (m) => toast(m),
     waUrl: () => 'https://wa.me/' + D.premium.whatsapp + '?text=' + encodeURIComponent(D.premium.mensaje),
     isPremium: () => localStorage.getItem('costito_premium') === '1',
@@ -630,6 +630,18 @@
 
   function renderProds() {
     const list = $('plist');
+    const n = state.productos.length;
+    const countEl = $('prodCount');
+    if (countEl) {
+      if (n === 0) {
+        countEl.textContent = '';
+      } else if (n < PROD_LIMIT) {
+        countEl.textContent = n + ' de ' + PROD_LIMIT + ' productos guardados · te quedan ' + (PROD_LIMIT - n);
+      } else {
+        countEl.textContent = n + '/' + PROD_LIMIT + ' · límite alcanzado — próximamente podés crear una cuenta para más';
+        countEl.style.color = 'var(--naranja)';
+      }
+    }
     if (!state.productos.length) {
       setHTML(list, '<div class="empty">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>' +
@@ -666,8 +678,15 @@
     pendingCalcResult = null;
   }
 
+  const PROD_LIMIT = 5;
+
   function confirmSave() {
     if (!pendingCalcResult) return;
+    if (state.productos.length >= PROD_LIMIT) {
+      closeSaveModal();
+      toast('Límite de ' + PROD_LIMIT + ' productos — próximamente podés crear una cuenta para guardar más');
+      return;
+    }
     const nombre = $('modalNombre').value.trim() || 'Producto sin nombre';
     state.productos.unshift({
       id: Date.now(),

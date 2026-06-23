@@ -53,20 +53,17 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>
         Mis productos
       </button>
-      <button class="tab" data-tab="import" data-premium="1">
+      <button class="tab" data-tab="import">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 22V12"/></svg>
         Importación
-        <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
       </button>
-      <button class="tab" data-tab="mixta" data-premium="1">
+      <button class="tab" data-tab="mixta">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="6"/><path d="M15 9a6 6 0 1 1-6 6"/></svg>
         Compra mixta
-        <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
       </button>
-      <button class="tab" data-tab="servicios" data-premium="1">
+      <button class="tab" data-tab="servicios">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         Servicios
-        <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
       </button>
     </div>
   </div>
@@ -278,6 +275,8 @@
   <section class="panel" id="prod">
     <h2 class="section-title">Mis productos</h2>
     <p class="section-sub">Tu lista de precios calculados, siempre a mano. Se guardan en este dispositivo. Llevátela en PDF para imprimir o en Excel para seguir trabajándola.</p>
+
+    <p class="prod-count" id="prodCount"></p>
 
     <div class="card">
       <div class="plist" id="plist"></div>
