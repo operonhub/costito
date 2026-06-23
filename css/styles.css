@@ -333,6 +333,12 @@ select.in-bare{cursor:pointer;-webkit-appearance:none;appearance:none}
   .in-bare{padding:9px 8px;font-size:13px}
 }
 
+/* ---------- BADGE COMISIONES DESACTUALIZADAS ---------- */
+.com-stale{display:inline-flex;align-items:center;gap:4px;
+  background:rgba(242,96,63,.13);color:var(--naranja);
+  font-size:11px;font-weight:700;border-radius:6px;
+  padding:3px 8px;margin-left:6px;cursor:default}
+
 /* ---------- BARRA DE COTIZACIÓN DEL DÓLAR ---------- */
 .dolar-bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--papel);
   border:1.5px solid var(--linea);border-radius:12px;padding:9px 13px;margin-bottom:14px;

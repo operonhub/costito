@@ -7,7 +7,13 @@
 
 const COSTITO_DATA = {
 
-  // Fecha visible en la UI para que el usuario sepa qué tan vigentes son los datos
+  // Metadata de comisiones: cuándo se verificaron por última vez y cuándo avisar
+  comisionesMetadata: {
+    lastVerified: '2026-06-23',   // fecha de la última verificación manual
+    alertThresholdDays: 30,       // si pasaron más de N días, mostrar aviso en UI
+  },
+
+  // Fecha visible en la UI (texto libre, se actualiza junto con lastVerified)
   comisionesActualizadas: 'junio 2026',
 
   // Cotización del dólar. El VALOR viene en vivo de la API (no se edita a mano);

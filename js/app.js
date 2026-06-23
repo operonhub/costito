@@ -835,7 +835,16 @@
   // ============================================================
   // INIT
   // ============================================================
+  function checkComisionesStale() {
+    const meta = D.comisionesMetadata;
+    if (!meta) return;
+    const days = (Date.now() - new Date(meta.lastVerified)) / 86400000;
+    const badge = $('comStale');
+    if (badge) badge.style.display = days > meta.alertThresholdDays ? 'inline-flex' : 'none';
+  }
+
   buildControls();
+  checkComisionesStale();
   if (state.cur === 'USD') {
     document.querySelectorAll('#cur button').forEach((x) => x.classList.toggle('on', x.dataset.cur === 'USD'));
     $('pre1').textContent = $('pre2').textContent = $('finCur').textContent = symbol();
