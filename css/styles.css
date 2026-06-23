@@ -427,3 +427,91 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .comp-tbl td.comp-loss{color:var(--naranja)!important}
 .comp-group td{background:var(--crema);color:var(--tinta-soft);font-size:11px;font-weight:700;
   text-transform:uppercase;letter-spacing:.6px;padding:6px 10px!important;border:none}
+
+/* ============================================================
+   SPLASH DE ENTRADA
+   ============================================================ */
+.splash{position:fixed;inset:0;z-index:1000;background:var(--crema);
+  background-image:radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 0);background-size:22px 22px;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .5s ease, transform .5s ease}
+.splash.gone{opacity:0;transform:scale(1.04);pointer-events:none}
+.splash-logo{display:flex;flex-direction:column;align-items:center;gap:15px}
+.splash-mark{width:82px;height:82px;border-radius:22px;background:var(--verde);color:var(--on-verde);
+  display:grid;place-items:center;box-shadow:inset 0 0 0 2.5px var(--naranja), 0 18px 40px -14px rgba(20,80,55,.5);
+  animation:splashPop .6s cubic-bezier(.18,.9,.25,1.1) both}
+.splash-mark svg{width:44px;height:44px}
+.splash-word{font-family:var(--serif);font-size:34px;font-weight:700;color:var(--tinta);text-align:center;
+  line-height:1;animation:splashRise .55s ease .22s both}
+.splash-word small{display:block;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--tinta-soft);margin-top:7px}
+.splash-accent{width:54px;height:4px;border-radius:4px;background:var(--naranja);
+  transform-origin:center;animation:splashSweep .5s cubic-bezier(.2,.8,.2,1) .45s both}
+@keyframes splashPop{from{opacity:0;transform:scale(.55) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes splashRise{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:none}}
+@keyframes splashSweep{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){
+  .splash-mark,.splash-word,.splash-accent{animation:splashFade .3s ease both}
+  @keyframes splashFade{from{opacity:0}to{opacity:1}}
+}
+
+/* ============================================================
+   CUENTA (botón header + menú)
+   ============================================================ */
+.acct-wrap{position:relative;flex:0 0 auto}
+.acct-btn{width:38px;height:38px;border-radius:999px;border:0;cursor:pointer;flex:0 0 auto;
+  background:rgba(255,255,255,.12);color:var(--on-verde);display:grid;place-items:center;transition:.2s}
+.acct-btn:hover{background:rgba(255,255,255,.22)}
+.acct-btn .acct-ico{width:20px;height:20px}
+.acct-avatar{display:none;width:30px;height:30px;border-radius:999px;background:var(--naranja);color:#fff;
+  font-family:var(--sans);font-weight:700;font-size:12px;align-items:center;justify-content:center;letter-spacing:.3px}
+.acct-btn.logged .acct-ico{display:none}
+.acct-btn.logged .acct-avatar{display:flex}
+.acct-menu{position:absolute;top:46px;right:0;width:230px;background:var(--papel);border:1.5px solid var(--linea);
+  border-radius:14px;box-shadow:0 18px 40px -14px rgba(0,0,0,.4);padding:8px;z-index:40;
+  opacity:0;transform:translateY(-6px);pointer-events:none;transition:.16s}
+.acct-menu.on{opacity:1;transform:none;pointer-events:all}
+.acct-menu-head{display:flex;align-items:center;gap:11px;padding:9px 9px 11px}
+.acct-avatar-lg{width:40px;height:40px;border-radius:999px;background:var(--naranja);color:#fff;
+  display:grid;place-items:center;font-weight:700;font-size:15px;flex:0 0 auto}
+.acct-menu-id{min-width:0}
+.acct-menu-id b{display:block;font-size:14px;color:var(--tinta);font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct-menu-id span{display:block;font-size:12px;color:var(--tinta-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct-logout{width:100%;display:flex;align-items:center;gap:9px;border:0;background:var(--crema);
+  color:var(--tinta);font-family:var(--sans);font-weight:600;font-size:13.5px;padding:11px 12px;
+  border-radius:10px;cursor:pointer;transition:.15s}
+.acct-logout:hover{background:var(--crema-2);color:var(--naranja)}
+.acct-logout svg{width:17px;height:17px}
+
+/* ============================================================
+   MODAL DE LOGIN
+   ============================================================ */
+.auth-box{position:relative;text-align:center;width:min(390px,calc(100vw - 36px))}
+.auth-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border:0;border-radius:9px;
+  background:var(--crema);color:var(--tinta-soft);cursor:pointer;display:grid;place-items:center;transition:.15s}
+.auth-close:hover{background:var(--crema-2);color:var(--tinta)}
+.auth-close svg{width:17px;height:17px}
+.auth-head{display:flex;flex-direction:column;align-items:center;margin-bottom:18px}
+.auth-mark{width:52px;height:52px;border-radius:15px;background:var(--verde);color:var(--on-verde);
+  display:grid;place-items:center;box-shadow:inset 0 0 0 2px var(--naranja);margin-bottom:12px}
+.auth-mark svg{width:28px;height:28px}
+.auth-box .modal-title{font-size:21px}
+.auth-label{display:block;text-align:left;font-size:12.5px;font-weight:600;color:var(--tinta);margin-bottom:6px}
+.auth-box .in input{width:100%;font-size:16px}
+.auth-error{min-height:16px;text-align:left;font-size:12.5px;font-weight:600;color:var(--naranja);margin:4px 2px 0}
+.auth-submit{width:100%;margin-top:12px;border:0;border-radius:12px;background:var(--verde);color:var(--on-verde);
+  font-family:var(--sans);font-weight:700;font-size:15px;padding:13px;cursor:pointer;transition:.15s}
+.auth-submit:hover{filter:brightness(1.08)}
+.auth-submit:disabled{opacity:.6;cursor:default}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--tinta-soft);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--linea)}
+.auth-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;border:1.5px solid var(--linea);
+  background:var(--papel);color:var(--tinta);font-family:var(--sans);font-weight:600;font-size:14.5px;
+  padding:12px;border-radius:12px;cursor:pointer;transition:.15s}
+.auth-google:hover{background:var(--crema);border-color:var(--tinta-soft)}
+.auth-google svg{width:19px;height:19px}
+.auth-foot{font-size:13px;color:var(--tinta-soft);margin-top:16px}
+.auth-foot a{color:var(--verde);font-weight:700;cursor:pointer}
+.auth-foot a:hover{text-decoration:underline}
