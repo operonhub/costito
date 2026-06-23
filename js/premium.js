@@ -137,10 +137,27 @@
         '<div class="big"><span class="c">' + C.symbol() + '</span><span id="imp-unit">—</span></div>' +
         '<div class="note">Con todos los costos de importación incluidos.</div>' +
       '</div></div>' +
-      '<button class="btn-add" id="imp-usar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Usar este costo en la calculadora</button>'
+      '<button class="btn-add" id="imp-usar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Usar este costo en la calculadora</button>' +
+
+      // — Comparador avión vs barco —
+      '<details class="card comp-card" id="compFlete" style="margin-top:16px">' +
+        '<summary class="card-h comp-summary">' +
+          '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19 2c-2-2-4-2-5.5-.5L10 5 1.8 3.2l-1 1 7.5 4.7L3 14l-3 1 2 2 1-3 4.8-5.3 4.7 7.5 1-1z"/></svg></span>' +
+          '<div><h3>¿Avión o barco?</h3><p>Comparar el costo unitario según el flete</p></div>' +
+          '<svg class="comp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</summary>' +
+        '<p class="imp-desc">Ingresá el costo total del flete en USD para cada vía. El seguro y los demás ítems de origen quedan igual.</p>' +
+        '<div class="row2">' +
+          '<div class="field"><label>Flete marítimo (USD)</label><div class="in"><span class="pre">U$S</span><input type="text" id="cf-mar" inputmode="numeric" placeholder="0" /></div></div>' +
+          '<div class="field"><label>Flete aéreo (USD)</label><div class="in"><span class="pre">U$S</span><input type="text" id="cf-air" inputmode="numeric" placeholder="0" /></div></div>' +
+        '</div>' +
+        '<div id="cf-result"></div>' +
+      '</details>'
     );
     fmtInput('imp-fob', recalcImport);
     fmtInput('imp-tc',  recalcImport);
+    fmtInput('cf-mar',  recalcCompFlete);
+    fmtInput('cf-air',  recalcCompFlete);
     recalcImport();
   }
 
@@ -184,6 +201,58 @@
     if ($('imp-total'))     $('imp-total').textContent      = fmt(r.total);
     if ($('imp-unit'))      $('imp-unit').textContent       = C.fmt(C.conv(r.unitario));
     $('body-import')._unit = r.unitario;
+  }
+
+  function recalcCompFlete() {
+    const cfMar = C.parseNum($('cf-mar') && $('cf-mar').value);
+    const cfAir = C.parseNum($('cf-air') && $('cf-air').value);
+    const result = $('cf-result');
+    if (!result) return;
+    if (!cfMar && !cfAir) { C.setHTML(result, ''); return; }
+
+    const fob = C.parseNum($('imp-fob').value);
+    const qty = $('imp-qty').value;
+    const tc  = C.parseNum($('imp-tc').value);
+    // Origen sin los ítems de flete en USD (se reemplazan con cada opción)
+    const restOrigen = impOrigen.filter((it) => it.tipo !== 'usd');
+
+    const calcFor = (fleteUSD) => {
+      const origen = fleteUSD > 0
+        ? [{ label: 'Flete', tipo: 'usd', valor: fleteUSD }, ...restOrigen]
+        : [...restOrigen];
+      return Calc.landedCost({ fob, qty, tc, origen, aduana: impAduana, interno: impInterno });
+    };
+
+    const rMar = cfMar > 0 ? calcFor(cfMar) : null;
+    const rAir = cfAir > 0 ? calcFor(cfAir) : null;
+
+    let html = '<div class="cf-cols">';
+    if (rMar) html +=
+      '<div class="cf-col">' +
+        '<div class="cf-ico">🚢</div>' +
+        '<div class="cf-via">Marítimo</div>' +
+        '<div class="cf-unit">' + money(rMar.unitario) + '</div>' +
+        '<div class="cf-sub">por unidad</div>' +
+      '</div>';
+    if (rAir) html +=
+      '<div class="cf-col">' +
+        '<div class="cf-ico">✈️</div>' +
+        '<div class="cf-via">Aéreo</div>' +
+        '<div class="cf-unit">' + money(rAir.unitario) + '</div>' +
+        '<div class="cf-sub">por unidad</div>' +
+      '</div>';
+    html += '</div>';
+
+    if (rMar && rAir && rMar.unitario > 0) {
+      const pct = ((rAir.unitario - rMar.unitario) / rMar.unitario * 100).toFixed(1).replace('.', ',');
+      const diff = rAir.unitario - rMar.unitario;
+      const sign = diff >= 0 ? '+' : '';
+      html += '<div class="cf-diff' + (diff > 0 ? ' cf-more' : ' cf-less') + '">' +
+        'El aéreo sale <b>' + sign + pct + '%</b> que el marítimo · ' + sign + money(diff) + ' por unidad' +
+      '</div>';
+    }
+
+    C.setHTML(result, html);
   }
 
   // Delegación de eventos (se ata una sola vez; sobrevive a los rebuilds)

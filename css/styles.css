@@ -395,6 +395,25 @@ select.in-bare{cursor:pointer;-webkit-appearance:none;appearance:none}
 /* ---------- CONTADOR DE PRODUCTOS ---------- */
 .prod-count{font-size:12.5px;color:var(--tinta-soft);margin:0 2px 10px;min-height:1em}
 
+/* ---------- TEASER CUENTA CLOUD ---------- */
+.cloud-teaser{display:flex;align-items:flex-start;gap:14px;background:var(--papel);
+  border:1.5px solid var(--linea);border-radius:14px;padding:16px 18px;margin-top:18px}
+.cloud-teaser svg{width:24px;height:24px;color:var(--verde);flex:0 0 auto;margin-top:2px}
+.cloud-teaser b{font-size:14px;color:var(--tinta)}
+.cloud-teaser p{font-size:13px;color:var(--tinta-soft);margin-top:4px;line-height:1.5}
+
+/* ---------- COMPARADOR AVIÓN VS BARCO ---------- */
+.cf-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.cf-col{background:var(--crema);border-radius:12px;padding:14px;text-align:center}
+.cf-ico{font-size:22px;margin-bottom:4px}
+.cf-via{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tinta-soft);margin-bottom:6px}
+.cf-unit{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--verde)}
+.cf-sub{font-size:11.5px;color:var(--tinta-soft);margin-top:2px}
+.cf-diff{margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13.5px;text-align:center;
+  background:var(--crema-2);color:var(--tinta)}
+.cf-diff.cf-more{background:#FFF0EB;color:#B03000}
+.cf-diff.cf-less{background:#EAF6EF;color:var(--verde)}
+
 /* ---------- COMPARATIVA DE CANALES ---------- */
 .comp-card{margin-top:16px}
 .comp-summary{cursor:pointer;list-style:none;user-select:none}

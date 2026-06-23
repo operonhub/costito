@@ -890,7 +890,7 @@
   // PREMIUM: botón WhatsApp del tab Productos
   // (las calculadoras Premium y sus gates viven en premium.js)
   // ============================================================
-  $('waBtn').href = 'https://wa.me/' + D.premium.whatsapp + '?text=' + encodeURIComponent(D.premium.mensaje);
+  // waBtn removido — upsell Premium reemplazado por teaser de cuenta cloud
 
   // ============================================================
   // TOAST
