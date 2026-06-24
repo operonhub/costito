@@ -723,7 +723,9 @@
     const n = state.productos.length;
     const loggedIn = window.CostitoAuth && window.CostitoAuth.getUser();
     const countEl = $('prodCount');
-    if (countEl) countEl.textContent = loggedIn && n > 0 ? n + (n === 1 ? ' producto guardado' : ' productos guardados') : '';
+    const free = loggedIn && !Costito.isPremium();
+    const limitTxt = free ? n + '/5 productos' : n + (n === 1 ? ' producto guardado' : ' productos guardados');
+    if (countEl) countEl.textContent = loggedIn && n > 0 ? limitTxt : '';
 
     renderCatFilter();
 
@@ -767,11 +769,19 @@
   // ============================================================
   let pendingCalcResult = null;
 
+  const PROD_LIMIT_FREE = 5;
+
   function showSaveModal() {
     if (!window.CostitoAuth || !window.CostitoAuth.getUser()) {
       toast('Creá una cuenta para guardar tus productos en la nube');
       const authOverlay = $('authOverlay');
       if (authOverlay) { authOverlay.classList.add('on'); setTimeout(() => { const el = $('authEmail'); if (el) el.focus(); }, 60); }
+      return;
+    }
+    if (!Costito.isPremium() && state.productos.length >= PROD_LIMIT_FREE) {
+      toast('Llegaste al límite de 5 productos. ¡Pasate a Premium para guardar ilimitados! 🟢');
+      const btn = document.getElementById('goPremium');
+      if (btn) btn.closest('.acct-wrap') && document.getElementById('acctBtn').click();
       return;
     }
     const r = Calc.precioPublicado(leerInputs());
@@ -1080,9 +1090,10 @@
   renderProds();
   updateTabFades();
 
-  // Sincronizar productos con Supabase cuando cambia la sesión
+  // Sincronizar plan premium y productos con Supabase cuando cambia la sesión
   document.addEventListener('costito:authchange', (e) => {
     const user = e.detail;
+    Costito.setPremium(user && user.plan === 'premium');
     if (user) {
       window.CostitoAuth.loadProducts()
         .then((prods) => { state.productos = prods; renderProds(); })
