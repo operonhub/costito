@@ -142,6 +142,9 @@ nav.can-right::after{opacity:1}
 .in .suf{padding:0 14px 0 0;font-weight:700;color:var(--tinta-soft);font-size:15px}
 .in select{cursor:pointer;-webkit-appearance:none;appearance:none}
 .in.sel::after{content:"▾";position:absolute;right:14px;color:var(--tinta-soft);pointer-events:none}
+/* Opciones del dropdown nativo: fondo y texto sólidos para que tengan contraste
+   en ambos temas (en oscuro el navegador las pintaba sin contraste). */
+select option{background:var(--papel);color:var(--tinta)}
 
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 .seg{display:flex;gap:7px;flex-wrap:wrap}
