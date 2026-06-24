@@ -36,7 +36,15 @@ window.CostitoPay = (function () {
         headers: { 'Authorization': 'Bearer ' + token, 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
         body: '{}',
       });
-      if (!res.ok) throw new Error('fn ' + res.status);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        console.error('[Costito Pay] Error', res.status, errBody);
+        // DEBUG TEMP: mostrar error de MP en toast para diagnosticar
+        const detail = errBody.detail ? JSON.parse(errBody.detail) : null;
+        const mpMsg = detail && detail.message ? detail.message : (errBody.error || res.status);
+        toast('MP error: ' + mpMsg);
+        return;
+      }
       const out = await res.json();
       if (out && out.init_point) { window.location.href = out.init_point; return; }
       throw new Error('sin init_point');
