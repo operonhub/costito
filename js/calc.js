@@ -18,41 +18,52 @@ const CostitoCalc = {
   },
 
   /* Cálculo central de precio de publicación.
-     Devuelve siempre un objeto con `ok`. Si los descuentos (comisión +
-     IIBB + margen) se comen el 100% o más, no hay precio posible:
-     ok=false y un motivo legible, en vez de un número absurdo. */
-  precioPublicado({ costo, ivaProveedor = 0, margen = 0, comEfectiva = 0, iibb = 0 }) {
+     condicionFiscal: 'mono' | 'ri_21' | 'ri_105'
+     - Mono: el IVA del proveedor es un costo real; no se agrega IVA en la venta.
+     - RI:   el IVA del proveedor es crédito fiscal (no suma al costo);
+             se agrega IVA sobre el precio neto al publicar. */
+  precioPublicado({ costo, ivaProveedor = 0, margen = 0, comEfectiva = 0, iibb = 0,
+                    condicionFiscal = 'mono' }) {
     costo = Number(costo) || 0;
-    const costoConIva = costo * (1 + (Number(ivaProveedor) || 0) / 100);
+    const esRI = condicionFiscal !== 'mono';
+    const ivaVenta = condicionFiscal === 'ri_21' ? 21 : condicionFiscal === 'ri_105' ? 10.5 : 0;
+
+    // Mono: el IVA pagado al proveedor no es recuperable → sube el costo.
+    // RI:   el IVA es un crédito fiscal → el costo efectivo es el neto.
+    const costoBase = esRI ? costo : costo * (1 + (Number(ivaProveedor) || 0) / 100);
 
     const com  = (Number(comEfectiva) || 0) / 100;
     const ib   = (Number(iibb) || 0) / 100;
     const mg   = Math.min(Number(margen) || 0, 95) / 100;
-
     const denom = 1 - com - ib - mg;
 
-    // Guard: los descuentos no pueden igualar o superar el 100%
     if (denom <= 0) {
       return {
         ok: false,
         motivo: 'Entre comisión, IIBB y margen te pasás del 100%. Bajá el margen o cambiá de canal.',
-        costoConIva,
+        costoConIva: costoBase,
       };
     }
 
-    const precio   = costoConIva / denom;
-    const comAmt   = precio * com;
-    const iibbAmt  = precio * ib;
-    const ganancia = precio - costoConIva - comAmt - iibbAmt;
+    const precioNeto   = costoBase / denom;
+    const precio       = esRI ? precioNeto * (1 + ivaVenta / 100) : precioNeto;
+    const comAmt       = precioNeto * com;
+    const iibbAmt      = precioNeto * ib;
+    const ivaVentaAmt  = precio - precioNeto;
+    const ganancia     = precioNeto - costoBase - comAmt - iibbAmt;
 
     return {
       ok: true,
-      costoConIva,   // lo que te costó, ya con IVA del proveedor
-      precio,        // precio a publicar
-      comAmt,        // $ que se queda el canal
-      iibbAmt,       // $ de ingresos brutos
-      ganancia,      // tu ganancia neta por unidad
-      margenReal: ganancia / precio * 100,
+      costoConIva: costoBase,
+      precioNeto,
+      precio,
+      comAmt,
+      iibbAmt,
+      ivaVentaAmt,
+      ganancia,
+      esRI,
+      ivaVenta,
+      margenReal: ganancia / precioNeto * 100,
     };
   },
 

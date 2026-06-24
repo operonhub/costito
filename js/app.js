@@ -19,13 +19,14 @@
   // Claves de localStorage
   const LS = {
     theme: 'costito_theme', cur: 'costito_cur', prods: 'costito_productos', procs: 'costito_procs',
-    dolarTipo: 'costito_dolar_tipo', dolarCache: 'costito_dolar_cache',
+    dolarTipo: 'costito_dolar_tipo', dolarCache: 'costito_dolar_cache', condFiscal: 'costito_cond_fiscal',
   };
 
   // Estado en memoria
   const state = {
     cur: localStorage.getItem(LS.cur) || 'ARS',
     iva: 21,
+    condFiscal: localStorage.getItem(LS.condFiscal) || 'mono',
     productos: [],
     dolarTipo: localStorage.getItem(LS.dolarTipo) || D.dolar.tipoDefault,
     dolares: JSON.parse(localStorage.getItem(LS.dolarCache) || 'null'), // { casa: {valor, fecha} }
@@ -404,6 +405,7 @@
       margen: $('margen').value,
       comEfectiva: Calc.comisionEfectiva(comNominal(), $('ivaCom').checked),
       iibb: parseFloat($('iibb').value) || 0,
+      condicionFiscal: state.condFiscal,
     };
   }
 
@@ -413,7 +415,7 @@
     if (!r.ok) {
       $('finVal').textContent = '—';
       setHTML($('ganNote'), escapeHtml(r.motivo));
-      ['bCosto', 'bCom', 'bIibb', 'bGan', 'bTotal'].forEach((id) => ($(id).textContent = '—'));
+      ['bCosto', 'bCom', 'bIibb', 'bGan', 'bTotal', 'bPrecioNeto', 'bIvaVenta'].forEach((id) => ($(id).textContent = '—'));
       $('addBtn').disabled = true;
       $('addBtn').style.opacity = .5;
       $('verMediosBtn').disabled = true;
@@ -425,14 +427,36 @@
 
     $('finVal').textContent = fmt(conv(r.precio));
     setHTML($('ganNote'), 'Con esto ganás <b>' + money(r.ganancia) + ' limpios</b> por unidad.');
+    $('bCostoLabel').textContent = r.esRI ? 'Tu costo neto' : 'Te costó (con IVA)';
     $('bCosto').textContent = money(r.costoConIva);
     $('bCom').textContent = '– ' + money(r.comAmt);
     $('bIibb').textContent = '– ' + money(r.iibbAmt);
     $('bGan').textContent = '+ ' + money(r.ganancia);
+    $('bNetRow').style.display = r.esRI ? '' : 'none';
+    $('bIvaRow').style.display = r.esRI ? '' : 'none';
+    if (r.esRI) {
+      $('bPrecioNeto').textContent = money(r.precioNeto);
+      $('bIvaLabel').textContent = 'IVA a cobrar (' + r.ivaVenta + '%)';
+      $('bIvaVenta').textContent = '+ ' + money(r.ivaVentaAmt);
+    }
     $('bTotal').textContent = money(r.precio);
     updateMarkupConv();
     renderComparacion();
   }
+
+  // Condición fiscal
+  $('condFiscalSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    state.condFiscal = b.dataset.cond;
+    localStorage.setItem(LS.condFiscal, state.condFiscal);
+    document.querySelectorAll('#condFiscalSeg button').forEach((x) => x.classList.remove('on'));
+    b.classList.add('on');
+    const esRI = state.condFiscal !== 'mono';
+    $('ivaProvField').style.display = esRI ? 'none' : '';
+    $('riNota').style.display = esRI ? '' : 'none';
+    calc();
+  });
 
   // Eventos de la calculadora
   $('ivaSeg').addEventListener('click', (e) => {
@@ -953,6 +977,15 @@
   // Valores iniciales con formato
   $('costo').value = (10000).toLocaleString('es-AR');
   $('base').value = (20000).toLocaleString('es-AR');
+
+  // Restaurar condición fiscal guardada
+  if (state.condFiscal !== 'mono') {
+    document.querySelectorAll('#condFiscalSeg button').forEach((b) => {
+      b.classList.toggle('on', b.dataset.cond === state.condFiscal);
+    });
+    $('ivaProvField').style.display = 'none';
+    $('riNota').style.display = '';
+  }
 
   buildControls();
   checkComisionesStale();

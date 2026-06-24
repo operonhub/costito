@@ -122,14 +122,24 @@
       </div>
 
       <div class="field">
+        <label>Tu condición fiscal <span class="help"><span class="q">?</span><span class="tip">Define si cobrás IVA en tus ventas. Monotributista: no cobrás IVA, el IVA que pagaste al proveedor es tu costo. Responsable Inscripto: sumás IVA al precio y lo remitís a la AFIP — el IVA de la compra es un crédito.</span></span></label>
+        <div class="seg" id="condFiscalSeg">
+          <button class="on" data-cond="mono">Monotributista</button>
+          <button data-cond="ri_21">RI – 21%</button>
+          <button data-cond="ri_105">RI – 10,5%</button>
+        </div>
+      </div>
+
+      <div class="field">
         <label>¿Cuánto te costó? <span class="help"><span class="q">?</span><span class="tip">El precio que pagaste al proveedor, sin contar el IVA. Si te facturan con IVA, poné el neto.</span></span></label>
         <div class="in"><span class="pre" id="pre1">$</span><input type="text" id="costo" inputmode="numeric" placeholder="Ej: 10.000" /></div>
       </div>
 
-      <div class="field">
+      <div class="field" id="ivaProvField">
         <label>IVA del proveedor <span class="help"><span class="q">?</span><span class="tip">El impuesto que te suma el proveedor sobre el costo. La mayoría de los productos llevan 21%. Algunos (libros, alimentos básicos) van al 10,5%.</span></span></label>
         <div class="seg" id="ivaSeg"></div>
       </div>
+      <p class="ri-nota" id="riNota" style="display:none">Como RI, el IVA que pagaste al proveedor es un crédito fiscal — no suma a tu costo real.</p>
 
       <div class="field">
         <label>¿Cuánto querés ganar? <span class="help"><span class="q">?</span><span class="tip">Tu margen sobre el precio final de venta. Si ponés 40%, de cada $100 que vendés, $40 quedan para vos (antes de comisiones).</span></span></label>
@@ -213,10 +223,12 @@
 
     <div class="card" style="margin-top:16px">
       <div class="break" id="break">
-        <div class="li"><span class="k">Te costó (con IVA)</span><span class="v" id="bCosto">—</span></div>
+        <div class="li"><span class="k" id="bCostoLabel">Te costó (con IVA)</span><span class="v" id="bCosto">—</span></div>
         <div class="li minus"><span class="k">Comisión del canal <span class="help"><span class="q">?</span><span class="tip">Lo que se queda la plataforma, ya con su IVA incluido.</span></span></span><span class="v" id="bCom">—</span></div>
         <div class="li minus"><span class="k">Ingresos Brutos</span><span class="v" id="bIibb">—</span></div>
         <div class="li plus"><span class="k">Tu ganancia neta</span><span class="v" id="bGan">—</span></div>
+        <div class="li" id="bNetRow" style="display:none"><span class="k">Precio neto (sin IVA)</span><span class="v" id="bPrecioNeto">—</span></div>
+        <div class="li plus" id="bIvaRow" style="display:none"><span class="k" id="bIvaLabel">IVA a cobrar (21%)</span><span class="v" id="bIvaVenta">—</span></div>
         <div class="li tot"><span class="k">Precio a publicar</span><span class="v" id="bTotal">—</span></div>
       </div>
       <button class="btn-add" id="addBtn">
