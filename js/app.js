@@ -416,10 +416,12 @@
       ['bCosto', 'bCom', 'bIibb', 'bGan', 'bTotal'].forEach((id) => ($(id).textContent = '—'));
       $('addBtn').disabled = true;
       $('addBtn').style.opacity = .5;
+      $('verMediosBtn').disabled = true;
       return;
     }
     $('addBtn').disabled = false;
     $('addBtn').style.opacity = 1;
+    $('verMediosBtn').disabled = false;
 
     $('finVal').textContent = fmt(conv(r.precio));
     setHTML($('ganNote'), 'Con esto ganás <b>' + money(r.ganancia) + ' limpios</b> por unidad.');
@@ -502,6 +504,18 @@
       $('margen').value = Calc.markupAMargen(markup).toFixed(1);
     }
     calc();
+  });
+
+  // Ver en Medios de pago: pre-carga el precio calculado y cambia de tab
+  $('verMediosBtn').addEventListener('click', () => {
+    const r = Calc.precioPublicado(leerInputs());
+    if (!r.ok) return;
+    const precioARS = Math.round(r.precio);
+    const baseInput = $('base');
+    baseInput.value = precioARS.toLocaleString('es-AR');
+    baseInput.dispatchEvent(new Event('input'));
+    document.querySelector('[data-tab="medios"]').click();
+    setTimeout(() => baseInput.focus(), 80);
   });
 
   // Copiar precio
