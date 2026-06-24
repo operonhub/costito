@@ -26,7 +26,7 @@
   const state = {
     cur: localStorage.getItem(LS.cur) || 'ARS',
     iva: 21,
-    productos: JSON.parse(localStorage.getItem(LS.prods) || '[]'),
+    productos: [],
     dolarTipo: localStorage.getItem(LS.dolarTipo) || D.dolar.tipoDefault,
     dolares: JSON.parse(localStorage.getItem(LS.dolarCache) || 'null'), // { casa: {valor, fecha} }
   };
@@ -624,25 +624,20 @@
   const TAG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--verde)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.4"/></svg>';
   const DEL_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
 
-  function persistProds() {
-    localStorage.setItem(LS.prods, JSON.stringify(state.productos));
-  }
-
   function renderProds() {
     const list = $('plist');
     const n = state.productos.length;
+    const loggedIn = window.CostitoAuth && window.CostitoAuth.getUser();
     const countEl = $('prodCount');
-    if (countEl) {
-      if (n === 0) {
-        countEl.textContent = '';
-      } else if (n < PROD_LIMIT) {
-        countEl.textContent = n + ' de ' + PROD_LIMIT + ' productos guardados · te quedan ' + (PROD_LIMIT - n);
-      } else {
-        countEl.textContent = n + '/' + PROD_LIMIT + ' · límite alcanzado — próximamente podés crear una cuenta para más';
-        countEl.style.color = 'var(--naranja)';
-      }
+    if (countEl) countEl.textContent = loggedIn && n > 0 ? n + (n === 1 ? ' producto guardado' : ' productos guardados') : '';
+
+    if (!loggedIn) {
+      setHTML(list, '<div class="empty">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>' +
+        '<div>Creá una cuenta para guardar tus productos en la nube y acceder desde cualquier dispositivo.</div></div>');
+      return;
     }
-    if (!state.productos.length) {
+    if (!n) {
       setHTML(list, '<div class="empty">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>' +
         '<div>Todavía no guardaste ningún producto.<br/>Calculá un precio y tocá <b>"Guardar en mis productos"</b>.</div></div>');
@@ -665,6 +660,12 @@
   let pendingCalcResult = null;
 
   function showSaveModal() {
+    if (!window.CostitoAuth || !window.CostitoAuth.getUser()) {
+      toast('Creá una cuenta para guardar tus productos en la nube');
+      const authOverlay = $('authOverlay');
+      if (authOverlay) { authOverlay.classList.add('on'); setTimeout(() => { const el = $('authEmail'); if (el) el.focus(); }, 60); }
+      return;
+    }
     const r = Calc.precioPublicado(leerInputs());
     if (!r.ok) return;
     pendingCalcResult = r;
@@ -678,26 +679,25 @@
     pendingCalcResult = null;
   }
 
-  const PROD_LIMIT = 5;
-
   function confirmSave() {
     if (!pendingCalcResult) return;
-    if (state.productos.length >= PROD_LIMIT) {
-      closeSaveModal();
-      toast('Límite de ' + PROD_LIMIT + ' productos — próximamente podés crear una cuenta para guardar más');
-      return;
-    }
     const nombre = $('modalNombre').value.trim() || 'Producto sin nombre';
-    state.productos.unshift({
-      id: Date.now(),
+    const prod = {
       nombre,
       sub: canalNombreDisplay() + ' · margen ' + $('margen').value + '% · ' + new Date().toLocaleDateString('es-AR'),
       precioARS: pendingCalcResult.precio,
-    });
-    persistProds();
-    renderProds();
+    };
+    const btn = $('modalConfirm');
+    btn.disabled = true;
     closeSaveModal();
-    toast('Guardado en mis productos');
+    window.CostitoAuth.saveProduct(prod)
+      .then((id) => {
+        state.productos.unshift({ id, ...prod });
+        renderProds();
+        toast('Guardado en mis productos');
+      })
+      .catch((err) => toast('Error al guardar: ' + err.message))
+      .finally(() => { btn.disabled = false; });
   }
 
   $('addBtn').addEventListener('click', showSaveModal);
@@ -710,10 +710,14 @@
   $('plist').addEventListener('click', (e) => {
     const b = e.target.closest('[data-del]');
     if (!b) return;
-    state.productos = state.productos.filter((p) => String(p.id) !== b.dataset.del);
-    persistProds();
-    renderProds();
-    toast('Producto borrado');
+    const id = b.dataset.del;
+    window.CostitoAuth.deleteProduct(id)
+      .then(() => {
+        state.productos = state.productos.filter((p) => String(p.id) !== id);
+        renderProds();
+        toast('Producto borrado');
+      })
+      .catch((err) => toast('Error al borrar: ' + err.message));
   });
 
   // ============================================================
@@ -948,4 +952,17 @@
   medios();
   renderProds();
   updateTabFades();
+
+  // Sincronizar productos con Supabase cuando cambia la sesión
+  document.addEventListener('costito:authchange', (e) => {
+    const user = e.detail;
+    if (user) {
+      window.CostitoAuth.loadProducts()
+        .then((prods) => { state.productos = prods; renderProds(); })
+        .catch(() => {});
+    } else {
+      state.productos = [];
+      renderProds();
+    }
+  });
 })();

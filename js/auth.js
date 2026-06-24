@@ -32,7 +32,7 @@ window.CostitoAuth = (function () {
       ? sbUser.user_metadata.full_name
       : email.split('@')[0].replace(/[._-]+/g, ' ').trim();
     const initials = name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || email[0].toUpperCase();
-    return { email, name, initials };
+    return { id: sbUser.id, email, name, initials };
   }
 
   function emit(u) { listeners.forEach((f) => { try { f(u); } catch (e) {} }); }
@@ -43,6 +43,7 @@ window.CostitoAuth = (function () {
   sb.auth.onAuthStateChange((_event, session) => {
     currentUser = makeUser(session ? session.user : null);
     emit(currentUser);
+    document.dispatchEvent(new CustomEvent('costito:authchange', { detail: currentUser }));
   });
 
   function translateError(msg) {
@@ -89,7 +90,35 @@ window.CostitoAuth = (function () {
     return sb.auth.signOut();
   }
 
-  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut };
+  function loadProducts() {
+    return sb.from('productos')
+      .select('id, nombre, sub, precio_ars, created_at')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) throw new Error(error.message);
+        return (data || []).map((r) => ({ id: r.id, nombre: r.nombre, sub: r.sub, precioARS: r.precio_ars }));
+      });
+  }
+
+  function saveProduct({ nombre, sub, precioARS }) {
+    if (!currentUser) return Promise.reject(new Error('No hay sesión activa.'));
+    return sb.from('productos')
+      .insert({ user_id: currentUser.id, nombre, sub, precio_ars: precioARS })
+      .select('id')
+      .single()
+      .then(({ data, error }) => {
+        if (error) throw new Error(error.message);
+        return data.id;
+      });
+  }
+
+  function deleteProduct(id) {
+    return sb.from('productos').delete().eq('id', id).then(({ error }) => {
+      if (error) throw new Error(error.message);
+    });
+  }
+
+  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut, loadProducts, saveProduct, deleteProduct };
 })();
 
 /* ---------- 3) WIRING DE LA UI ---------- */
