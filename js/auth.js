@@ -40,8 +40,17 @@ window.CostitoAuth = (function () {
   function onChange(cb) { listeners.push(cb); return () => { listeners = listeners.filter((f) => f !== cb); }; }
 
   // Supabase emite INITIAL_SESSION al cargar — sincroniza el estado apenas resuelve
-  sb.auth.onAuthStateChange((_event, session) => {
-    currentUser = makeUser(session ? session.user : null);
+  // Fetch del plan del perfil para que pay.js sepa si el usuario ya es Premium.
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    if (!session) {
+      currentUser = null;
+      emit(null);
+      document.dispatchEvent(new CustomEvent('costito:authchange', { detail: null }));
+      return;
+    }
+    const base = makeUser(session.user);
+    const { data: perfil } = await sb.from('profiles').select('plan').eq('id', session.user.id).single();
+    currentUser = { ...base, plan: perfil?.plan || 'free' };
     emit(currentUser);
     document.dispatchEvent(new CustomEvent('costito:authchange', { detail: currentUser }));
   });
