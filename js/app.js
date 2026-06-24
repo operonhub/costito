@@ -663,12 +663,28 @@
   const TAG_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--verde)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.4"/></svg>';
   const DEL_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
 
+  let catActiva = '';
+
+  function renderCatFilter() {
+    const el = $('catFilter');
+    if (!el) return;
+    const cats = [...new Set(state.productos.map((p) => p.categoria).filter(Boolean))];
+    if (cats.length < 2) { el.style.display = 'none'; catActiva = ''; return; }
+    el.style.display = 'flex';
+    setHTML(el,
+      '<button class="cat-pill' + (catActiva === '' ? ' on' : '') + '" data-cat="">Todos</button>' +
+      cats.map((c) => '<button class="cat-pill' + (catActiva === c ? ' on' : '') + '" data-cat="' + escapeHtml(c) + '">' + escapeHtml(c) + '</button>').join('')
+    );
+  }
+
   function renderProds() {
     const list = $('plist');
     const n = state.productos.length;
     const loggedIn = window.CostitoAuth && window.CostitoAuth.getUser();
     const countEl = $('prodCount');
     if (countEl) countEl.textContent = loggedIn && n > 0 ? n + (n === 1 ? ' producto guardado' : ' productos guardados') : '';
+
+    renderCatFilter();
 
     if (!loggedIn) {
       setHTML(list, '<div class="empty">' +
@@ -682,16 +698,28 @@
         '<div>Todavía no guardaste ningún producto.<br/>Calculá un precio y tocá <b>"Guardar en mis productos"</b>.</div></div>');
       return;
     }
-    setHTML(list, state.productos.map((p) =>
+    const visible = catActiva ? state.productos.filter((p) => p.categoria === catActiva) : state.productos;
+    setHTML(list, visible.map((p) =>
       '<div class="prod" data-id="' + p.id + '">' +
         '<span class="pic">' + TAG_ICO + '</span>' +
-        '<div class="info"><h4>' + escapeHtml(p.nombre) + '</h4><p>' + escapeHtml(p.sub) + '</p></div>' +
+        '<div class="info">' +
+          (p.categoria ? '<span class="cat-tag">' + escapeHtml(p.categoria) + '</span>' : '') +
+          '<h4>' + escapeHtml(p.nombre) + '</h4>' +
+          '<p>' + escapeHtml(p.sub) + '</p>' +
+        '</div>' +
         '<div class="pr">' +
           '<div style="text-align:right"><div class="n">' + money(p.precioARS) + '</div><div class="s">a publicar</div></div>' +
           '<button class="del" data-del="' + p.id + '" aria-label="Borrar">' + DEL_ICO + '</button>' +
         '</div></div>'
     ).join(''));
   }
+
+  $('catFilter').addEventListener('click', (e) => {
+    const b = e.target.closest('.cat-pill');
+    if (!b) return;
+    catActiva = b.dataset.cat;
+    renderProds();
+  });
 
   // ============================================================
   // MODAL: guardar producto
@@ -721,17 +749,25 @@
   function confirmSave() {
     if (!pendingCalcResult) return;
     const nombre = $('modalNombre').value.trim() || 'Producto sin nombre';
+    const categoria = $('modalCategoria').value || '';
+    const inputs = leerInputs();
+    const canalNom = canalNombreDisplay();
     const prod = {
       nombre,
-      sub: canalNombreDisplay() + ' · margen ' + $('margen').value + '% · ' + new Date().toLocaleDateString('es-AR'),
+      sub: [canalNom, 'margen ' + $('margen').value + '%', new Date().toLocaleDateString('es-AR')].join(' · '),
       precioARS: pendingCalcResult.precio,
+      ganancia: pendingCalcResult.ganancia,
+      costo: inputs.costo,
+      margen: parseFloat($('margen').value) || 0,
+      canalNombre: canalNom,
+      categoria,
     };
     const btn = $('modalConfirm');
     btn.disabled = true;
     closeSaveModal();
     window.CostitoAuth.saveProduct(prod)
       .then((id) => {
-        state.productos.unshift({ id, ...prod });
+        state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria });
         renderProds();
         toast('Guardado en mis productos');
       })

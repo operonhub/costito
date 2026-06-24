@@ -92,18 +92,35 @@ window.CostitoAuth = (function () {
 
   function loadProducts() {
     return sb.from('productos')
-      .select('id, nombre, sub, precio_ars, created_at')
+      .select('id, nombre, precio_publicar, ganancia, canal_nombre, margen, categoria, created_at')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) throw new Error(error.message);
-        return (data || []).map((r) => ({ id: r.id, nombre: r.nombre, sub: r.sub, precioARS: r.precio_ars }));
+        return (data || []).map((r) => ({
+          id: r.id,
+          nombre: r.nombre,
+          sub: [r.canal_nombre, r.margen ? 'margen ' + r.margen + '%' : null,
+                new Date(r.created_at).toLocaleDateString('es-AR')].filter(Boolean).join(' · '),
+          precioARS: r.precio_publicar,
+          ganancia: r.ganancia,
+          categoria: r.categoria || '',
+        }));
       });
   }
 
-  function saveProduct({ nombre, sub, precioARS }) {
+  function saveProduct({ nombre, precioARS, ganancia, costo, margen, canalNombre, categoria }) {
     if (!currentUser) return Promise.reject(new Error('No hay sesión activa.'));
     return sb.from('productos')
-      .insert({ user_id: currentUser.id, nombre, sub, precio_ars: precioARS })
+      .insert({
+        user_id: currentUser.id,
+        nombre,
+        precio_publicar: precioARS,
+        ganancia: ganancia || 0,
+        costo: costo || 0,
+        margen: margen || 0,
+        canal_nombre: canalNombre || '',
+        categoria: categoria || '',
+      })
       .select('id')
       .single()
       .then(({ data, error }) => {

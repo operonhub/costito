@@ -324,6 +324,7 @@
     <p class="section-sub">Tu lista de precios calculados, siempre a mano. Se guardan en este dispositivo. Llevátela en PDF para imprimir o en Excel para seguir trabajándola.</p>
 
     <p class="prod-count" id="prodCount"></p>
+    <div class="cat-filter" id="catFilter" style="display:none"></div>
 
     <div class="card">
       <div class="plist" id="plist"></div>
@@ -382,9 +383,23 @@
 <div class="overlay" id="saveOverlay">
   <div class="modal-box">
     <h3 class="modal-title">¿Cómo se llama el producto?</h3>
-    <p class="modal-hint">Ingresá el nombre para guardarlo en tu lista de precios.</p>
+    <p class="modal-hint">Ingresá el nombre y la categoría para organizarlo en tu lista.</p>
     <div class="in" style="margin:14px 0">
       <input type="text" id="modalNombre" placeholder="Ej: Remera talle M" maxlength="80" />
+    </div>
+    <div class="in sel" style="margin-bottom:14px">
+      <select id="modalCategoria">
+        <option value="">Sin categoría</option>
+        <option value="Ropa y calzado">Ropa y calzado</option>
+        <option value="Electrónica">Electrónica</option>
+        <option value="Hogar y deco">Hogar y deco</option>
+        <option value="Alimentos">Alimentos</option>
+        <option value="Belleza">Belleza</option>
+        <option value="Deportes">Deportes</option>
+        <option value="Herramientas">Herramientas</option>
+        <option value="Servicios">Servicios</option>
+        <option value="Otro">Otro</option>
+      </select>
     </div>
     <div class="modal-btns">
       <button id="modalCancel">Cancelar</button>
