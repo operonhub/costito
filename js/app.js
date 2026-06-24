@@ -506,13 +506,14 @@
     calc();
   });
 
-  // Ver en Medios de pago: pre-carga el precio calculado y cambia de tab
+  // Ver en Medios de pago: manda el precio SIN comisión de canal para evitar doble comisión
   $('verMediosBtn').addEventListener('click', () => {
-    const r = Calc.precioPublicado(leerInputs());
-    if (!r.ok) return;
-    const precioARS = Math.round(r.precio);
+    const inputs = leerInputs();
+    if (!Calc.precioPublicado(inputs).ok) return;
+    // Precio base = costo + IVA + margen + IIBB, sin comisión de canal
+    const rBase = Calc.precioPublicado({ ...inputs, comEfectiva: 0 });
     const baseInput = $('base');
-    baseInput.value = precioARS.toLocaleString('es-AR');
+    baseInput.value = Math.round(rBase.precio).toLocaleString('es-AR');
     baseInput.dispatchEvent(new Event('input'));
     document.querySelector('[data-tab="medios"]').click();
     setTimeout(() => baseInput.focus(), 80);
