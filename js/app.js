@@ -246,7 +246,8 @@
       .join(''));
 
     setHTML($('iibb'), D.iibb
-      .map((o) => '<option value="' + o.v + '"' + (o.v === 3.5 ? ' selected' : '') + '>' + o.label + ' (' + o.prov + ')</option>')
+      .map((o) => '<option value="' + o.v + '"' + (o.label === 'Buenos Aires' ? ' selected' : '') + '>' +
+        o.label + (o.prov ? ' (' + o.prov + ')' : '') + '</option>')
       .join(''));
 
     // Procesadores locales (calc tab)
@@ -402,7 +403,9 @@
   function leerInputs() {
     const costo = parseNum($('costo').value);
     const comEfectiva = Calc.comisionEfectiva(comNominal(), $('ivaCom').checked);
-    const iibb = parseFloat($('iibb').value) || 0;
+    const iibb = $('iibb').value === 'custom'
+      ? (parseFloat($('iibbCustom').value) || 0)
+      : (parseFloat($('iibb').value) || 0);
     const condicionFiscal = state.condFiscal;
     let margen;
     if (state.modoGanancia === 'ars') {
@@ -549,7 +552,13 @@
   });
 
   $('ivaCom').addEventListener('change', calc);
-  $('iibb').addEventListener('change', calc);
+  $('iibb').addEventListener('change', () => {
+    const isCustom = $('iibb').value === 'custom';
+    $('iibbCustomWrap').style.display = isCustom ? '' : 'none';
+    if (isCustom) setTimeout(() => $('iibbCustom').focus(), 30);
+    calc();
+  });
+  $('iibbCustom').addEventListener('input', calc);
   // #costo tiene su listener en bindMoneyInput (init); margen se mantiene acá
   $('margen').addEventListener('input', calc);
 

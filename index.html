@@ -214,8 +214,12 @@
       </label>
 
       <div class="field" style="margin-top:15px">
-        <label>Ingresos Brutos (IIBB) <span class="help"><span class="q">?</span><span class="tip">Impuesto provincial sobre tus ventas. Cambia según dónde estés inscripto. Si sos Monotributista en algunas provincias podés estar exento (0%).</span></span></label>
+        <label>Ingresos Brutos (IIBB) <span class="help"><span class="q">?</span><span class="tip">Impuesto provincial sobre tus ventas. Las alícuotas son de referencia para comercio minorista — pueden variar según tu actividad. Si no estás seguro, consultá con tu contador o usá "Personalizado".</span></span></label>
         <div class="in sel"><select id="iibb"></select></div>
+        <div id="iibbCustomWrap" style="display:none;margin-top:8px">
+          <div class="in"><input type="number" id="iibbCustom" min="0" max="20" step="0.1" inputmode="decimal" placeholder="Ej: 3,5" /><span class="suf">%</span></div>
+        </div>
+        <p class="iibb-nota">Tasas de referencia. ¿No coincide? Usá "Personalizado" o <a href="https://www.afip.gob.ar/multi/default.asp" target="_blank" rel="noopener">consultá en AFIP →</a></p>
       </div>
     </div>
 

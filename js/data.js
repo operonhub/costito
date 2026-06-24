@@ -52,14 +52,35 @@ const COSTITO_DATA = {
     { v: 21,   label: '21%'     },
   ],
 
-  // Ingresos Brutos por jurisdicción (alícuotas de referencia)
+  // Ingresos Brutos por jurisdicción — alícuotas de referencia para comercio minorista.
+  // Fuente: agencias fiscales provinciales (ARBA, AGIP, DGR, etc.) — verificar con contador.
   iibb: [
-    { v: 0,   label: 'No pago / exento',  prov: '0%'   },
-    { v: 3.5, label: 'Buenos Aires',      prov: '3,5%' },
-    { v: 3,   label: 'CABA',              prov: '3%'   },
-    { v: 4,   label: 'Córdoba',           prov: '4%'   },
-    { v: 3.6, label: 'Santa Fe',          prov: '3,6%' },
-    { v: 4.5, label: 'Mendoza',           prov: '4,5%' },
+    { v: 0,        label: 'No pago / exento',   prov: '0%'    },
+    { v: 3.5,      label: 'Buenos Aires',        prov: '3,5%'  },
+    { v: 3,        label: 'CABA',               prov: '3%'    },
+    { v: 4,        label: 'Córdoba',            prov: '4%'    },
+    { v: 3.5,      label: 'Santa Fe',           prov: '3,5%'  },
+    { v: 4.5,      label: 'Mendoza',            prov: '4,5%'  },
+    { v: 3.5,      label: 'Entre Ríos',         prov: '3,5%'  },
+    { v: 3,        label: 'Tucumán',            prov: '3%'    },
+    { v: 3.5,      label: 'Salta',              prov: '3,5%'  },
+    { v: 3.5,      label: 'Misiones',           prov: '3,5%'  },
+    { v: 3.5,      label: 'Chaco',              prov: '3,5%'  },
+    { v: 3.5,      label: 'Corrientes',         prov: '3,5%'  },
+    { v: 3.5,      label: 'Santiago del Estero',prov: '3,5%'  },
+    { v: 3.5,      label: 'Jujuy',              prov: '3,5%'  },
+    { v: 3.5,      label: 'Río Negro',          prov: '3,5%'  },
+    { v: 3.5,      label: 'Neuquén',            prov: '3,5%'  },
+    { v: 4,        label: 'Formosa',            prov: '4%'    },
+    { v: 3.5,      label: 'Catamarca',          prov: '3,5%'  },
+    { v: 3.5,      label: 'La Pampa',           prov: '3,5%'  },
+    { v: 4,        label: 'San Juan',           prov: '4%'    },
+    { v: 3.5,      label: 'San Luis',           prov: '3,5%'  },
+    { v: 3.5,      label: 'La Rioja',           prov: '3,5%'  },
+    { v: 3.5,      label: 'Chubut',             prov: '3,5%'  },
+    { v: 3,        label: 'Santa Cruz',         prov: '3%'    },
+    { v: 0,        label: 'Tierra del Fuego',   prov: '0%'    },
+    { v: 'custom', label: 'Personalizado',      prov: ''      },
   ],
 
   // Medios de pago para la tabla "¿Cuánto cobrar en cada uno?".
