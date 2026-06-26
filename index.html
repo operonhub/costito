@@ -337,6 +337,23 @@
     <h2 class="section-title">Mis productos</h2>
     <p class="section-sub">Tu lista de precios calculados, siempre a mano. Se guardan en este dispositivo. Llevátela en PDF para imprimir o en Excel para seguir trabajándola.</p>
 
+    <!-- Mi negocio: nombre + logo para brandear el PDF -->
+    <div class="negocio-card" id="negocioCard">
+      <div class="neg-logo" id="negLogoBox" role="button" tabindex="0" aria-label="Subir logo del negocio">
+        <img id="negLogoImg" alt="Logo del negocio" />
+        <span class="neg-ph" id="negLogoPh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21V12h6v9"/></svg>Logo</span>
+      </div>
+      <div class="neg-fields">
+        <input type="text" id="negNombre" placeholder="Nombre de tu negocio" maxlength="40" />
+        <div class="neg-actions">
+          <button id="negUpload" type="button">Subir logo</button>
+          <button id="negRemove" type="button" style="display:none">Quitar</button>
+        </div>
+        <p class="neg-note">Aparece en el encabezado del PDF de tu lista de precios.</p>
+      </div>
+      <input type="file" id="negFile" accept="image/png,image/jpeg,image/webp" style="display:none" />
+    </div>
+
     <p class="prod-count" id="prodCount"></p>
     <div class="cat-filter" id="catFilter" style="display:none"></div>
 
@@ -476,5 +493,6 @@
 <script src="js/auth.js"></script>
 <script src="js/pay.js"></script>
 <script src="js/import.js"></script>
+<script src="js/negocio.js"></script>
 </body>
 </html>
