@@ -400,6 +400,9 @@ select.in-bare{cursor:pointer;-webkit-appearance:none;appearance:none}
   .row2{grid-template-columns:1fr}
   .tbl .reca{display:none}
   nav{top:63px}
+  /* Header: achicar gap/padding para que los 4 elementos entren sin apretarse */
+  .head-in{gap:8px;padding:14px 12px}
+  .cur button{padding:6px 10px}
 }
 
 /* ---------- CONVERSOR MARKUP ↔ MARGEN ---------- */
