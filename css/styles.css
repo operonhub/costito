@@ -645,3 +645,4 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .sugerencias-link{display:flex;align-items:center;gap:6px;font-family:var(--sans);font-size:.8rem;font-weight:600;color:var(--tinta-soft);text-decoration:none;padding:6px 10px;border-radius:8px;border:1px solid var(--linea);transition:.15s}
 .sugerencias-link:hover{color:var(--verde);border-color:var(--verde)}
 .sugerencias-link svg{width:14px;height:14px;flex-shrink:0}
+.foot-links{display:flex;align-items:center;gap:8px}
