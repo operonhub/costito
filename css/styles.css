@@ -240,12 +240,13 @@ select option{background:var(--papel);color:var(--tinta)}
 .empty{text-align:center;padding:30px 16px;color:var(--tinta-soft);font-size:14px;line-height:1.6}
 .empty svg{width:40px;height:40px;opacity:.35;margin-bottom:10px}
 
-.export{display:flex;gap:10px;margin-top:16px}
-.export button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--crema);
+.export{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.export button{flex:1;min-width:calc(50% - 5px);display:flex;align-items:center;justify-content:center;gap:8px;background:var(--crema);
   border:1.5px solid var(--linea);color:var(--tinta);font-family:var(--sans);font-weight:600;font-size:14px;
   padding:13px;border-radius:12px;cursor:pointer;transition:.15s}
 .export button:hover{border-color:var(--naranja);color:var(--naranja)}
 .export button svg{width:17px;height:17px}
+#shareWa:hover{border-color:#25D366;color:#25D366}
 
 /* Botón exportar PDF en medios de pago */
 .btn-export{margin-top:14px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;

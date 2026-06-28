@@ -959,6 +959,35 @@
   $('expPdf').addEventListener('click', printProductosPdf);
   $('mediosPdfBtn').addEventListener('click', printMediosPdf);
 
+  $('shareWa').addEventListener('click', () => {
+    const visible = catActiva ? state.productos.filter((p) => p.categoria === catActiva) : state.productos;
+    if (!visible.length) return toast('No hay productos para compartir');
+
+    const negocio = window.CostitoNegocio ? window.CostitoNegocio.get() : { nombre: '' };
+    const titulo = negocio.nombre ? '🏷️ *Lista de precios — ' + negocio.nombre + '*' : '🏷️ *Lista de precios*';
+
+    // Agrupar por categoría, sin categoría al final
+    const groups = {};
+    visible.forEach((p) => {
+      const cat = p.categoria || '';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(p);
+    });
+    const cats = Object.keys(groups).sort((a, b) => a === '' ? 1 : b === '' ? -1 : a.localeCompare(b));
+    const multiCat = cats.some((c) => c !== '');
+
+    const lines = [titulo, ''];
+    cats.forEach((cat) => {
+      if (multiCat && cat) lines.push('*' + cat + '*');
+      groups[cat].forEach((p) => lines.push('▸ ' + p.nombre + ' · ' + money(p.precioARS)));
+      if (multiCat && cat) lines.push('');
+    });
+    lines.push('');
+    lines.push('📅 ' + new Date().toLocaleDateString('es-AR') + ' · costito.online');
+
+    window.open('https://wa.me/?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+  });
+
   // ============================================================
   // PDF FORMATEADO — Mis productos
   // ============================================================
