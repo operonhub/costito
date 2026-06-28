@@ -87,12 +87,25 @@
     const cfg = C.configActual ? C.configActual() : { canal: '' };
     C.setHTML(body,
       '<h3 class="modal-title">Importar productos</h3>' +
-      '<p class="modal-hint">Subí un CSV con tus productos. Calculamos el precio de cada uno con la configuración actual de la calculadora.</p>' +
+      '<p class="modal-hint">Completá la plantilla con tus productos y subila. Costito calcula el precio de publicación de cada uno automáticamente — vos solo ponés el costo y el margen.</p>' +
+
+      '<div class="imp-cols">' +
+        '<div class="imp-col-row"><span class="imp-col-name">nombre</span><span class="imp-col-desc">El nombre del producto. <b>Obligatorio.</b></span></div>' +
+        '<div class="imp-col-row"><span class="imp-col-name">costo</span><span class="imp-col-desc">Lo que te costó, <b>sin IVA</b>. Igual que el campo "¿Cuánto te costó?" de la Calculadora. <b>Obligatorio.</b></span></div>' +
+        '<div class="imp-col-row"><span class="imp-col-name">margen</span><span class="imp-col-desc">Tu % de ganancia sobre el precio final. Si lo dejás vacío, usa 40% por defecto. <i>Opcional.</i></span></div>' +
+        '<div class="imp-col-row"><span class="imp-col-name">categoria</span><span class="imp-col-desc">Para organizar tu lista (Ropa, Electrónica, etc.). <i>Opcional.</i></span></div>' +
+      '</div>' +
+
+      '<div class="imp-cfg' + (cfg.canal ? ' imp-cfg-warn' : '') + '">' +
+        '<b>⚠ Antes de subir:</b> los precios se calculan con el canal <b>' + C.escapeHtml(cfg.canal || 'actual') + '</b>. ' +
+        'Si vendés en otro canal, cerrá este modal, cambialo en la Calculadora y volvé.' +
+      '</div>' +
+
       '<ol class="imp-steps">' +
-        '<li><b>1.</b> Bajá la plantilla y llenala en Excel o Google Sheets.</li>' +
-        '<li><b>2.</b> Subí el archivo. Vas a ver un preview antes de guardar.</li>' +
+        '<li><b>1.</b> Bajá la plantilla y completala en Excel o Google Sheets.</li>' +
+        '<li><b>2.</b> Subí el archivo. Vas a ver un preview con los precios calculados antes de guardar.</li>' +
       '</ol>' +
-      '<div class="imp-cfg">Precios calculados con: <b>' + C.escapeHtml(cfg.canal || 'el canal actual') + '</b>. Cambialo en la Calculadora si hace falta.</div>' +
+
       '<div class="imp-actions">' +
         '<button class="imp-tpl" id="impTpl">Descargar plantilla</button>' +
         '<button class="imp-pick" id="impPick">Elegir archivo CSV</button>' +

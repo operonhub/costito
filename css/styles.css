@@ -622,3 +622,10 @@ details[open] .comp-chev{transform:rotate(180deg)}
 
 /* ---------- Código / SKU en la lista de productos ---------- */
 .sku-tag{font-size:.7rem;font-weight:600;color:var(--tinta-soft);background:var(--crema);border:1px solid var(--linea);border-radius:5px;padding:1px 5px;letter-spacing:.04em;vertical-align:middle;margin-left:4px}
+
+/* ---------- Importador: leyenda de columnas ---------- */
+.imp-cols{background:var(--crema);border:1px solid var(--linea);border-radius:10px;padding:10px 12px;margin:14px 0 10px;display:flex;flex-direction:column;gap:7px}
+.imp-col-row{display:flex;gap:10px;align-items:baseline;font-size:.83rem}
+.imp-col-name{font-family:monospace;font-size:.8rem;font-weight:700;color:var(--verde);background:var(--papel);border:1px solid var(--linea);border-radius:5px;padding:1px 6px;flex-shrink:0}
+.imp-col-desc{color:var(--tinta);line-height:1.4}
+.imp-cfg-warn{border-left:3px solid var(--naranja);padding-left:10px}
