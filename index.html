@@ -213,6 +213,18 @@
         <span class="t"><b>La comisión paga IVA (21%)</b><span>Algunas plataformas te cobran IVA sobre su comisión. Si es tu caso, dejalo tildado.</span></span>
       </label>
 
+      <!-- Costos adicionales por venta: cargo fijo ML + envío gratis a cargo del vendedor -->
+      <div id="costos-extra-wrap" style="display:none;margin-top:12px">
+        <div class="field" id="cargo-fijo-field" style="display:none">
+          <label>Cargo fijo por venta <span class="help"><span class="q">?</span><span class="tip">ML cobra un monto fijo por unidad cuando el precio publicado es menor a ~$33.000. Buscá el monto exacto en el Centro de vendedores de ML según tu categoría.</span></span></label>
+          <div class="in"><span class="pre">$</span><input type="number" id="cargoFijoInput" value="0" min="0" step="1" inputmode="decimal" /></div>
+        </div>
+        <div class="field" id="envio-field">
+          <label>Envío a cargo del vendedor <span class="help"><span class="q">?</span><span class="tip">Si ofrecés envío gratis al comprador, ingresá el costo promedio que te cobra el correo. Se suma al costo para que lo recuperes en el precio.</span></span></label>
+          <div class="in"><span class="pre">$</span><input type="number" id="envioInput" value="0" min="0" step="1" inputmode="decimal" /></div>
+        </div>
+      </div>
+
       <div class="field" style="margin-top:15px">
         <label>Ingresos Brutos (IIBB) <span class="help"><span class="q">?</span><span class="tip">Impuesto provincial sobre tus ventas. Las alícuotas son de referencia para comercio minorista — pueden variar según tu actividad. Si no estás seguro, consultá con tu contador o usá "Personalizado".</span></span></label>
         <div class="in sel"><select id="iibb"></select></div>
@@ -238,6 +250,7 @@
     <div class="card" style="margin-top:16px">
       <div class="break" id="break">
         <div class="li"><span class="k" id="bCostoLabel">Te costó (con IVA)</span><span class="v" id="bCosto">—</span></div>
+        <div class="li minus" id="bCostosExtraRow" style="display:none"><span class="k">Costos adicionales <span class="help"><span class="q">?</span><span class="tip">Cargo fijo y/o costo de envío a cargo del vendedor.</span></span></span><span class="v" id="bCostosExtra">—</span></div>
         <div class="li minus"><span class="k">Comisión del canal <span class="help"><span class="q">?</span><span class="tip">Lo que se queda la plataforma, ya con su IVA incluido.</span></span></span><span class="v" id="bCom">—</span></div>
         <div class="li minus"><span class="k">Ingresos Brutos</span><span class="v" id="bIibb">—</span></div>
         <div class="li plus"><span class="k">Tu ganancia neta</span><span class="v" id="bGan">—</span></div>

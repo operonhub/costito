@@ -360,6 +360,13 @@
       if (!canalState.desvinculado) $('ivaCom').checked = !!showIva;
     }
 
+    // Costos adicionales: cargo fijo (ML) y envío a cargo del vendedor (ML, TN, Shopify)
+    const platId = canalState.plataformaId;
+    const showCargoFijo = tipo === 'internet' && (platId === 'ml_clasica' || platId === 'ml_premium');
+    const showEnvio = tipo === 'internet' && (platId === 'ml_clasica' || platId === 'ml_premium' || platId === 'tiendanube' || platId === 'shopify');
+    $('costos-extra-wrap').style.display = (showCargoFijo || showEnvio) ? '' : 'none';
+    $('cargo-fijo-field').style.display = showCargoFijo ? '' : 'none';
+
     // Nota contextual
     if (tipo === 'local') {
       const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
@@ -420,7 +427,9 @@
     } else {
       margen = $('margen').value;
     }
-    return { costo, ivaProveedor: state.iva, margen, comEfectiva, iibb, condicionFiscal };
+    const cargoFijo = parseNum($('cargoFijoInput').value) || 0;
+    const costoEnvio = parseNum($('envioInput').value) || 0;
+    return { costo, ivaProveedor: state.iva, margen, comEfectiva, iibb, condicionFiscal, costosFijos: cargoFijo + costoEnvio };
   }
 
   function calc() {
@@ -430,6 +439,7 @@
       $('finVal').textContent = '—';
       setHTML($('ganNote'), escapeHtml(r.motivo));
       ['bCosto', 'bCom', 'bIibb', 'bGan', 'bTotal', 'bPrecioNeto', 'bIvaVenta'].forEach((id) => ($(id).textContent = '—'));
+      $('bCostosExtraRow').style.display = 'none';
       $('addBtn').disabled = true;
       $('addBtn').style.opacity = .5;
       $('verMediosBtn').disabled = true;
@@ -443,6 +453,9 @@
     setHTML($('ganNote'), 'Con esto ganás <b>' + money(r.ganancia) + ' limpios</b> por unidad.');
     $('bCostoLabel').textContent = r.esRI ? 'Tu costo neto' : 'Te costó (con IVA)';
     $('bCosto').textContent = money(r.costoConIva);
+    const hasCostosExtra = (r.costosFijos || 0) > 0;
+    $('bCostosExtraRow').style.display = hasCostosExtra ? '' : 'none';
+    if (hasCostosExtra) $('bCostosExtra').textContent = '– ' + money(r.costosFijos);
     $('bCom').textContent = '– ' + money(r.comAmt);
     $('bIibb').textContent = '– ' + money(r.iibbAmt);
     $('bGan').textContent = '+ ' + money(r.ganancia);
@@ -553,6 +566,8 @@
   });
 
   $('ivaCom').addEventListener('change', calc);
+  $('cargoFijoInput').addEventListener('input', calc);
+  $('envioInput').addEventListener('input', calc);
   $('iibb').addEventListener('change', () => {
     const isCustom = $('iibb').value === 'custom';
     $('iibbCustomWrap').style.display = isCustom ? '' : 'none';

@@ -23,7 +23,7 @@ const CostitoCalc = {
      - RI:   el IVA del proveedor es crédito fiscal (no suma al costo);
              se agrega IVA sobre el precio neto al publicar. */
   precioPublicado({ costo, ivaProveedor = 0, margen = 0, comEfectiva = 0, iibb = 0,
-                    condicionFiscal = 'mono' }) {
+                    condicionFiscal = 'mono', costosFijos = 0 }) {
     costo = Number(costo) || 0;
     const esRI = condicionFiscal !== 'mono';
     const ivaVenta = condicionFiscal === 'ri_21' ? 21 : condicionFiscal === 'ri_105' ? 10.5 : 0;
@@ -31,6 +31,8 @@ const CostitoCalc = {
     // Mono: el IVA pagado al proveedor no es recuperable → sube el costo.
     // RI:   el IVA es un crédito fiscal → el costo efectivo es el neto.
     const costoBase = esRI ? costo : costo * (1 + (Number(ivaProveedor) || 0) / 100);
+    // Costos adicionales por venta (cargo fijo ML, envío a cargo del vendedor, etc.)
+    const costoTotal = costoBase + (Number(costosFijos) || 0);
 
     const com  = (Number(comEfectiva) || 0) / 100;
     const ib   = (Number(iibb) || 0) / 100;
@@ -45,16 +47,17 @@ const CostitoCalc = {
       };
     }
 
-    const precioNeto   = costoBase / denom;
+    const precioNeto   = costoTotal / denom;
     const precio       = esRI ? precioNeto * (1 + ivaVenta / 100) : precioNeto;
     const comAmt       = precioNeto * com;
     const iibbAmt      = precioNeto * ib;
     const ivaVentaAmt  = precio - precioNeto;
-    const ganancia     = precioNeto - costoBase - comAmt - iibbAmt;
+    const ganancia     = precioNeto - costoTotal - comAmt - iibbAmt;
 
     return {
       ok: true,
       costoConIva: costoBase,
+      costosFijos: Number(costosFijos) || 0,
       precioNeto,
       precio,
       comAmt,
