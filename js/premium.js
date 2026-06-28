@@ -362,19 +362,23 @@
   // ============================================================
   // 3) SERVICIOS (precio por hora)
   // ============================================================
+  const COSTOS_OPTS = ['Alquiler', 'Sueldos', 'Publicidad', 'Contador', 'Seguro', 'Flete', 'Combustible', 'Servicios (luz, internet…)', 'Envíos', 'Transporte', 'Mantenimiento', 'Tasa municipal', 'Gastos bancarios', 'ARCA', 'Otros gastos'];
+
   let sOtrosCostos = [];
   let sLastResult = null;
 
   function renderSCostos() {
     const list = $('s-costos-list');
     if (!list) return;
-    C.setHTML(list, sOtrosCostos.map((c, i) =>
-      '<div class="s-costo-row" data-idx="' + i + '">' +
-        '<input type="text" class="s-cn" placeholder="ej. Alquiler" value="' + C.escapeHtml(c.label) + '" />' +
+    C.setHTML(list, sOtrosCostos.map((c, i) => {
+      const opts = '<option value="" disabled' + (c.label ? '' : ' selected') + '>Seleccioná un costo…</option>' +
+        COSTOS_OPTS.map((o) => '<option value="' + o + '"' + (o === c.label ? ' selected' : '') + '>' + o + '</option>').join('');
+      return '<div class="s-costo-row" data-idx="' + i + '">' +
+        '<select class="s-cn">' + opts + '</select>' +
         '<div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" class="s-cv" value="' + (c.valor || '') + '" min="0" inputmode="decimal" /></div>' +
         '<button class="s-del" data-del="' + i + '" title="Quitar">×</button>' +
-      '</div>'
-    ).join(''));
+      '</div>';
+    }).join(''));
   }
 
   function buildServicios() {
