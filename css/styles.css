@@ -619,3 +619,6 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .serv-hint{text-align:center;font-size:.83rem;color:var(--tinta-soft);margin:4px 0 16px}
 .serv-hint a{color:var(--verde);font-weight:600;cursor:pointer}
 .serv-hint a:hover{opacity:.75}
+
+/* ---------- Código / SKU en la lista de productos ---------- */
+.sku-tag{font-size:.7rem;font-weight:600;color:var(--tinta-soft);background:var(--crema);border:1px solid var(--linea);border-radius:5px;padding:1px 5px;letter-spacing:.04em;vertical-align:middle;margin-left:4px}

@@ -749,7 +749,7 @@
         '<span class="pic">' + TAG_ICO + '</span>' +
         '<div class="info">' +
           (p.categoria ? '<span class="cat-tag">' + escapeHtml(p.categoria) + '</span>' : '') +
-          '<h4>' + escapeHtml(p.nombre) + '</h4>' +
+          '<h4>' + escapeHtml(p.nombre) + (p.codigo ? ' <span class="sku-tag">' + escapeHtml(p.codigo) + '</span>' : '') + '</h4>' +
           '<p>' + escapeHtml(p.sub) + '</p>' +
         '</div>' +
         '<div class="pr">' +
@@ -773,6 +773,20 @@
   let pendingServicio = null;
 
   const PROD_LIMIT_FREE = 5;
+  const CATS_DEFAULT = ['Ropa y calzado','Electrónica','Hogar y deco','Alimentos','Belleza','Deportes','Herramientas','Servicios','Otro'];
+  const CATS_LS = 'costito_cats';
+  function getCats() { try { return JSON.parse(localStorage.getItem(CATS_LS)) || []; } catch(e) { return []; } }
+  function addCat(cat) {
+    if (!cat) return;
+    const c = getCats();
+    if (!CATS_DEFAULT.includes(cat) && !c.includes(cat)) { c.unshift(cat); localStorage.setItem(CATS_LS, JSON.stringify(c.slice(0, 30))); }
+  }
+  function populateCatList() {
+    const dl = $('categoriasData');
+    if (!dl) return;
+    const all = [...CATS_DEFAULT, ...getCats().filter((c) => !CATS_DEFAULT.includes(c))];
+    setHTML(dl, all.map((c) => '<option value="' + escapeHtml(c) + '">').join(''));
+  }
 
   function showSaveModal() {
     if (!window.CostitoAuth || !window.CostitoAuth.getUser()) {
@@ -791,6 +805,9 @@
     if (!r.ok) return;
     pendingCalcResult = r;
     $('modalNombre').value = '';
+    $('modalCategoria').value = '';
+    $('modalCodigo').value = '';
+    populateCatList();
     $('saveOverlay').classList.add('on');
     setTimeout(() => $('modalNombre').focus(), 60);
   }
@@ -804,7 +821,9 @@
   function confirmSave() {
     if (!pendingCalcResult && !pendingServicio) return;
     const nombre = $('modalNombre').value.trim() || (pendingServicio ? 'Servicio sin nombre' : 'Producto sin nombre');
-    const categoria = $('modalCategoria').value || '';
+    const categoria = ($('modalCategoria').value || '').trim();
+    const codigo = ($('modalCodigo').value || '').trim();
+    addCat(categoria);
     let prod;
     if (pendingServicio) {
       const r = pendingServicio;
@@ -817,6 +836,7 @@
         margen: 0,
         canalNombre: 'Servicio por hora',
         categoria,
+        codigo,
       };
     } else {
       const inputs = leerInputs();
@@ -831,6 +851,7 @@
         margen: margenGuardar,
         canalNombre: canalNom,
         categoria,
+        codigo,
       };
     }
     const btn = $('modalConfirm');
@@ -838,7 +859,7 @@
     closeSaveModal();
     window.CostitoAuth.saveProduct(prod)
       .then((id) => {
-        state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria });
+        state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria, codigo });
         renderProds();
         toast('Guardado en mis productos');
       })
@@ -909,6 +930,9 @@
     pendingServicio = r;
     pendingCalcResult = null;
     $('modalNombre').value = '';
+    $('modalCategoria').value = '';
+    $('modalCodigo').value = '';
+    populateCatList();
     $('saveOverlay').classList.add('on');
     setTimeout(() => $('modalNombre').focus(), 60);
   };

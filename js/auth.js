@@ -121,7 +121,7 @@ window.CostitoAuth = (function () {
 
   function loadProducts() {
     return sb.from('productos')
-      .select('id, nombre, precio_publicar, ganancia, canal_nombre, margen, categoria, created_at')
+      .select('id, nombre, precio_publicar, ganancia, canal_nombre, margen, categoria, codigo, created_at')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) throw new Error(error.message);
@@ -133,11 +133,12 @@ window.CostitoAuth = (function () {
           precioARS: r.precio_publicar,
           ganancia: r.ganancia,
           categoria: r.categoria || '',
+          codigo: r.codigo || '',
         }));
       });
   }
 
-  function saveProduct({ nombre, precioARS, ganancia, costo, margen, canalNombre, categoria }) {
+  function saveProduct({ nombre, precioARS, ganancia, costo, margen, canalNombre, categoria, codigo }) {
     if (!currentUser) return Promise.reject(new Error('No hay sesión activa.'));
     return sb.from('productos')
       .insert({
@@ -149,6 +150,7 @@ window.CostitoAuth = (function () {
         margen: margen || 0,
         canal_nombre: canalNombre || '',
         categoria: categoria || '',
+        codigo: codigo || '',
       })
       .select('id')
       .single()

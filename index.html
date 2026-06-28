@@ -417,23 +417,16 @@
 <div class="overlay" id="saveOverlay">
   <div class="modal-box">
     <h3 class="modal-title">¿Cómo se llama el producto?</h3>
-    <p class="modal-hint">Ingresá el nombre y la categoría para organizarlo en tu lista.</p>
-    <div class="in" style="margin:14px 0">
+    <p class="modal-hint">Ingresá el nombre, la categoría y el código para organizarlo en tu lista.</p>
+    <div class="in" style="margin:14px 0 10px">
       <input type="text" id="modalNombre" placeholder="Ej: Remera talle M" maxlength="80" />
     </div>
-    <div class="in sel" style="margin-bottom:14px">
-      <select id="modalCategoria">
-        <option value="">Sin categoría</option>
-        <option value="Ropa y calzado">Ropa y calzado</option>
-        <option value="Electrónica">Electrónica</option>
-        <option value="Hogar y deco">Hogar y deco</option>
-        <option value="Alimentos">Alimentos</option>
-        <option value="Belleza">Belleza</option>
-        <option value="Deportes">Deportes</option>
-        <option value="Herramientas">Herramientas</option>
-        <option value="Servicios">Servicios</option>
-        <option value="Otro">Otro</option>
-      </select>
+    <div class="in" style="margin-bottom:10px">
+      <input type="text" id="modalCategoria" list="categoriasData" placeholder="Categoría (podés escribir la tuya)" maxlength="50" autocomplete="off" />
+      <datalist id="categoriasData"></datalist>
+    </div>
+    <div class="in" style="margin-bottom:14px">
+      <input type="text" id="modalCodigo" placeholder="Código / SKU (opcional)" maxlength="40" />
     </div>
     <div class="modal-btns">
       <button id="modalCancel">Cancelar</button>
