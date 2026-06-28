@@ -572,6 +572,8 @@
   });
 
   // Ver en Medios de pago: manda el precio SIN comisión de canal para evitar doble comisión
+  $('goServicios').addEventListener('click', () => document.querySelector('[data-tab="servicios"]').click());
+
   $('verMediosBtn').addEventListener('click', () => {
     const inputs = leerInputs();
     if (!Calc.precioPublicado(inputs).ok) return;

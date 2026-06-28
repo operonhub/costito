@@ -614,3 +614,8 @@ details[open] .comp-chev{transform:rotate(180deg)}
 /* ---------- AUTH: olvidé contraseña ---------- */
 .auth-forgot{display:block;text-align:right;font-size:.8rem;color:var(--tinta-soft);cursor:pointer;margin-bottom:12px;user-select:none}
 .auth-forgot:hover{color:var(--tinta)}
+
+/* ---------- HINT: ir a Servicios desde la Calculadora ---------- */
+.serv-hint{text-align:center;font-size:.83rem;color:var(--tinta-soft);margin:4px 0 16px}
+.serv-hint a{color:var(--verde);font-weight:600;cursor:pointer}
+.serv-hint a:hover{opacity:.75}
