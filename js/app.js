@@ -27,7 +27,7 @@
     cur: localStorage.getItem(LS.cur) || 'ARS',
     iva: 21,
     condFiscal: localStorage.getItem(LS.condFiscal) || 'mono',
-    modoGanancia: 'pct',
+    modoGanancia: 'ars',
     productos: [],
     dolarTipo: localStorage.getItem(LS.dolarTipo) || D.dolar.tipoDefault,
     dolares: JSON.parse(localStorage.getItem(LS.dolarCache) || 'null'), // { casa: {valor, fecha} }
