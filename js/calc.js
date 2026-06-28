@@ -172,19 +172,21 @@ const CostitoCalc = {
   /* ---------- PREMIUM: Precio de servicios (por hora) ----------
      Cuánto cobrar la hora para llegar al ingreso neto deseado al mes,
      cubriendo el costo fijo del monotributo, con tus horas facturables. */
-  precioServicio({ ingresoDeseado = 0, horasMes = 0, monotributo = 0, horasProyecto = 0 }) {
+  precioServicio({ ingresoDeseado = 0, horasMes = 0, monotributo = 0, horasProyecto = 0, otrosCostos = [] }) {
     const ingreso = Number(ingresoDeseado) || 0;
     const horas = Number(horasMes) || 0;
     const mono = Number(monotributo) || 0;
+    const extras = otrosCostos.reduce((s, c) => s + (Number(c.valor) || 0), 0);
     if (horas <= 0) return { ok: false, motivo: 'Decinos cuántas horas por mes podés facturar.' };
 
-    const precioHora = (ingreso + mono) / horas;
+    const costosFijos = mono + extras;
+    const precioHora = (ingreso + costosFijos) / horas;
     const hp = Number(horasProyecto) || 0;
     return {
       ok: true,
       precioHora,
       precioProyecto: hp > 0 ? precioHora * hp : null,
-      costoCubierto: ingreso + mono,
+      costosFijos,
     };
   },
 };

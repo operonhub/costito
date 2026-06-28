@@ -768,6 +768,7 @@
   // MODAL: guardar producto
   // ============================================================
   let pendingCalcResult = null;
+  let pendingServicio = null;
 
   const PROD_LIMIT_FREE = 5;
 
@@ -795,25 +796,41 @@
   function closeSaveModal() {
     $('saveOverlay').classList.remove('on');
     pendingCalcResult = null;
+    pendingServicio = null;
   }
 
   function confirmSave() {
-    if (!pendingCalcResult) return;
-    const nombre = $('modalNombre').value.trim() || 'Producto sin nombre';
+    if (!pendingCalcResult && !pendingServicio) return;
+    const nombre = $('modalNombre').value.trim() || (pendingServicio ? 'Servicio sin nombre' : 'Producto sin nombre');
     const categoria = $('modalCategoria').value || '';
-    const inputs = leerInputs();
-    const canalNom = canalNombreDisplay();
-    const margenGuardar = Math.round(pendingCalcResult.margenReal * 10) / 10;
-    const prod = {
-      nombre,
-      sub: [canalNom, 'margen ' + margenGuardar + '%', new Date().toLocaleDateString('es-AR')].join(' · '),
-      precioARS: pendingCalcResult.precio,
-      ganancia: pendingCalcResult.ganancia,
-      costo: inputs.costo,
-      margen: margenGuardar,
-      canalNombre: canalNom,
-      categoria,
-    };
+    let prod;
+    if (pendingServicio) {
+      const r = pendingServicio;
+      prod = {
+        nombre,
+        sub: ['Servicio por hora', new Date().toLocaleDateString('es-AR')].join(' · '),
+        precioARS: r.precioHora,
+        ganancia: 0,
+        costo: r.costosFijos || 0,
+        margen: 0,
+        canalNombre: 'Servicio por hora',
+        categoria,
+      };
+    } else {
+      const inputs = leerInputs();
+      const canalNom = canalNombreDisplay();
+      const margenGuardar = Math.round(pendingCalcResult.margenReal * 10) / 10;
+      prod = {
+        nombre,
+        sub: [canalNom, 'margen ' + margenGuardar + '%', new Date().toLocaleDateString('es-AR')].join(' · '),
+        precioARS: pendingCalcResult.precio,
+        ganancia: pendingCalcResult.ganancia,
+        costo: inputs.costo,
+        margen: margenGuardar,
+        canalNombre: canalNom,
+        categoria,
+      };
+    }
     const btn = $('modalConfirm');
     btn.disabled = true;
     closeSaveModal();
@@ -875,6 +892,24 @@
   // Datos de la config actual para mostrarlos en el preview del importador
   window.Costito.configActual = () => ({ canal: canalNombreDisplay(), cond: state.condFiscal });
   window.Costito.refreshProds = () => renderProds();
+  window.Costito.abrirGuardarServicio = function (r) {
+    if (!window.CostitoAuth || !window.CostitoAuth.getUser()) {
+      toast('Creá una cuenta para guardar tus servicios en la nube');
+      const ao = $('authOverlay');
+      if (ao) { ao.classList.add('on'); setTimeout(() => { const el = $('authEmail'); if (el) el.focus(); }, 60); }
+      return;
+    }
+    if (!Costito.isPremium() && state.productos.length >= PROD_LIMIT_FREE) {
+      toast('Llegaste al límite de 5 productos. ¡Pasate a Premium para guardar ilimitados! 🟢');
+      document.getElementById('acctBtn').click();
+      return;
+    }
+    pendingServicio = r;
+    pendingCalcResult = null;
+    $('modalNombre').value = '';
+    $('saveOverlay').classList.add('on');
+    setTimeout(() => $('modalNombre').focus(), 60);
+  };
 
   // ============================================================
   // EXPORTAR

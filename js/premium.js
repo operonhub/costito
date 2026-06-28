@@ -362,11 +362,30 @@
   // ============================================================
   // 3) SERVICIOS (precio por hora)
   // ============================================================
+  let sOtrosCostos = [];
+  let sLastResult = null;
+
+  function renderSCostos() {
+    const list = $('s-costos-list');
+    if (!list) return;
+    C.setHTML(list, sOtrosCostos.map((c, i) =>
+      '<div class="s-costo-row" data-idx="' + i + '">' +
+        '<input type="text" class="s-cn" placeholder="ej. Alquiler" value="' + C.escapeHtml(c.label) + '" />' +
+        '<div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" class="s-cv" value="' + (c.valor || '') + '" min="0" inputmode="decimal" /></div>' +
+        '<button class="s-del" data-del="' + i + '" title="Quitar">×</button>' +
+      '</div>'
+    ).join(''));
+  }
+
   function buildServicios() {
     C.setHTML($('body-servicios'),
       '<div class="card">' + cardHead('Cuánto querés ganar', 'Por mes, limpio') +
         '<div class="field"><label>Ingreso neto que querés al mes</label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="s-ingreso" value="800000" min="0" inputmode="decimal" /></div></div>' +
-        '<div class="field"><label>Monotributo (costo fijo mensual) <span class="help"><span class="q">?</span><span class="tip">Lo que pagás de monotributo por mes. Se reparte entre tus horas para que no te lo comas vos.</span></span></label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="s-mono" value="35000" min="0" inputmode="decimal" /></div></div>' +
+      '</div>' +
+      '<div class="card">' + cardHead('Costos fijos', 'Lo que pagás todo el mes') +
+        '<div class="field"><label>Monotributo (mensual) <span class="help"><span class="q">?</span><span class="tip">Lo que pagás de monotributo por mes. Se reparte entre tus horas para que no te lo comas vos.</span></span></label><div class="in"><span class="pre">' + C.symbol() + '</span><input type="number" id="s-mono" value="35000" min="0" inputmode="decimal" /></div></div>' +
+        '<div id="s-costos-list"></div>' +
+        '<button class="s-add" id="s-addCosto">+ Agregar costo</button>' +
       '</div>' +
       '<div class="card">' + cardHead('Tus horas', 'Las que realmente facturás') +
         '<div class="row2">' +
@@ -378,8 +397,10 @@
         '<div class="lbl">' + ICO.check + ' Precio por hora</div>' +
         '<div class="big"><span class="c">' + C.symbol() + '</span><span id="s-hora">—</span></div>' +
         '<div class="note" id="s-note">Lo que tenés que cobrar la hora para llegar a tu objetivo.</div>' +
-      '</div></div>'
+      '</div></div>' +
+      '<div class="s-guardar-wrap"><button class="s-guardar" id="s-guardar">Guardar servicio en mis productos</button></div>'
     );
+    renderSCostos();
     fmtInput('s-ingreso', recalcServicios);
     fmtInput('s-mono',    recalcServicios);
     recalcServicios();
@@ -389,7 +410,9 @@
     const r = Calc.precioServicio({
       ingresoDeseado: C.parseNum($('s-ingreso').value), horasMes: $('s-horas').value,
       monotributo: C.parseNum($('s-mono').value), horasProyecto: $('s-hproy').value,
+      otrosCostos: sOtrosCostos,
     });
+    sLastResult = r.ok ? r : null;
     if (!r.ok) {
       $('s-hora').textContent = '—';
       $('s-note').textContent = r.motivo;
@@ -402,7 +425,31 @@
   }
 
   $('body-servicios').addEventListener('input', (e) => {
-    if (['s-ingreso', 's-mono', 's-horas', 's-hproy'].includes(e.target.id)) recalcServicios();
+    if (['s-ingreso', 's-mono', 's-horas', 's-hproy'].includes(e.target.id)) { recalcServicios(); return; }
+    if (e.target.classList.contains('s-cv')) {
+      const row = e.target.closest('[data-idx]');
+      if (row) { sOtrosCostos[Number(row.dataset.idx)].valor = C.parseNum(e.target.value) || 0; recalcServicios(); }
+    }
+    if (e.target.classList.contains('s-cn')) {
+      const row = e.target.closest('[data-idx]');
+      if (row) sOtrosCostos[Number(row.dataset.idx)].label = e.target.value;
+    }
+  });
+
+  $('body-servicios').addEventListener('click', (e) => {
+    const del = e.target.closest('[data-del]');
+    if (del) { sOtrosCostos.splice(Number(del.dataset.del), 1); renderSCostos(); recalcServicios(); return; }
+    if (e.target.id === 's-addCosto' || e.target.closest('#s-addCosto')) {
+      sOtrosCostos.push({ label: '', valor: 0 });
+      renderSCostos();
+      const rows = $('s-costos-list').querySelectorAll('.s-costo-row');
+      if (rows.length) rows[rows.length - 1].querySelector('.s-cn').focus();
+      return;
+    }
+    if (e.target.id === 's-guardar' || e.target.closest('#s-guardar')) {
+      if (sLastResult && window.Costito && window.Costito.abrirGuardarServicio) window.Costito.abrirGuardarServicio(sLastResult);
+      return;
+    }
   });
 
   // ============================================================

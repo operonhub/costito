@@ -598,3 +598,15 @@ details[open] .comp-chev{transform:rotate(180deg)}
   cursor:pointer;border:1.5px solid var(--linea);background:var(--crema);color:var(--tinta);transition:.15s}
 .neg-actions button:hover{border-color:var(--naranja);color:var(--naranja)}
 .neg-note{font-size:11px;color:var(--tinta-soft);margin-top:7px}
+
+/* ---------- SERVICIOS: costos fijos + guardar ---------- */
+.s-costo-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.s-costo-row .s-cn{flex:1;min-width:0}
+.s-costo-row .in{flex:0 0 160px}
+.s-del{background:none;border:none;padding:4px 8px;cursor:pointer;color:var(--tinta-soft);font-size:16px;line-height:1;border-radius:6px;flex-shrink:0}
+.s-del:hover{color:#e53}
+.s-add{background:none;border:none;padding:4px 0;cursor:pointer;color:var(--verde);font-size:.875rem;font-weight:700;margin-top:4px}
+.s-add:hover{opacity:.75}
+.s-guardar-wrap{text-align:center;margin-top:4px}
+.s-guardar{display:inline-block;padding:13px 28px;background:var(--verde);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.s-guardar:hover{opacity:.88}
