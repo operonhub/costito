@@ -630,3 +630,18 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .imp-col-name{font-family:monospace;font-size:.8rem;font-weight:700;color:var(--verde);background:var(--papel);border:1px solid var(--linea);border-radius:5px;padding:1px 6px;flex-shrink:0}
 .imp-col-desc{color:var(--tinta);line-height:1.4}
 .imp-cfg-warn{border-left:3px solid var(--naranja);padding-left:10px}
+
+/* ---------- Mis productos: banner de registro ---------- */
+.reg-teaser{text-align:center;padding:36px 24px 32px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.reg-teaser-ico{color:var(--tinta-soft);opacity:.5}
+.reg-teaser-ico svg{width:44px;height:44px;stroke-width:1.2}
+.reg-teaser h3{font-family:var(--serif);font-size:1.25rem;font-weight:700;color:var(--tinta);margin:0}
+.reg-teaser p{font-size:.9rem;color:var(--tinta-soft);margin:0;max-width:280px;line-height:1.5}
+.reg-teaser-btn{margin-top:6px;background:var(--verde);color:#fff;border:none;border-radius:12px;padding:13px 26px;font-family:var(--sans);font-size:.95rem;font-weight:700;cursor:pointer;transition:.15s}
+.reg-teaser-btn:hover{opacity:.88}
+
+/* ---------- Footer: sugerencias ---------- */
+.app-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.sugerencias-link{display:flex;align-items:center;gap:6px;font-family:var(--sans);font-size:.8rem;font-weight:600;color:var(--tinta-soft);text-decoration:none;padding:6px 10px;border-radius:8px;border:1px solid var(--linea);transition:.15s}
+.sugerencias-link:hover{color:var(--verde);border-color:var(--verde)}
+.sugerencias-link svg{width:14px;height:14px;flex-shrink:0}

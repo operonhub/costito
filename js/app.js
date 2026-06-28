@@ -732,9 +732,14 @@
     renderCatFilter();
 
     if (!loggedIn) {
-      setHTML(list, '<div class="empty">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>' +
-        '<div>Creá una cuenta para guardar tus productos en la nube y acceder desde cualquier dispositivo.</div></div>');
+      setHTML(list,
+        '<div class="reg-teaser">' +
+          '<div class="reg-teaser-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg></div>' +
+          '<h3>Guardá tus precios en la nube</h3>' +
+          '<p>Creá tu cuenta gratis y accedé a tu lista de productos desde cualquier dispositivo. Tus precios siempre a mano.</p>' +
+          '<button class="reg-teaser-btn">Crear cuenta gratis →</button>' +
+        '</div>'
+      );
       return;
     }
     if (!n) {
@@ -875,6 +880,10 @@
 
   // Borrar producto (delegación)
   $('plist').addEventListener('click', (e) => {
+    if (e.target.closest('.reg-teaser-btn')) {
+      document.getElementById('acctBtn').click();
+      return;
+    }
     const b = e.target.closest('[data-del]');
     if (!b) return;
     const id = b.dataset.del;
