@@ -647,3 +647,109 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .sugerencias-link:hover{color:var(--verde);border-color:var(--verde)}
 .sugerencias-link svg{width:14px;height:14px;flex-shrink:0}
 .foot-links{display:flex;align-items:center;gap:8px}
+
+/* ============================================================
+   NAV AGRUPADA
+   ============================================================ */
+.tabs{align-items:flex-end}
+.tab-group{display:flex;flex-direction:column;gap:3px}
+.tab-group-label{font-size:9.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--tinta-soft);padding:0 4px;white-space:nowrap}
+.tab-group-inner{display:flex;gap:6px}
+.tab-divider{width:1.5px;background:var(--linea);align-self:stretch;margin:6px 4px 10px;
+  border-radius:2px;flex:0 0 auto}
+.tab.tab-accent{border-color:var(--verde);color:var(--verde)}
+.tab.tab-accent.on{background:var(--verde);border-color:var(--verde);color:var(--on-verde)}
+
+/* ============================================================
+   MIS PRODUCTOS — PESTAÑAS POR TIPO
+   ============================================================ */
+.prod-tipo-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tipo-pill{background:var(--crema);border:1.5px solid var(--linea);color:var(--tinta-soft);
+  font-family:var(--sans);font-weight:600;font-size:13px;padding:7px 13px;
+  border-radius:20px;cursor:pointer;transition:.15s;white-space:nowrap}
+.tipo-pill.on{background:var(--verde);border-color:var(--verde);color:var(--on-verde)}
+.tipo-tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;
+  border-radius:20px;margin-bottom:3px;letter-spacing:.02em;vertical-align:middle;margin-left:5px;
+  background:rgba(31,138,91,.1);color:var(--verde)}
+
+/* ============================================================
+   SECCIÓN PRODUCCIÓN
+   ============================================================ */
+/* Encabezado de columnas de ingredientes */
+.ping-header{display:grid;
+  grid-template-columns:1.8fr 130px 120px 130px 75px 38px;
+  gap:6px;padding:0 2px 8px;font-size:10.5px;font-weight:700;color:var(--tinta-soft);
+  text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid var(--linea);margin-bottom:8px}
+
+/* Filas de ingredientes */
+.ping-row{display:grid;
+  grid-template-columns:1.8fr 130px 120px 130px 75px 38px;
+  gap:6px;align-items:center;margin-bottom:7px}
+.ping-pkt{display:flex;align-items:center;gap:3px;min-width:0}
+.in-bare-pre{font-size:13px;font-weight:700;color:var(--tinta-soft);flex:0 0 auto;padding-left:2px}
+.in-bare-suf{font-size:12px;font-weight:600;color:var(--tinta-soft);white-space:nowrap;flex:0 0 auto}
+.ping-unit{width:36px!important;text-align:center;padding:10px 5px!important}
+.ping-costo{font-family:var(--serif);font-weight:700;font-size:14px;color:var(--verde);
+  text-align:right;white-space:nowrap}
+
+/* Filas de gastos */
+.pgasto-row{display:grid;
+  grid-template-columns:1.4fr 1.4fr 110px auto 38px;
+  gap:6px;align-items:center;margin-bottom:7px}
+
+/* Barra resultado sticky */
+.prod-result-bar{position:sticky;bottom:0;background:var(--papel);
+  border-top:2px solid var(--verde);padding:14px 0 16px;margin-top:24px;
+  display:flex;align-items:center;gap:12px;z-index:10;
+  box-shadow:0 -6px 20px -6px rgba(0,0,0,.13)}
+.prb-main{flex:1;min-width:0}
+.prb-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--tinta-soft);margin-bottom:2px}
+.prb-val{font-family:var(--serif);font-weight:700;font-size:28px;color:var(--verde);line-height:1}
+.prb-actions{display:flex;gap:8px;flex:0 0 auto}
+.prb-save{display:flex;align-items:center;gap:7px;background:var(--naranja);color:#fff;
+  border:0;font-family:var(--sans);font-weight:700;font-size:14px;padding:11px 16px;
+  border-radius:12px;cursor:pointer;transition:.15s;white-space:nowrap}
+.prb-save:hover{filter:brightness(.94)}
+.prb-save svg{width:16px;height:16px}
+.prb-calc{background:var(--crema);border:1.5px solid var(--verde);color:var(--verde);
+  font-family:var(--sans);font-weight:700;font-size:14px;padding:10px 14px;
+  border-radius:12px;cursor:pointer;transition:.15s;white-space:nowrap}
+.prb-calc:hover{background:var(--verde);color:var(--on-verde)}
+
+/* Scroll horizontal en mobile para la tabla de ingredientes */
+@media(max-width:600px){
+  .ping-header,.ping-row{grid-template-columns:140px 110px 110px 110px 65px 34px;
+    min-width:580px}
+  #ping-list{overflow-x:auto;padding-bottom:4px}
+  .pgasto-row{grid-template-columns:1fr 1.2fr 90px auto 34px}
+  .prb-val{font-size:22px}
+  .prb-save{padding:10px 12px;font-size:13px}
+  .prb-calc{padding:9px 10px;font-size:13px}
+}
+
+/* ============================================================
+   ONBOARDING
+   ============================================================ */
+.onb-overlay{position:fixed;inset:0;background:rgba(10,20,14,.65);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;z-index:500;
+  opacity:0;pointer-events:none;transition:opacity .3s}
+.onb-overlay.on{opacity:1;pointer-events:all}
+.onb-card{background:var(--papel);border-radius:20px;padding:32px 28px 24px;
+  width:min(400px,calc(100vw - 32px));box-shadow:0 24px 48px -16px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;gap:16px;animation:rise .35s ease}
+.onb-ico{font-size:48px;text-align:center;line-height:1}
+.onb-title{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--tinta);margin-bottom:6px}
+.onb-body{font-size:14.5px;color:var(--tinta-soft);line-height:1.6}
+.onb-footer{display:flex;flex-direction:column;gap:12px}
+.onb-dots{display:flex;gap:6px;justify-content:center}
+.onb-dot{width:8px;height:8px;border-radius:50%;background:var(--linea);transition:.25s}
+.onb-dot.on{background:var(--verde);width:22px;border-radius:4px}
+.onb-btns{display:flex;align-items:center;justify-content:space-between}
+.onb-skip{background:transparent;border:0;color:var(--tinta-soft);font-family:var(--sans);
+  font-size:13.5px;font-weight:600;cursor:pointer;padding:8px 4px;transition:.15s}
+.onb-skip:hover{color:var(--tinta)}
+.onb-next{background:var(--verde);color:var(--on-verde);border:0;font-family:var(--sans);
+  font-weight:700;font-size:15px;padding:12px 24px;border-radius:12px;cursor:pointer;transition:.15s}
+.onb-next:hover{filter:brightness(1.08)}

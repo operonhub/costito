@@ -169,6 +169,39 @@ const CostitoCalc = {
     };
   },
 
+  /* ---------- Costo de producción ----------
+     ingredientes: [{ id, cantidad, paqueteCosto, paqueteCantidad, ...resto }]
+     gastos: [{ id, tipo: 'tanda'|'mensual'|'fijo', monto, unidadesMes? }]
+     unidades: cuántas unidades produce esta tanda. */
+  costoProduccion({ ingredientes = [], unidades = 1, gastos = [] }) {
+    unidades = Math.max(Number(unidades) || 1, 1);
+    let subtotalMP = 0;
+    const ingConCosto = ingredientes.map((ing) => {
+      const cantidad = Number(ing.cantidad) || 0;
+      const paqueteCosto = Number(ing.paqueteCosto) || 0;
+      const paqueteCantidad = Math.max(Number(ing.paqueteCantidad) || 1, 0.001);
+      const costoCalculado = (cantidad / paqueteCantidad) * paqueteCosto;
+      subtotalMP += costoCalculado;
+      return { ...ing, costoCalculado };
+    });
+    const costoMPPorUnidad = subtotalMP / unidades;
+    let totalGastosPorUnidad = 0;
+    const gastosConCosto = gastos.map((g) => {
+      const monto = Number(g.monto) || 0;
+      let costoPorUnidad = 0;
+      if (g.tipo === 'mensual') costoPorUnidad = monto / Math.max(Number(g.unidadesMes) || 1, 1);
+      else if (g.tipo === 'tanda') costoPorUnidad = monto / unidades;
+      else costoPorUnidad = monto; // 'fijo'
+      totalGastosPorUnidad += costoPorUnidad;
+      return { ...g, costoPorUnidad };
+    });
+    return {
+      ok: true, subtotalMP, costoMPPorUnidad, totalGastosPorUnidad,
+      costoTotalPorUnidad: costoMPPorUnidad + totalGastosPorUnidad,
+      ingredientes: ingConCosto, gastos: gastosConCosto,
+    };
+  },
+
   /* ---------- PREMIUM: Precio de servicios (por hora) ----------
      Cuánto cobrar la hora para llegar al ingreso neto deseado al mes,
      cubriendo el costo fijo del monotributo, con tus horas facturables. */

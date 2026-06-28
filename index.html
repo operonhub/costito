@@ -71,30 +71,30 @@
 <nav>
   <div class="head-in" style="padding-top:0;padding-bottom:0;display:block">
     <div class="tabs" id="tabs">
-      <button class="tab on" data-tab="calc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h.01M8 15h2M12 15h2M16 15h.01M8 18h6"/></svg>
-        Calculadora
-      </button>
-      <button class="tab" data-tab="medios">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>
-        Medios de pago
-      </button>
-      <button class="tab" data-tab="prod">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>
-        Mis productos
-      </button>
-      <button class="tab" data-tab="import">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 22V12"/></svg>
-        Importación
-      </button>
-      <button class="tab" data-tab="mixta">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="6"/><path d="M15 9a6 6 0 1 1-6 6"/></svg>
-        Compra mixta
-      </button>
-      <button class="tab" data-tab="servicios">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        Servicios
-      </button>
+      <div class="tab-group">
+        <span class="tab-group-label">Precio</span>
+        <div class="tab-group-inner">
+          <button class="tab on" data-tab="calc">Calculadora</button>
+          <button class="tab" data-tab="medios">Medios de pago</button>
+        </div>
+      </div>
+      <div class="tab-divider"></div>
+      <div class="tab-group">
+        <span class="tab-group-label">Costo</span>
+        <div class="tab-group-inner">
+          <button class="tab" data-tab="produccion">Producción</button>
+          <button class="tab" data-tab="import">Importación</button>
+          <button class="tab" data-tab="mixta">Compra mixta</button>
+          <button class="tab" data-tab="servicios">Servicios</button>
+        </div>
+      </div>
+      <div class="tab-divider"></div>
+      <div class="tab-group">
+        <span class="tab-group-label">Mis productos</span>
+        <div class="tab-group-inner">
+          <button class="tab tab-accent" data-tab="prod">Mis productos</button>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -357,6 +357,7 @@
     </div>
 
     <p class="prod-count" id="prodCount"></p>
+    <div id="prodTipoTabs" class="prod-tipo-tabs" style="display:none"></div>
     <div class="cat-filter" id="catFilter" style="display:none"></div>
 
     <div class="card">
@@ -401,6 +402,12 @@
     <h2 class="section-title">Precio de tus servicios</h2>
     <p class="section-sub">Si trabajás por hora o por proyecto, calculá cuánto cobrar contemplando monotributo, horas reales y la ganancia que querés.</p>
     <div id="body-servicios"></div>
+  </section>
+
+  <section class="panel" id="produccion">
+    <h2 class="section-title">Costo de producción</h2>
+    <p class="section-sub">Cargá las materias primas, el rendimiento de la tanda y los gastos fijos. Te calculamos el costo por unidad para que sepas desde dónde arrancar el precio.</p>
+    <div id="body-produccion"></div>
   </section>
 
   <!-- Sello Operon (marca de autor, sutil) -->
@@ -507,5 +514,7 @@
 <script src="js/pay.js"></script>
 <script src="js/import.js"></script>
 <script src="js/negocio.js"></script>
+<script src="js/produccion.js"></script>
+<script src="js/onboarding.js"></script>
 </body>
 </html>

@@ -31,6 +31,7 @@
     productos: [],
     dolarTipo: localStorage.getItem(LS.dolarTipo) || D.dolar.tipoDefault,
     dolares: JSON.parse(localStorage.getItem(LS.dolarCache) || 'null'), // { casa: {valor, fecha} }
+    prodTipoActivo: null,
   };
 
   // ---------- Helpers de formato ----------
@@ -720,6 +721,35 @@
     );
   }
 
+  const TIPO_TABS = [
+    { id: null,          label: 'Todos' },
+    { id: 'produccion',  label: '🍞 Producción' },
+    { id: 'reventa',     label: '🏪 Reventa' },
+    { id: 'servicio',    label: '🔧 Servicio' },
+    { id: 'importacion', label: '📦 Importación' },
+  ];
+  const TIPO_PRECIO_LABEL = { produccion: 'costo/u', servicio: 'precio/hora', importacion: 'costo unit.', reventa: 'a publicar' };
+  const TIPO_EMPTY = {
+    produccion:  { msg: 'Todavía no tenés productos de producción.', cta: 'Ir a Producción →', tab: 'produccion' },
+    reventa:     { msg: 'Todavía no tenés productos de reventa.', cta: 'Ir a Calculadora →', tab: 'calc' },
+    servicio:    { msg: 'Todavía no tenés servicios guardados.', cta: 'Ir a Servicios →', tab: 'servicios' },
+    importacion: { msg: 'Todavía no tenés productos importados.', cta: 'Ir a Importación →', tab: 'import' },
+  };
+
+  function renderTipoTabs() {
+    const el = $('prodTipoTabs');
+    if (!el) return;
+    const loggedIn = window.CostitoAuth && window.CostitoAuth.getUser();
+    if (!loggedIn || !state.productos.length) { el.style.display = 'none'; return; }
+    const tiposPresentes = new Set(state.productos.map((p) => p.tipo || 'reventa'));
+    if (tiposPresentes.size < 2) { el.style.display = 'none'; state.prodTipoActivo = null; return; }
+    const visibles = TIPO_TABS.filter((t) => t.id === null || tiposPresentes.has(t.id));
+    el.style.display = 'flex';
+    setHTML(el, visibles.map((t) =>
+      '<button class="tipo-pill' + (state.prodTipoActivo === t.id ? ' on' : '') + '" data-tipo="' + (t.id || '') + '">' + t.label + '</button>'
+    ).join(''));
+  }
+
   function renderProds() {
     const list = $('plist');
     const n = state.productos.length;
@@ -729,6 +759,7 @@
     const limitTxt = free ? n + '/5 productos' : n + (n === 1 ? ' producto guardado' : ' productos guardados');
     if (countEl) countEl.textContent = loggedIn && n > 0 ? limitTxt : '';
 
+    renderTipoTabs();
     renderCatFilter();
 
     if (!loggedIn) {
@@ -748,20 +779,47 @@
         '<div>Todavía no guardaste ningún producto.<br/>Calculá un precio y tocá <b>"Guardar en mis productos"</b>.</div></div>');
       return;
     }
-    const visible = catActiva ? state.productos.filter((p) => p.categoria === catActiva) : state.productos;
-    setHTML(list, visible.map((p) =>
-      '<div class="prod" data-id="' + p.id + '">' +
+
+    // Filter by tipo and then by category
+    let pool = state.prodTipoActivo
+      ? state.productos.filter((p) => (p.tipo || 'reventa') === state.prodTipoActivo)
+      : state.productos;
+    const visible = catActiva ? pool.filter((p) => p.categoria === catActiva) : pool;
+
+    // Empty state when tipo filter active but no products of that type
+    if (!visible.length) {
+      const info = state.prodTipoActivo && TIPO_EMPTY[state.prodTipoActivo];
+      if (info) {
+        setHTML(list, '<div class="empty">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>' +
+          '<div>' + escapeHtml(info.msg) + '<br/>' +
+          '<button class="reg-teaser-btn" style="margin-top:12px" data-goto-tab="' + info.tab + '">' + escapeHtml(info.cta) + '</button></div></div>');
+      } else {
+        setHTML(list, '<div class="empty"><div>No hay productos en esta vista.</div></div>');
+      }
+      return;
+    }
+
+    const showTipoBadge = !state.prodTipoActivo;
+    setHTML(list, visible.map((p) => {
+      const tipo = p.tipo || 'reventa';
+      const tipoBadge = showTipoBadge && tipo !== 'reventa'
+        ? '<span class="tipo-tag">' + (TIPO_TABS.find((t) => t.id === tipo) || {}).label + '</span>'
+        : '';
+      const prLabel = TIPO_PRECIO_LABEL[tipo] || 'a publicar';
+      return '<div class="prod" data-id="' + p.id + '">' +
         '<span class="pic">' + TAG_ICO + '</span>' +
         '<div class="info">' +
           (p.categoria ? '<span class="cat-tag">' + escapeHtml(p.categoria) + '</span>' : '') +
+          tipoBadge +
           '<h4>' + escapeHtml(p.nombre) + (p.codigo ? ' <span class="sku-tag">' + escapeHtml(p.codigo) + '</span>' : '') + '</h4>' +
           '<p>' + escapeHtml(p.sub) + '</p>' +
         '</div>' +
         '<div class="pr">' +
-          '<div style="text-align:right"><div class="n">' + money(p.precioARS) + '</div><div class="s">a publicar</div></div>' +
+          '<div style="text-align:right"><div class="n">' + money(p.precioARS) + '</div><div class="s">' + prLabel + '</div></div>' +
           '<button class="del" data-del="' + p.id + '" aria-label="Borrar">' + DEL_ICO + '</button>' +
-        '</div></div>'
-    ).join(''));
+        '</div></div>';
+    }).join(''));
   }
 
   $('catFilter').addEventListener('click', (e) => {
@@ -771,11 +829,21 @@
     renderProds();
   });
 
+  $('prodTipoTabs').addEventListener('click', (e) => {
+    const b = e.target.closest('.tipo-pill');
+    if (!b) return;
+    state.prodTipoActivo = b.dataset.tipo || null;
+    catActiva = '';
+    renderProds();
+  });
+
   // ============================================================
   // MODAL: guardar producto
   // ============================================================
   let pendingCalcResult = null;
   let pendingServicio = null;
+  let pendingProduccion = null;  // costoTotalPorUnidad (number)
+  let pendingRecipeData = null;
 
   const PROD_LIMIT_FREE = 5;
   const CATS_DEFAULT = ['Ropa y calzado','Electrónica','Hogar y deco','Alimentos','Belleza','Deportes','Herramientas','Servicios','Otro'];
@@ -821,16 +889,33 @@
     $('saveOverlay').classList.remove('on');
     pendingCalcResult = null;
     pendingServicio = null;
+    pendingProduccion = null;
+    pendingRecipeData = null;
   }
 
   function confirmSave() {
-    if (!pendingCalcResult && !pendingServicio) return;
-    const nombre = $('modalNombre').value.trim() || (pendingServicio ? 'Servicio sin nombre' : 'Producto sin nombre');
+    if (!pendingCalcResult && !pendingServicio && !pendingProduccion) return;
+    const fallback = pendingProduccion ? 'Producción sin nombre' : pendingServicio ? 'Servicio sin nombre' : 'Producto sin nombre';
+    const nombre = $('modalNombre').value.trim() || fallback;
     const categoria = ($('modalCategoria').value || '').trim();
     const codigo = ($('modalCodigo').value || '').trim();
     addCat(categoria);
     let prod;
-    if (pendingServicio) {
+    if (pendingProduccion) {
+      prod = {
+        nombre,
+        sub: ['Costo de producción', new Date().toLocaleDateString('es-AR')].join(' · '),
+        precioARS: pendingProduccion,
+        ganancia: 0,
+        costo: pendingProduccion,
+        margen: 0,
+        canalNombre: 'Producción propia',
+        categoria,
+        codigo,
+        tipo: 'produccion',
+        recipeData: pendingRecipeData,
+      };
+    } else if (pendingServicio) {
       const r = pendingServicio;
       prod = {
         nombre,
@@ -842,6 +927,7 @@
         canalNombre: 'Servicio por hora',
         categoria,
         codigo,
+        tipo: 'servicio',
       };
     } else {
       const inputs = leerInputs();
@@ -857,6 +943,7 @@
         canalNombre: canalNom,
         categoria,
         codigo,
+        tipo: 'reventa',
       };
     }
     const btn = $('modalConfirm');
@@ -864,7 +951,7 @@
     closeSaveModal();
     window.CostitoAuth.saveProduct(prod)
       .then((id) => {
-        state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria, codigo });
+        state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria, codigo, tipo: prod.tipo || 'reventa' });
         renderProds();
         toast('Guardado en mis productos');
       })
@@ -878,9 +965,11 @@
   $('saveOverlay').addEventListener('click', (e) => { if (e.target === $('saveOverlay')) closeSaveModal(); });
   $('modalNombre').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmSave(); });
 
-  // Borrar producto (delegación)
+  // Borrar producto / CTAs (delegación)
   $('plist').addEventListener('click', (e) => {
     if (e.target.closest('.reg-teaser-btn')) {
+      const goto = e.target.closest('.reg-teaser-btn').dataset.gotoTab;
+      if (goto) { document.querySelector('[data-tab="' + goto + '"]').click(); return; }
       document.getElementById('acctBtn').click();
       return;
     }
@@ -900,7 +989,7 @@
   // IMPORTAR (lo usa import.js) — calcula el precio con la config
   // actual de la calculadora y guarda, igual que el alta manual.
   // ============================================================
-  window.Costito.importarProducto = function ({ nombre, costo, margen, categoria }) {
+  window.Costito.importarProducto = function ({ nombre, costo, margen, categoria, tipo = 'reventa' }) {
     const base = leerInputs();
     const r = Calc.precioPublicado({ ...base, costo: Number(costo) || 0, margen: Number(margen) || 0 });
     if (!r.ok) return Promise.reject(new Error(r.motivo || 'No se pudo calcular el precio'));
@@ -915,9 +1004,10 @@
       margen: margenReal,
       canalNombre: canalNom,
       categoria: categoria || '',
+      tipo,
     };
     return window.CostitoAuth.saveProduct(prod).then((id) => {
-      state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria: prod.categoria });
+      state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria: prod.categoria, tipo });
       return prod;
     });
   };
@@ -938,6 +1028,32 @@
     }
     pendingServicio = r;
     pendingCalcResult = null;
+    pendingProduccion = null;
+    pendingRecipeData = null;
+    $('modalNombre').value = '';
+    $('modalCategoria').value = '';
+    $('modalCodigo').value = '';
+    populateCatList();
+    $('saveOverlay').classList.add('on');
+    setTimeout(() => $('modalNombre').focus(), 60);
+  };
+
+  window.Costito.abrirGuardarProduccion = function (costoTotal, recipeData) {
+    if (!window.CostitoAuth || !window.CostitoAuth.getUser()) {
+      toast('Creá una cuenta para guardar tus productos en la nube');
+      const ao = $('authOverlay');
+      if (ao) { ao.classList.add('on'); setTimeout(() => { const el = $('authEmail'); if (el) el.focus(); }, 60); }
+      return;
+    }
+    if (!Costito.isPremium() && state.productos.length >= PROD_LIMIT_FREE) {
+      toast('Llegaste al límite de 5 productos. ¡Pasate a Premium para guardar ilimitados! 🟢');
+      document.getElementById('acctBtn').click();
+      return;
+    }
+    pendingProduccion = costoTotal;
+    pendingRecipeData = recipeData || null;
+    pendingCalcResult = null;
+    pendingServicio = null;
     $('modalNombre').value = '';
     $('modalCategoria').value = '';
     $('modalCodigo').value = '';
