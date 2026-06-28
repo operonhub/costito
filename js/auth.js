@@ -209,6 +209,19 @@ window.CostitoAuth = (function () {
     $('authError').textContent = '';
   }
 
+  // Toggle mostrar/ocultar contraseña
+  const passEye = $('passEye');
+  const passInput = $('authPass');
+  if (passEye && passInput) {
+    passEye.addEventListener('click', () => {
+      const show = passInput.type === 'password';
+      passInput.type = show ? 'text' : 'password';
+      passEye.querySelector('.eye-off').style.display = show ? 'none' : '';
+      passEye.querySelector('.eye-on').style.display = show ? '' : 'none';
+      passEye.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    });
+  }
+
   function toggleMenu() { menu.classList.toggle('on'); }
   function closeMenu() { menu.classList.remove('on'); }
 

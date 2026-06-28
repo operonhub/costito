@@ -462,7 +462,13 @@
       <label class="auth-label" for="authEmail">Email</label>
       <div class="in" style="margin-bottom:12px"><input type="email" id="authEmail" placeholder="vos@ejemplo.com" autocomplete="email" /></div>
       <label class="auth-label" for="authPass">Contraseña</label>
-      <div class="in" style="margin-bottom:4px"><input type="password" id="authPass" placeholder="Mínimo 6 caracteres" autocomplete="current-password" /></div>
+      <div class="in pass-wrap" style="margin-bottom:4px">
+        <input type="password" id="authPass" placeholder="Mínimo 6 caracteres" autocomplete="current-password" />
+        <button type="button" class="pass-eye" id="passEye" aria-label="Mostrar contraseña" tabindex="-1">
+          <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.5 10.5 0 0 1 12 20C6 20 1 12 1 12a18.5 18.5 0 0 1 5.1-5.9M9.9 4.2A9.8 9.8 0 0 1 12 4c6 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2M1 1l22 22"/><circle cx="12" cy="12" r="3" style="display:none"/></svg>
+          <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <p class="auth-error" id="authError"></p>
       <button type="submit" class="auth-submit" id="authSubmit">Entrar</button>
     </form>

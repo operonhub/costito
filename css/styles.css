@@ -527,6 +527,11 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .auth-box .modal-title{font-size:21px}
 .auth-label{display:block;text-align:left;font-size:12.5px;font-weight:600;color:var(--tinta);margin-bottom:6px}
 .auth-box .in input{width:100%;font-size:16px}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:42px}
+.pass-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;padding:4px;cursor:pointer;color:var(--tinta-soft);line-height:0;border-radius:6px}
+.pass-eye:hover{color:var(--tinta)}
+.pass-eye svg{width:18px;height:18px}
 .auth-error{min-height:16px;text-align:left;font-size:12.5px;font-weight:600;color:var(--naranja);margin:4px 2px 0}
 .auth-submit{width:100%;margin-top:12px;border:0;border-radius:12px;background:var(--verde);color:var(--on-verde);
   font-family:var(--sans);font-weight:700;font-size:15px;padding:13px;cursor:pointer;transition:.15s}
