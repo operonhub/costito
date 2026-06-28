@@ -157,7 +157,7 @@
       return;
     }
     if (!C.isPremium()) {
-      toast('Importar en masa es Premium. ¡Pasate por $2.000/mes! 🟢');
+      toast('Importar en masa es Premium. ¡Pasate por $10.000/mes! 🟢');
       $('acctBtn').click();
       return;
     }
