@@ -111,6 +111,14 @@ window.CostitoAuth = (function () {
     return sb.auth.signOut();
   }
 
+  function resetPassword(email) {
+    return sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: window.location.origin + window.location.pathname,
+    }).then(({ error }) => {
+      if (error) throw new Error(translateError(error.message));
+    });
+  }
+
   function loadProducts() {
     return sb.from('productos')
       .select('id, nombre, precio_publicar, ganancia, canal_nombre, margen, categoria, created_at')
@@ -156,7 +164,7 @@ window.CostitoAuth = (function () {
     });
   }
 
-  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut, loadProducts, saveProduct, deleteProduct };
+  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut, resetPassword, loadProducts, saveProduct, deleteProduct };
 })();
 
 /* ---------- 3) WIRING DE LA UI ---------- */
@@ -207,6 +215,7 @@ window.CostitoAuth = (function () {
     $('authSwitchTxt').textContent = login ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?';
     $('authSwitch').textContent = login ? 'Creá una gratis' : 'Entrá';
     $('authError').textContent = '';
+    $('authForgot').style.display = login ? '' : 'none';
   }
 
   // Toggle mostrar/ocultar contraseña
@@ -221,6 +230,23 @@ window.CostitoAuth = (function () {
       passEye.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
     });
   }
+
+  $('authForgot').addEventListener('click', () => {
+    const email = ($('authEmail').value || '').trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      $('authError').textContent = 'Ingresá tu email primero.';
+      $('authEmail').focus();
+      return;
+    }
+    const link = $('authForgot');
+    link.style.pointerEvents = 'none';
+    link.textContent = 'Enviando…';
+    $('authError').textContent = '';
+    Auth.resetPassword(email)
+      .then(() => { closeModal(); toast('Te mandamos un email para resetear tu contraseña'); })
+      .catch((err) => { $('authError').textContent = err.message; })
+      .finally(() => { link.textContent = 'Olvidé mi contraseña'; link.style.pointerEvents = ''; });
+  });
 
   function toggleMenu() { menu.classList.toggle('on'); }
   function closeMenu() { menu.classList.remove('on'); }
