@@ -720,8 +720,17 @@ details[open] .comp-chev{transform:rotate(180deg)}
 
 /* Layout mobile para la tabla de ingredientes y gastos */
 @media(max-width:600px){
-  /* Ingredientes: ocultar header de escritorio, reflowear cada fila en 2 líneas */
-  #ping-header{display:none}
+  /* Ingredientes: header adaptado a 3 columnas (con ? tooltips visibles) */
+  #ping-header{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr 34px;
+    padding:0 2px 6px}
+  #ping-header>:nth-child(1),
+  #ping-header>:nth-child(5),
+  #ping-header>:nth-child(6){display:none}
+  #ping-header>:nth-child(2){grid-column:1}
+  #ping-header>:nth-child(3){grid-column:2}
+  #ping-header>:nth-child(4){grid-column:3}
   #ping-list{overflow-x:visible;padding-bottom:0}
   .ping-row{
     display:grid;
@@ -731,16 +740,11 @@ details[open] .comp-chev{transform:rotate(180deg)}
     padding-bottom:10px;margin-bottom:8px;
     border-bottom:1px solid var(--crema-2)}
   .ping-row>:nth-child(1){grid-area:nombre}
-  .ping-row>:nth-child(2){grid-area:cant;flex-wrap:wrap}
-  .ping-row>:nth-child(3){grid-area:pkt;flex-wrap:wrap}
-  .ping-row>:nth-child(4){grid-area:rinde;flex-wrap:wrap}
-  .ping-row>:nth-child(5){grid-area:costo;align-self:center;justify-self:end;font-size:12px;display:flex;flex-direction:column;align-items:flex-end}
+  .ping-row>:nth-child(2){grid-area:cant}
+  .ping-row>:nth-child(3){grid-area:pkt}
+  .ping-row>:nth-child(4){grid-area:rinde}
+  .ping-row>:nth-child(5){grid-area:costo;align-self:center;justify-self:end;font-size:12px}
   .ping-row>:nth-child(6){grid-area:del;justify-self:end;align-self:start}
-  /* Mini etiquetas encima de cada campo via ::before */
-  .ping-row>:nth-child(2)::before{content:'CANT.';flex:0 0 100%;font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
-  .ping-row>:nth-child(3)::before{content:'$ PAQUETE';flex:0 0 100%;font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
-  .ping-row>:nth-child(4)::before{content:'RINDE';flex:0 0 100%;font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
-  .ping-row>:nth-child(5)::before{content:'COSTO';font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
   .ping-unit{width:30px!important;padding:10px 3px!important}
   /* Gastos: nombre+del en fila 1, tipo+monto en fila 2 */
   .pgasto-row{
