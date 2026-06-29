@@ -746,6 +746,8 @@ details[open] .comp-chev{transform:rotate(180deg)}
   .ping-row>:nth-child(5){grid-area:costo;align-self:center;justify-self:end;font-size:12px}
   .ping-row>:nth-child(6){grid-area:del;justify-self:end;align-self:start}
   .ping-unit{width:30px!important;padding:10px 3px!important}
+  /* iOS hace auto-zoom si el input tiene font-size < 16px — lo forzamos en mobile */
+  .ping-row .in-bare,.pgasto-row .in-bare,.ping-unit{font-size:16px!important}
   /* Gastos: nombre+del en fila 1, tipo+monto en fila 2 */
   .pgasto-row{
     display:grid;
