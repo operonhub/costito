@@ -7,6 +7,13 @@
   const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmtN = (n) => Math.round(n).toLocaleString('es-AR');
 
+  const UNITS = ['g','kg','ml','litros','l','mg','u','taza','cdita','cda','pizca','oz','lb','sobre','lata','paq.'];
+  function unitSel(val, field) {
+    return '<select class="in-bare ping-unit" data-field="' + field + '">' +
+      UNITS.map(u => '<option value="' + u + '"' + (u === (val || 'g') ? ' selected' : '') + '>' + u + '</option>').join('') +
+      '</select>';
+  }
+
   let ingredientes = [];
   let gastos = [];
   let unidades = 1;
@@ -26,7 +33,6 @@
           '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7l1 9h9"/><circle cx="9" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M3 3l-1-2"/></svg></span>',
           '<div><h3>Materia prima</h3><p>Los ingredientes o materiales que usás para producir</p></div>',
         '</div>',
-        '<datalist id="prod-units"><option value="g"><option value="kg"><option value="ml"><option value="litros"><option value="l"><option value="mg"><option value="u"><option value="taza"><option value="cdita"><option value="cda"><option value="pizca"><option value="oz"><option value="lb"><option value="sobre"><option value="lata"><option value="paq."></datalist>',
         '<div id="ping-header" class="ping-header">',
           '<span>Ingrediente</span>',
           '<span>Cantidad <span class="help"><span class="q">?</span><span class="tip">Cuánto usás de este ingrediente en la receta. Ej: 500 g de harina.</span></span></span>',
@@ -95,6 +101,7 @@
     });
     $('ping-list').addEventListener('click', onIngClick);
     $('ping-list').addEventListener('input', onIngInput);
+    $('ping-list').addEventListener('change', onIngInput);
     $('pgasto-list').addEventListener('click', onGastoClick);
     $('pgasto-list').addEventListener('input', onGastoInput);
     $('pgasto-list').addEventListener('change', onGastoChange);
@@ -129,7 +136,7 @@
         '<input class="in-bare ping-nombre" type="text" placeholder="Ej: Harina" value="' + esc(ing.nombre) + '" data-field="nombre" />',
         '<div class="ping-pkt">',
           '<input class="in-bare ping-num" type="number" placeholder="500" min="0" value="' + (ing.cantidad || '') + '" data-field="cantidad" inputmode="decimal" style="flex:1;min-width:0" />',
-          '<input class="in-bare ping-unit" type="text" placeholder="g" list="prod-units" value="' + esc(ing.unidad) + '" data-field="unidad" />',
+          unitSel(ing.unidad, 'unidad'),
         '</div>',
         '<div class="ping-pkt">',
           '<span class="in-bare-pre">$</span>',
@@ -137,7 +144,7 @@
         '</div>',
         '<div class="ping-pkt">',
           '<input class="in-bare ping-num" type="number" placeholder="1000" min="0" value="' + (ing.paqueteCantidad || '') + '" data-field="paqueteCantidad" inputmode="decimal" style="flex:1;min-width:0" />',
-          '<input class="in-bare ping-unit" type="text" placeholder="g" list="prod-units" value="' + esc(ing.unidadRinde) + '" data-field="unidadRinde" />',
+          unitSel(ing.unidadRinde, 'unidadRinde'),
         '</div>',
         '<div class="ping-costo">' + (ing.costoCalculado > 0 ? '$ ' + fmtN(ing.costoCalculado) : '—') + '</div>',
         '<button class="imp-del" data-del-ing="' + ing.id + '" type="button" aria-label="Eliminar">×</button>',

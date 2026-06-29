@@ -689,7 +689,7 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .ping-pkt{display:flex;align-items:center;gap:3px;min-width:0}
 .in-bare-pre{font-size:13px;font-weight:700;color:var(--tinta-soft);flex:0 0 auto;padding-left:2px}
 .in-bare-suf{font-size:12px;font-weight:600;color:var(--tinta-soft);white-space:nowrap;flex:0 0 auto}
-.ping-unit{width:36px!important;text-align:center;padding:10px 5px!important}
+.ping-unit{width:60px!important;padding:10px 4px!important;-webkit-appearance:auto!important;appearance:auto!important;cursor:pointer}
 .ping-costo{font-family:var(--serif);font-weight:700;font-size:14px;color:var(--verde);
   text-align:right;white-space:nowrap}
 
@@ -746,7 +746,7 @@ details[open] .comp-chev{transform:rotate(180deg)}
   .ping-row>:nth-child(4){grid-area:rinde}
   .ping-row>:nth-child(5){display:none}
   .ping-row>:nth-child(6){grid-area:del;justify-self:end;align-self:start}
-  .ping-unit{width:36px!important;padding:10px 4px!important}
+  .ping-unit{width:56px!important;padding:10px 3px!important;-webkit-appearance:auto!important;appearance:auto!important}
   /* iOS hace auto-zoom si el input tiene font-size < 16px — lo forzamos en mobile */
   .ping-row .in-bare,.pgasto-row .in-bare,.ping-unit{font-size:16px!important}
   /* Gastos: nombre+del en fila 1, tipo+monto en fila 2 */
