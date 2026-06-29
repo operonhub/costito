@@ -731,11 +731,12 @@ details[open] .comp-chev{transform:rotate(180deg)}
   #ping-header>:nth-child(2){grid-column:1}
   #ping-header>:nth-child(3){grid-column:2}
   #ping-header>:nth-child(4){grid-column:3}
+  #ping-header .help{display:none}
   #ping-list{overflow-x:visible;padding-bottom:0}
   .ping-row{
     display:grid;
     grid-template-columns:1fr 1fr 1fr 34px;
-    grid-template-areas:"nombre nombre nombre del" "cant pkt rinde costo";
+    grid-template-areas:"nombre nombre nombre del" "cant pkt rinde .";
     gap:6px 4px;min-width:unset;
     padding-bottom:10px;margin-bottom:8px;
     border-bottom:1px solid var(--crema-2)}
@@ -743,9 +744,9 @@ details[open] .comp-chev{transform:rotate(180deg)}
   .ping-row>:nth-child(2){grid-area:cant}
   .ping-row>:nth-child(3){grid-area:pkt}
   .ping-row>:nth-child(4){grid-area:rinde}
-  .ping-row>:nth-child(5){grid-area:costo;align-self:center;justify-self:end;font-size:12px}
+  .ping-row>:nth-child(5){display:none}
   .ping-row>:nth-child(6){grid-area:del;justify-self:end;align-self:start}
-  .ping-unit{width:30px!important;padding:10px 3px!important}
+  .ping-unit{width:36px!important;padding:10px 4px!important}
   /* iOS hace auto-zoom si el input tiene font-size < 16px — lo forzamos en mobile */
   .ping-row .in-bare,.pgasto-row .in-bare,.ping-unit{font-size:16px!important}
   /* Gastos: nombre+del en fila 1, tipo+monto en fila 2 */
