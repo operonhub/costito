@@ -718,12 +718,38 @@ details[open] .comp-chev{transform:rotate(180deg)}
   border-radius:12px;cursor:pointer;transition:.15s;white-space:nowrap}
 .prb-calc:hover{background:var(--verde);color:var(--on-verde)}
 
-/* Scroll horizontal en mobile para la tabla de ingredientes */
+/* Layout mobile para la tabla de ingredientes y gastos */
 @media(max-width:600px){
-  .ping-header,.ping-row{grid-template-columns:140px 110px 110px 110px 65px 34px;
-    min-width:580px}
-  #ping-list{overflow-x:auto;padding-bottom:4px}
-  .pgasto-row{grid-template-columns:1fr 1.2fr 90px auto 34px}
+  /* Ingredientes: ocultar header de escritorio, reflowear cada fila en 2 líneas */
+  #ping-header{display:none}
+  #ping-list{overflow-x:visible;padding-bottom:0}
+  .ping-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr 34px;
+    grid-template-areas:"nombre nombre nombre del" "cant pkt rinde costo";
+    gap:6px 4px;min-width:unset;
+    padding-bottom:10px;margin-bottom:8px;
+    border-bottom:1px solid var(--crema-2)}
+  .ping-row>:nth-child(1){grid-area:nombre}
+  .ping-row>:nth-child(2){grid-area:cant}
+  .ping-row>:nth-child(3){grid-area:pkt}
+  .ping-row>:nth-child(4){grid-area:rinde}
+  .ping-row>:nth-child(5){grid-area:costo;align-self:center;justify-self:end;font-size:12px}
+  .ping-row>:nth-child(6){grid-area:del;justify-self:end;align-self:start}
+  .ping-unit{width:30px!important;padding:10px 3px!important}
+  /* Gastos: nombre+del en fila 1, tipo+monto en fila 2 */
+  .pgasto-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 34px;
+    grid-template-areas:"nombre nombre del" "tipo monto monto";
+    gap:6px 4px;min-width:unset;
+    padding-bottom:10px;margin-bottom:8px;
+    border-bottom:1px solid var(--crema-2)}
+  .pgasto-row>:nth-child(1){grid-area:nombre}
+  .pgasto-row>:nth-child(2){grid-area:tipo}
+  .pgasto-row>:nth-child(3){grid-area:monto}
+  .pgasto-row>:nth-child(4){grid-column:1/-1}
+  .pgasto-row>:nth-child(5){grid-area:del;justify-self:end;align-self:start}
   .prb-val{font-size:22px}
   .prb-save{padding:10px 12px;font-size:13px}
   .prb-calc{padding:9px 10px;font-size:13px}
