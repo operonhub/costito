@@ -731,11 +731,16 @@ details[open] .comp-chev{transform:rotate(180deg)}
     padding-bottom:10px;margin-bottom:8px;
     border-bottom:1px solid var(--crema-2)}
   .ping-row>:nth-child(1){grid-area:nombre}
-  .ping-row>:nth-child(2){grid-area:cant}
-  .ping-row>:nth-child(3){grid-area:pkt}
-  .ping-row>:nth-child(4){grid-area:rinde}
-  .ping-row>:nth-child(5){grid-area:costo;align-self:center;justify-self:end;font-size:12px}
+  .ping-row>:nth-child(2){grid-area:cant;flex-wrap:wrap}
+  .ping-row>:nth-child(3){grid-area:pkt;flex-wrap:wrap}
+  .ping-row>:nth-child(4){grid-area:rinde;flex-wrap:wrap}
+  .ping-row>:nth-child(5){grid-area:costo;align-self:center;justify-self:end;font-size:12px;display:flex;flex-direction:column;align-items:flex-end}
   .ping-row>:nth-child(6){grid-area:del;justify-self:end;align-self:start}
+  /* Mini etiquetas encima de cada campo via ::before */
+  .ping-row>:nth-child(2)::before{content:'CANT.';flex:0 0 100%;font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
+  .ping-row>:nth-child(3)::before{content:'$ PAQUETE';flex:0 0 100%;font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
+  .ping-row>:nth-child(4)::before{content:'RINDE';flex:0 0 100%;font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
+  .ping-row>:nth-child(5)::before{content:'COSTO';font-size:9px;font-weight:700;color:var(--tinta-soft);letter-spacing:.05em;margin-bottom:2px}
   .ping-unit{width:30px!important;padding:10px 3px!important}
   /* Gastos: nombre+del en fila 1, tipo+monto en fila 2 */
   .pgasto-row{
