@@ -23,6 +23,7 @@
     customMedios: 'costito_custom_medios',
     mediosChecked: 'costito_medios_ck',
     procesadorIds: 'costito_proc_ids',
+    helpSeen: 'costito_help_seen',
   };
 
   // Estado en memoria
@@ -127,6 +128,7 @@
     // Centrar la tab clickeada (útil cuando estaba cortada en el borde)
     b.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    showHelpBanner(b.dataset.tab);
   });
 
   // ============================================================
@@ -228,6 +230,48 @@
       return plat.nombre + (proc ? ' + ' + proc.label : '');
     }
     return plat.nombre;
+  }
+
+  // ============================================================
+  // HELP BANNERS — tutorial colapsable por sección
+  // ============================================================
+  const HB_TABS = ['calc', 'prod'];
+
+  function showHelpBanner(tabId) {
+    if (!HB_TABS.includes(tabId)) return;
+    const seen = JSON.parse(localStorage.getItem(LS.helpSeen) || '[]');
+    const banner = $('hb-' + tabId);
+    const reopen = $('hb-' + tabId + '-reopen');
+    if (!banner) return;
+    if (!seen.includes(tabId)) {
+      banner.classList.add('on');
+      if (reopen) reopen.classList.remove('visible');
+    } else {
+      if (reopen) reopen.classList.add('visible');
+    }
+  }
+
+  function initHelpBanners() {
+    document.querySelectorAll('.hb-dismiss').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.hb;
+        const seen = JSON.parse(localStorage.getItem(LS.helpSeen) || '[]');
+        if (!seen.includes(id)) { seen.push(id); localStorage.setItem(LS.helpSeen, JSON.stringify(seen)); }
+        const banner = $('hb-' + id);
+        const reopen = $('hb-' + id + '-reopen');
+        if (banner) banner.classList.remove('on');
+        if (reopen) reopen.classList.add('visible');
+      });
+    });
+    document.querySelectorAll('.hb-reopen').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.hb;
+        const banner = $('hb-' + id);
+        if (banner) banner.classList.add('on');
+        btn.classList.remove('visible');
+      });
+    });
+    showHelpBanner('calc');
   }
 
   // ============================================================
@@ -1373,6 +1417,7 @@
   }
 
   buildControls();
+  initHelpBanners();
   checkComisionesStale();
   if (state.cur === 'USD') {
     document.querySelectorAll('#cur button').forEach((x) => x.classList.toggle('on', x.dataset.cur === 'USD'));
