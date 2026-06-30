@@ -457,6 +457,7 @@
     $('addBtn').style.opacity = 1;
 
     let finVal = r.precio;
+    let comAmtDisplay = r.comAmt;
     // Para LOCAL: usar el precio del medio más caro entre los seleccionados
     if (canalState.tipo === 'local') {
       const allMedios = getCanalMedios();
@@ -464,7 +465,10 @@
       const prices = allMedios
         .filter((m) => checked.has(m.uid) && m.comision !== null)
         .map((m) => Calc.precioPorMedio(r.precio, m.comision).precio);
-      if (prices.length) finVal = Math.max(...prices);
+      if (prices.length) {
+        finVal = Math.max(...prices);
+        comAmtDisplay = finVal - r.precio; // comisión = diferencia entre precio publicado y base
+      }
     }
     // Mostrar/ocultar nota de precio máximo
     const mediosNote = $('precio-medios-note');
@@ -477,7 +481,7 @@
     const hasCostosExtra = (r.costosFijos || 0) > 0;
     $('bCostosExtraRow').style.display = hasCostosExtra ? '' : 'none';
     if (hasCostosExtra) $('bCostosExtra').textContent = '– ' + money(r.costosFijos);
-    $('bCom').textContent = '– ' + money(r.comAmt);
+    $('bCom').textContent = '– ' + money(comAmtDisplay);
     $('bIibb').textContent = '– ' + money(r.iibbAmt);
     $('bGan').textContent = '+ ' + money(r.ganancia);
     $('bNetRow').style.display = r.esRI ? '' : 'none';
@@ -487,7 +491,7 @@
       $('bIvaLabel').textContent = 'IVA a cobrar (' + r.ivaVenta + '%)';
       $('bIvaVenta').textContent = '+ ' + money(r.ivaVentaAmt);
     }
-    $('bTotal').textContent = money(r.precio);
+    $('bTotal').textContent = money(finVal);
     if (state.modoGanancia === 'ars') {
       $('ganEquiv').textContent = '≡ ' + r.margenReal.toFixed(1).replace('.', ',') + '% de margen sobre el precio';
     }
