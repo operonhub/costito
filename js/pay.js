@@ -28,10 +28,11 @@ window.CostitoPay = (function () {
         headers: { 'Authorization': 'Bearer ' + token, 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
         body: '{}',
       });
+      if (res.status === 404) { toast('No encontramos una suscripción activa en tu cuenta.'); return; }
       if (!res.ok) throw new Error('fn ' + res.status);
       toast('Suscripción cancelada. Tu acceso sigue activo hasta que venza el período.');
     } catch (e) {
-      toast('Para cancelar, ingresá a mercadopago.com.ar → Mis suscripciones');
+      toast('No se pudo cancelar automáticamente. Podés hacerlo en mercadopago.com.ar → Mis suscripciones');
     }
   }
 
