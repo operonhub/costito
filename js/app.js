@@ -13,6 +13,9 @@
   const D = COSTITO_DATA;
   const Calc = CostitoCalc;
   const $ = (id) => document.getElementById(id);
+
+  // Configuración de promo lanzamiento — cambiar activa:false para desactivar
+  const PROMO = { activa: true, maxUsos: 50, dias: 30 };
   // Render de markup confiable / ya escapado (limpia y vuelve a insertar)
   const setHTML = (el, html) => { el.textContent = ''; el.insertAdjacentHTML('beforeend', html); };
 
@@ -239,16 +242,52 @@
 
   function showHelpBanner(tabId) {
     if (!HB_TABS.includes(tabId)) return;
-    const seen = JSON.parse(localStorage.getItem(LS.helpSeen) || '[]');
-    const banner = $('hb-' + tabId);
+    // Siempre colapsado por defecto — el usuario lo abre si quiere
     const reopen = $('hb-' + tabId + '-reopen');
-    if (!banner) return;
-    if (!seen.includes(tabId)) {
-      banner.classList.add('on');
-      if (reopen) reopen.classList.remove('visible');
-    } else {
-      if (reopen) reopen.classList.add('visible');
+    if (reopen) reopen.classList.add('visible');
+  }
+
+  function initPromoBar() {
+    const bar = $('promoBar');
+    if (!bar) return;
+    if (!PROMO.activa || localStorage.getItem('costito_promo_bar_closed')) {
+      bar.style.display = 'none';
+      return;
     }
+    const txt = $('promoBarTxt');
+    if (txt) txt.textContent = `Promo lanzamiento: primeros ${PROMO.maxUsos} registros tienen ${PROMO.dias} días gratis del plan completo. Sin tarjeta.`;
+    const heroNote = $('heroPromoNote');
+    if (heroNote) heroNote.textContent = `Promo: ${PROMO.dias} días del plan completo para los primeros ${PROMO.maxUsos} registros`;
+    const guestPromo = $('guestCtaPromo');
+    if (guestPromo) guestPromo.textContent = `Primeros ${PROMO.maxUsos} registros: ${PROMO.dias} días del plan completo gratis.`;
+    const closeBtn = $('promoBarClose');
+    if (closeBtn) closeBtn.addEventListener('click', () => {
+      bar.style.display = 'none';
+      localStorage.setItem('costito_promo_bar_closed', '1');
+    });
+  }
+
+  function initHero() {
+    const btn = $('heroCtaBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const costoEl = $('costo');
+      if (costoEl) {
+        costoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => costoEl.focus(), 600);
+      }
+    });
+    if (!PROMO.activa) {
+      const heroNote = $('heroPromoNote');
+      if (heroNote) heroNote.parentElement.style.display = 'none';
+    }
+  }
+
+  function updateGuestCta(user) {
+    const addBtnTxt = $('addBtnTxt');
+    if (addBtnTxt) addBtnTxt.textContent = user ? 'Guardar en mis productos' : 'Guardar este cálculo gratis';
+    const guestCta = $('guestCta');
+    if (guestCta) guestCta.style.display = user ? 'none' : '';
   }
 
   function initHelpBanners() {
@@ -451,6 +490,8 @@
       $('addBtn').style.opacity = .5;
       const mediosNoteErr = $('precio-medios-note');
       if (mediosNoteErr) mediosNoteErr.style.display = 'none';
+      const subNoteErr = $('precioSubNote');
+      if (subNoteErr) subNoteErr.style.display = 'none';
       return;
     }
     $('addBtn').disabled = false;
@@ -470,9 +511,11 @@
         comAmtDisplay = finVal - r.precio; // comisión = diferencia entre precio publicado y base
       }
     }
-    // Mostrar/ocultar nota de precio máximo
+    // Mostrar/ocultar nota de precio máximo y sub-nota resultado
     const mediosNote = $('precio-medios-note');
     if (mediosNote) mediosNote.style.display = canalState.tipo === 'local' ? '' : 'none';
+    const subNote = $('precioSubNote');
+    if (subNote) subNote.style.display = canalState.tipo === 'local' ? 'none' : '';
 
     $('finVal').textContent = fmt(conv(finVal));
     setHTML($('ganNote'), 'Con esto ganás <b>' + money(r.ganancia) + ' limpios</b> por unidad.');
@@ -1425,6 +1468,9 @@
   }
 
   buildControls();
+  initPromoBar();
+  initHero();
+  updateGuestCta(null);
   initHelpBanners();
   checkComisionesStale();
   if (state.cur === 'USD') {
@@ -1441,6 +1487,7 @@
   // Sincronizar plan premium y productos con Supabase cuando cambia la sesión
   document.addEventListener('costito:authchange', (e) => {
     const user = e.detail;
+    updateGuestCta(user);
     Costito.setPremium(user && user.plan === 'premium');
     if (user) {
       window.CostitoAuth.loadProducts()

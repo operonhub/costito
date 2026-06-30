@@ -98,6 +98,14 @@
   </div>
 </nav>
 
+<div class="promo-bar" id="promoBar">
+  <span class="promo-bar-ico" aria-hidden="true">🚀</span>
+  <span id="promoBarTxt"></span>
+  <button class="promo-bar-close" id="promoBarClose" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+</div>
+
 <div class="wrap">
 
   <!-- Cotización del dólar (en vivo, solo visible en modo USD) -->
@@ -111,6 +119,13 @@
 
   <!-- ============ CALCULADORA ============ -->
   <section class="panel on" id="calc">
+
+    <div class="hero" id="hero">
+      <h1 class="hero-title">Calculá tu precio real<br>en&nbsp;1&nbsp;minuto</h1>
+      <p class="hero-sub">Sumá IVA, comisiones, Ingresos Brutos y margen sin hacer cuentas a mano.</p>
+      <button class="hero-cta" id="heroCtaBtn">Calcular gratis</button>
+      <p class="hero-note">Gratis hasta 5 productos · <span id="heroPromoNote"></span></p>
+    </div>
 
     <div class="help-banner" id="hb-calc">
       <div class="hb-head">
@@ -288,6 +303,7 @@
         <div class="big"><span class="c" id="finCur">$</span><span id="finVal">—</span></div>
         <div class="note" id="ganNote">Con esto ganás <b id="ganTxt">—</b> por unidad.</div>
         <p class="precio-medios-note" id="precio-medios-note" style="display:none">Precio con mayor comisión incluida · no perdés con ningún método</p>
+        <p class="precio-sub-note" id="precioSubNote" style="display:none">Precio sugerido para no perder plata con ningún medio de cobro.</p>
       </div>
     </div>
 
@@ -304,8 +320,12 @@
       </div>
       <button class="btn-add" id="addBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        Guardar en mis productos
+        <span id="addBtnTxt">Guardar en mis productos</span>
       </button>
+      <div class="guest-cta" id="guestCta" style="display:none">
+        <p class="guest-cta-title">Creá tu cuenta y guardá hasta 5 productos sin costo.</p>
+        <p class="guest-cta-promo" id="guestCtaPromo"></p>
+      </div>
     </div>
 
     <p class="serv-hint">¿Vendés servicios? <a id="goServicios" role="button" tabindex="0">Calculá tu precio por hora ↗</a></p>
