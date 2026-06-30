@@ -75,7 +75,6 @@
         <span class="tab-group-label">Precio</span>
         <div class="tab-group-inner">
           <button class="tab on" data-tab="calc">Calculadora</button>
-          <button class="tab" data-tab="medios">Medios de pago</button>
         </div>
       </div>
       <div class="tab-divider"></div>
@@ -182,6 +181,23 @@
           <div class="in sel"><select id="procesador-sel"></select></div>
         </div>
         <div class="canal-medios-list" id="canal-medios-list"></div>
+        <div class="canal-medios-footer" id="canal-medios-footer" style="display:none">
+          <div class="canal-add-form" id="canal-add-form" style="display:none">
+            <input type="text" id="nuevoMedioNombre" class="in-bare" placeholder="Nombre del medio" maxlength="30" />
+            <div class="in" style="flex-shrink:0;width:100px"><input type="number" id="nuevoMedioCom" class="in-bare" placeholder="0" min="0" max="60" step="0.01" inputmode="decimal" /><span class="suf">%</span></div>
+            <button class="btn-add-medio-confirm" id="nuevoMedioBtn">Agregar</button>
+          </div>
+          <div class="canal-medios-actions">
+            <button class="btn-medios-add" id="toggleAddMedioBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Agregar medio
+            </button>
+            <button class="btn-medios-pdf" id="exportMediosPdfBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 18h4"/></svg>
+              Descargar lista PDF
+            </button>
+          </div>
+        </div>
         <p class="canal-nota" id="procesador-nota"></p>
       </div>
 
@@ -200,15 +216,17 @@
         <p class="canal-nota" id="plataforma-nota"></p>
       </div>
 
-      <div class="field" style="margin-top:13px">
-        <label>Comisión <span id="com-desvin-badge" class="badge-desvin" style="display:none">· editada a mano</span></label>
-        <div class="in"><input type="number" id="comCustom" value="0.8" min="0" max="100" step="0.01" inputmode="decimal" /><span class="suf">%</span></div>
-      </div>
+      <div id="com-field-wrap">
+        <div class="field" style="margin-top:13px">
+          <label>Comisión <span id="com-desvin-badge" class="badge-desvin" style="display:none">· editada a mano</span></label>
+          <div class="in"><input type="number" id="comCustom" value="0.8" min="0" max="100" step="0.01" inputmode="decimal" /><span class="suf">%</span></div>
+        </div>
 
-      <label class="check" id="ivaComWrap" style="display:none">
-        <input type="checkbox" id="ivaCom" />
-        <span class="t"><b>La comisión paga IVA (21%)</b><span>Algunas plataformas te cobran IVA sobre su comisión. Si es tu caso, dejalo tildado.</span></span>
-      </label>
+        <label class="check" id="ivaComWrap" style="display:none">
+          <input type="checkbox" id="ivaCom" />
+          <span class="t"><b>La comisión paga IVA (21%)</b><span>Algunas plataformas te cobran IVA sobre su comisión. Si es tu caso, dejalo tildado.</span></span>
+        </label>
+      </div>
 
       <!-- Costos adicionales por venta: cargo fijo ML + envío gratis a cargo del vendedor -->
       <div id="costos-extra-wrap" style="display:none;margin-top:12px">
@@ -263,11 +281,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         Guardar en mis productos
       </button>
-      <button class="btn-medios" id="verMediosBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-        Ver en Medios de pago
-        <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
     </div>
 
     <p class="serv-hint">¿Vendés servicios? <a id="goServicios" role="button" tabindex="0">Calculá tu precio por hora ↗</a></p>
@@ -284,68 +297,6 @@
         <tbody id="compRows"></tbody>
       </table>
     </details>
-  </section>
-
-  <!-- ============ MEDIOS DE PAGO ============ -->
-  <section class="panel" id="medios">
-    <h2 class="section-title">Precio por cada medio de pago</h2>
-    <p class="section-sub">Poné tu precio de referencia y seleccioná dónde cobrás. Te mostramos cuánto tenés que cobrar en cada medio para que te quede lo mismo en el bolsillo.</p>
-
-    <div class="card">
-      <div class="card-h">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        <div><h3>Tu precio de referencia</h3><p>El precio base sin comisiones</p></div>
-      </div>
-      <div class="field">
-        <label>Precio base (efectivo / transferencia)</label>
-        <div class="in"><span class="pre" id="pre2">$</span><input type="text" id="base" inputmode="numeric" placeholder="Ej: 20.000" /></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-h">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1"/><path d="M16 12h6M16 12a2 2 0 0 1 0-4h6v8h-6a2 2 0 0 1 0-4z"/></svg></span>
-        <div><h3>¿Dónde cobrás?</h3><p>Seleccioná tu canal</p></div>
-      </div>
-      <div class="field">
-        <label>Tipo de venta</label>
-        <div class="seg" id="m-canal-tipo-seg">
-          <button class="on" data-tipo="local">Local / presencial</button>
-          <button data-tipo="internet">Internet</button>
-        </div>
-      </div>
-      <div id="m-canal-local-wrap">
-        <div class="proc-checks" id="m-proc-checks"></div>
-      </div>
-      <div id="m-canal-internet-wrap" style="display:none">
-        <div class="field" style="margin-top:10px">
-          <label>¿En qué plataforma?</label>
-          <div class="in sel"><select id="m-plataforma-sel"></select></div>
-        </div>
-        <div id="m-proc-online-field" style="display:none">
-          <div class="field">
-            <label>¿Con qué procesador cobrás?</label>
-            <div class="in sel"><select id="m-proc-online-sel"></select></div>
-          </div>
-        </div>
-      </div>
-      <p class="canal-nota" id="m-canal-nota"></p>
-    </div>
-
-    <div class="card">
-      <div class="card-h">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 9h20"/></svg></span>
-        <div><h3>¿Cuánto cobrar en cada uno?</h3><p>Para que te quede lo mismo</p></div>
-      </div>
-      <table class="tbl">
-        <thead><tr><th>Medio</th><th>Comisión</th><th>Cobrás</th></tr></thead>
-        <tbody id="mediosBody"></tbody>
-      </table>
-      <button class="btn-export" id="mediosPdfBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 18h4"/></svg>
-        Guardar lista PDF
-      </button>
-    </div>
   </section>
 
   <!-- ============ MIS PRODUCTOS ============ -->

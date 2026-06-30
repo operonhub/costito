@@ -20,6 +20,8 @@
   const LS = {
     theme: 'costito_theme', cur: 'costito_cur', prods: 'costito_productos', procs: 'costito_procs',
     dolarTipo: 'costito_dolar_tipo', dolarCache: 'costito_dolar_cache', condFiscal: 'costito_cond_fiscal',
+    customMedios: 'costito_custom_medios',
+    mediosChecked: 'costito_medios_ck',
   };
 
   // Estado en memoria
@@ -137,10 +139,9 @@
     document.querySelectorAll('#cur button').forEach((x) => x.classList.remove('on'));
     b.classList.add('on');
     $('pre1').textContent = symbol();
-    $('pre2').textContent = symbol();
     $('finCur').textContent = symbol();
     $('dolarBar').style.display = state.cur === 'USD' ? 'flex' : 'none';
-    calc(); medios(); renderProds();
+    calc(); renderProds();
     document.dispatchEvent(new CustomEvent('costito:rerender'));
   });
 
@@ -169,7 +170,7 @@
         state.dolares = map;
         localStorage.setItem(LS.dolarCache, JSON.stringify(map));
         updateDolarBar();
-        if (state.cur === 'USD') { calc(); medios(); renderProds(); document.dispatchEvent(new CustomEvent('costito:rerender')); }
+        if (state.cur === 'USD') { calc(); renderProds(); document.dispatchEvent(new CustomEvent('costito:rerender')); }
       })
       .catch(() => { updateDolarBar(); }); // si falla, queda el cache o el fallback
   }
@@ -179,7 +180,7 @@
     state.dolarTipo = this.value;
     localStorage.setItem(LS.dolarTipo, state.dolarTipo);
     updateDolarBar();
-    calc(); medios(); renderProds();
+    calc(); renderProds();
     document.dispatchEvent(new CustomEvent('costito:rerender'));
   });
 
@@ -193,14 +194,6 @@
     plataformaId: PLATAFORMAS_INTERNET[0].id,
     procOnlineId: null,
     desvinculado: false,
-  };
-
-  // Estado del selector de canal en la tab Medios de pago
-  const mediosState = {
-    tipo: 'local',
-    selectedProcIds: JSON.parse(localStorage.getItem(LS.procs) || 'null') || [PROCESADORES_LOCAL[0].id],
-    plataformaId: PLATAFORMAS_INTERNET[0].id,
-    procOnlineId: null,
   };
 
   function comisionComputada(cs) {
@@ -225,8 +218,7 @@
   function canalNombreDisplay() {
     if (canalState.tipo === 'local') {
       const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-      const medio = proc && (proc.medios.find((m) => m.id === canalState.medioId) || proc.medios[0]);
-      return (proc ? proc.nombre : 'Local') + (medio ? ' · ' + medio.label : '');
+      return proc ? proc.nombre : 'Local';
     }
     const plat = PLATAFORMAS_INTERNET.find((p) => p.id === canalState.plataformaId);
     if (!plat) return 'Internet';
@@ -267,20 +259,6 @@
     ).join(''));
     updateProcOnlineOptions(false);
 
-    // Medios tab — procesadores (checkboxes multi-select)
-    setHTML($('m-proc-checks'), PROCESADORES_LOCAL.map((p) => {
-      const on = mediosState.selectedProcIds.includes(p.id);
-      return '<label class="proc-check' + (on ? ' on' : '') + '">' +
-        '<input type="checkbox" value="' + p.id + '"' + (on ? ' checked' : '') + ' />' +
-        '<span>' + p.nombre + '</span></label>';
-    }).join(''));
-
-    // Medios tab — plataformas
-    setHTML($('m-plataforma-sel'), PLATAFORMAS_INTERNET.map((p) =>
-      '<option value="' + p.id + '">' + p.nombre + '</option>'
-    ).join(''));
-    updateMProcOnlineOptions(false);
-
     // Tipo de dólar (cotización en vivo)
     setHTML($('dolarTipo'), D.dolar.tipos
       .map((t) => '<option value="' + t.id + '"' + (t.id === state.dolarTipo ? ' selected' : '') + '>' + t.nombre + '</option>')
@@ -289,7 +267,6 @@
     $('comDate').textContent = 'Comisiones de ' + D.comisionesActualizadas;
 
     syncCanalUI();
-    syncMediosUI();
   }
 
   function resetMedioLocal() {
@@ -314,23 +291,12 @@
     }
   }
 
-  function updateMProcOnlineOptions(reset) {
-    const plat = PLATAFORMAS_INTERNET.find((p) => p.id === mediosState.plataformaId) || PLATAFORMAS_INTERNET[0];
-    const show = plat && plat.submodo && plat.procesadores_online && plat.procesadores_online.length > 0;
-    $('m-proc-online-field').style.display = show ? '' : 'none';
-    if (!show) return;
-    setHTML($('m-proc-online-sel'), plat.procesadores_online.map((p) =>
-      '<option value="' + p.id + '">' + p.label + '</option>'
-    ).join(''));
-    if (reset || !mediosState.procOnlineId) {
-      mediosState.procOnlineId = plat.procesadores_online[0].id;
-    }
-  }
-
   function syncCanalUI() {
     const tipo = canalState.tipo;
     $('canal-local-wrap').style.display = tipo === 'local' ? '' : 'none';
     $('canal-internet-wrap').style.display = tipo === 'internet' ? '' : 'none';
+    $('com-field-wrap').style.display = tipo === 'local' ? 'none' : '';
+    $('canal-medios-footer').style.display = tipo === 'local' ? '' : 'none';
 
     // Sync comCustom (if not desvinculado)
     if (!canalState.desvinculado) {
@@ -378,27 +344,6 @@
     calc();
   }
 
-  function syncMediosUI() {
-    $('m-canal-local-wrap').style.display = mediosState.tipo === 'local' ? '' : 'none';
-    $('m-canal-internet-wrap').style.display = mediosState.tipo === 'internet' ? '' : 'none';
-
-    // Nota contextual para medios
-    if (mediosState.tipo === 'local') {
-      const n = mediosState.selectedProcIds.length;
-      if (n > 1) {
-        $('m-canal-nota').textContent = n + ' procesadores seleccionados — la tabla los combina.';
-      } else {
-        const proc = PROCESADORES_LOCAL.find((p) => p.id === mediosState.selectedProcIds[0]);
-        $('m-canal-nota').textContent = proc ? proc.nota || '' : '';
-      }
-    } else {
-      const plat = PLATAFORMAS_INTERNET.find((p) => p.id === mediosState.plataformaId);
-      $('m-canal-nota').textContent = plat ? plat.nota || '' : '';
-    }
-
-    medios();
-  }
-
   // ============================================================
   // CALCULADORA PRINCIPAL
   // ============================================================
@@ -407,7 +352,7 @@
   }
   function leerInputs() {
     const costo = parseNum($('costo').value);
-    const comEfectiva = Calc.comisionEfectiva(comNominal(), $('ivaCom').checked);
+    const comEfectiva = canalState.tipo === 'local' ? 0 : Calc.comisionEfectiva(comNominal(), $('ivaCom').checked);
     const iibb = $('iibb').value === 'custom'
       ? (parseFloat($('iibbCustom').value) || 0)
       : (parseFloat($('iibb').value) || 0);
@@ -439,12 +384,10 @@
       $('bCostosExtraRow').style.display = 'none';
       $('addBtn').disabled = true;
       $('addBtn').style.opacity = .5;
-      $('verMediosBtn').disabled = true;
       return;
     }
     $('addBtn').disabled = false;
     $('addBtn').style.opacity = 1;
-    $('verMediosBtn').disabled = false;
 
     $('finVal').textContent = fmt(conv(r.precio));
     setHTML($('ganNote'), 'Con esto ganás <b>' + money(r.ganancia) + ' limpios</b> por unidad.');
@@ -472,6 +415,29 @@
     renderCanalMedios();
   }
 
+  function getCanalMedios() {
+    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
+    const base = (proc ? proc.medios : []).map((m) => ({ ...m, isCustom: false }));
+    const customKey = LS.customMedios + '_' + (proc ? proc.id : 'x');
+    const customs = JSON.parse(localStorage.getItem(customKey) || '[]');
+    return [...base, ...customs.map((c) => ({ ...c, isCustom: true }))];
+  }
+
+  function getCanalMediosChecked() {
+    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
+    const ckKey = LS.mediosChecked + '_' + (proc ? proc.id : 'x');
+    const saved = localStorage.getItem(ckKey);
+    if (saved) return new Set(JSON.parse(saved));
+    // Default: todos ON
+    return new Set(getCanalMedios().map((m) => m.id));
+  }
+
+  function saveCanalMediosChecked(set) {
+    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
+    const ckKey = LS.mediosChecked + '_' + (proc ? proc.id : 'x');
+    localStorage.setItem(ckKey, JSON.stringify([...set]));
+  }
+
   function renderCanalMedios() {
     const list = $('canal-medios-list');
     if (!list || canalState.tipo !== 'local') {
@@ -479,28 +445,38 @@
       return;
     }
     const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-    if (!proc || !proc.medios.length) { list.style.display = 'none'; return; }
+    if (!proc) { list.style.display = 'none'; return; }
+
     list.style.display = '';
-    const baseInputs = leerInputs();
-    const rows = proc.medios.map((m) => {
-      const isOn = m.id === canalState.medioId;
+    const base = Calc.precioPublicado(leerInputs());
+    const basePrice = base.ok ? base.precio : 0;
+    const allMedios = getCanalMedios();
+    const checked = getCanalMediosChecked();
+
+    const rows = allMedios.map((m) => {
+      const isOn = checked.has(m.id);
       const comDisp = m.comision === null ? '—'
         : m.comision === 0 ? 'Sin comisión'
         : String(m.comision).replace('.', ',') + '%';
       let precioStr = '—';
-      if (m.comision !== null) {
-        const r = Calc.precioPublicado({ ...baseInputs, comEfectiva: m.comision });
-        if (r.ok) precioStr = money(r.precio);
+      if (m.comision !== null && basePrice > 0) {
+        const r = Calc.precioPorMedio(basePrice, m.comision);
+        precioStr = money(r.precio);
       } else if (m.editable) {
-        const r = Calc.precioPublicado(baseInputs);
-        if (r.ok) precioStr = money(r.precio);
+        precioStr = basePrice > 0 ? money(basePrice) : '—';
       }
-      return '<div class="canal-medio-row' + (isOn ? ' on' : '') + '" data-mid="' + m.id + '">' +
+      const delBtn = m.isCustom
+        ? '<button class="canal-medio-del" data-del="' + m.id + '" title="Eliminar" aria-label="Eliminar medio">×</button>'
+        : '';
+      return '<div class="canal-medio-row' + (isOn ? '' : ' off') + '" data-mid="' + m.id + '">' +
         '<div><div class="canal-medio-name">' + m.label + '</div>' +
         '<div class="canal-medio-com">' + comDisp + '</div></div>' +
         '<div class="canal-medio-price">' + precioStr + '</div>' +
-        '</div>';
+        delBtn +
+        '<input type="checkbox" class="canal-medio-ck" data-ck="' + m.id + '"' + (isOn ? ' checked' : '') + ' />' +
+      '</div>';
     }).join('');
+
     setHTML(list, rows);
   }
 
@@ -566,21 +542,101 @@
     syncCanalUI();
   });
 
-  // Delegado de click para la lista de medios inline del canal
+  // Delegado de click para la lista de medios inline del canal (multi-select con checkboxes)
   $('canal-medios-list').addEventListener('click', (e) => {
+    // Eliminar medio custom
+    const delBtn = e.target.closest('.canal-medio-del');
+    if (delBtn) {
+      const mid = delBtn.dataset.del;
+      const customKey = LS.customMedios + '_' + canalState.procesadorId;
+      const customs = JSON.parse(localStorage.getItem(customKey) || '[]');
+      localStorage.setItem(customKey, JSON.stringify(customs.filter((m) => m.id !== mid)));
+      const ck = getCanalMediosChecked();
+      ck.delete(mid);
+      saveCanalMediosChecked(ck);
+      renderCanalMedios();
+      return;
+    }
+    // Toggle checkbox (click en checkbox O en la fila)
     const row = e.target.closest('.canal-medio-row');
     if (!row) return;
+    const mid = row.dataset.mid;
+    const ck = getCanalMediosChecked();
+    if (ck.has(mid)) ck.delete(mid); else ck.add(mid);
+    saveCanalMediosChecked(ck);
+    renderCanalMedios();
+  });
+
+  // Toggle formulario agregar medio
+  $('toggleAddMedioBtn').addEventListener('click', () => {
+    const form = $('canal-add-form');
+    const isOpen = form.style.display !== 'none';
+    form.style.display = isOpen ? 'none' : '';
+    if (!isOpen) setTimeout(() => $('nuevoMedioNombre').focus(), 30);
+  });
+
+  // Confirmar agregar medio
+  $('nuevoMedioBtn').addEventListener('click', () => {
+    const nombre = $('nuevoMedioNombre').value.trim();
+    const com = parseFloat($('nuevoMedioCom').value);
+    if (!nombre) { $('nuevoMedioNombre').focus(); return; }
+    if (isNaN(com) || com < 0 || com > 60) { $('nuevoMedioCom').focus(); return; }
+    const customKey = LS.customMedios + '_' + canalState.procesadorId;
+    const customs = JSON.parse(localStorage.getItem(customKey) || '[]');
+    const id = 'custom_' + Date.now();
+    customs.push({ id, label: nombre, comision: com, isCustom: true });
+    localStorage.setItem(customKey, JSON.stringify(customs));
+    // Marcar como checked
+    const ck = getCanalMediosChecked();
+    ck.add(id);
+    saveCanalMediosChecked(ck);
+    $('nuevoMedioNombre').value = '';
+    $('nuevoMedioCom').value = '';
+    $('canal-add-form').style.display = 'none';
+    renderCanalMedios();
+  });
+
+  // Descargar PDF de lista de medios
+  $('exportMediosPdfBtn').addEventListener('click', () => {
     const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-    if (!proc) return;
-    const medio = proc.medios.find((m) => m.id === row.dataset.mid);
-    if (!medio) return;
-    canalState.medioId = medio.id;
-    canalState.desvinculado = false;
-    if (medio.comision !== null) {
-      $('comCustom').value = medio.comision;
-      $('com-desvin-badge').style.display = 'none';
-    }
-    calc();
+    const base = Calc.precioPublicado(leerInputs());
+    if (!base.ok) { toast('Calculá un precio primero para descargar la lista.'); return; }
+    const allMedios = getCanalMedios();
+    const checked = getCanalMediosChecked();
+    const selected = allMedios.filter((m) => checked.has(m.id) && m.comision !== null);
+    if (!selected.length) { toast('No hay medios seleccionados para exportar.'); return; }
+
+    const rows = selected.map((m) => {
+      const r = Calc.precioPorMedio(base.precio, m.comision);
+      const pct = m.comision === 0 ? 'Sin comisión' : String(m.comision).replace('.', ',') + '%';
+      return '<tr><td>' + m.label + '</td><td style="text-align:center">' + pct + '</td>' +
+        '<td style="text-align:right;font-weight:700">' + money(r.precio) + '</td></tr>';
+    }).join('');
+
+    const fecha = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>' +
+      '<title>Lista de precios — Costito</title>' +
+      '<style>body{font-family:Arial,sans-serif;max-width:480px;margin:24px auto;color:#1a2e22}' +
+      'h2{color:#1F8A5B;margin-bottom:4px;font-size:20px}' +
+      '.fecha{font-size:13px;color:#666;margin-bottom:16px}' +
+      'table{width:100%;border-collapse:collapse;font-size:14px}' +
+      'th{background:#f0f7f3;padding:8px 10px;text-align:left;font-weight:700;color:#1a2e22}' +
+      'td{padding:8px 10px;border-bottom:1px solid #eee}' +
+      'tr:last-child td{border-bottom:none}' +
+      '.footer{margin-top:20px;font-size:11px;color:#aaa}' +
+      '</style></head><body>' +
+      '<h2>Lista de precios</h2>' +
+      '<div class="fecha">' + (proc ? proc.nombre + ' · ' : '') + fecha + '</div>' +
+      '<table><thead><tr><th>Medio de cobro</th><th style="text-align:center">Comisión</th><th style="text-align:right">Cobrás</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
+      '<div class="footer">Calculado con Costito · costito.online</div>' +
+      '</body></html>';
+
+    const w = window.open('', '_blank', 'width=540,height=600');
+    if (!w) { toast('Activá las ventanas emergentes para descargar el PDF'); return; }
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => { try { w.print(); } catch (e) {} }, 300);
   });
 
   // Plataforma internet
@@ -627,20 +683,7 @@
     calc();
   });
 
-  // Ver en Medios de pago: manda el precio SIN comisión de canal para evitar doble comisión
   $('goServicios').addEventListener('click', () => document.querySelector('[data-tab="servicios"]').click());
-
-  $('verMediosBtn').addEventListener('click', () => {
-    const inputs = leerInputs();
-    if (!Calc.precioPublicado(inputs).ok) return;
-    // Precio base = costo + IVA + margen + IIBB, sin comisión de canal
-    const rBase = Calc.precioPublicado({ ...inputs, comEfectiva: 0 });
-    const baseInput = $('base');
-    baseInput.value = Math.round(rBase.precio).toLocaleString('es-AR');
-    baseInput.dispatchEvent(new Event('input'));
-    document.querySelector('[data-tab="medios"]').click();
-    setTimeout(() => baseInput.focus(), 80);
-  });
 
   // Copiar precio
   $('copyBtn').addEventListener('click', () => {
@@ -653,107 +696,6 @@
     } else {
       toast('No se pudo copiar');
     }
-  });
-
-  // ============================================================
-  // MEDIOS DE PAGO
-  // ============================================================
-  function medios() {
-    const base = parseNum($('base').value);
-    let items = [];
-
-    if (mediosState.tipo === 'local') {
-      let selectedProcs = PROCESADORES_LOCAL.filter((p) => mediosState.selectedProcIds.includes(p.id));
-      if (!selectedProcs.length) selectedProcs = [PROCESADORES_LOCAL[0]];
-      const showHeader = selectedProcs.length > 1;
-      const rows = [];
-      selectedProcs.forEach((proc) => {
-        if (showHeader) rows.push({ header: proc.nombre });
-        proc.medios.forEach((m) => rows.push({ label: m.label, comision: m.comision, isBase: m.comision === 0 }));
-      });
-      setHTML($('mediosBody'), rows.map((m) => {
-        if (m.header) return '<tr class="proc-header"><td colspan="3">' + m.header + '</td></tr>';
-        if (m.comision === null) {
-          return '<tr><td>' + m.label + '</td><td>—</td>' +
-            '<td style="color:var(--tinta-soft);font-size:12px">Ingresá la comisión</td></tr>';
-        }
-        const res = Calc.precioPorMedio(base, m.comision);
-        const pct = m.comision > 0 ? String(m.comision).replace('.', ',') + '%' : '—';
-        const reca = res.recargo > 0 ? '<div class="reca">+' + res.recargo.toFixed(1).replace('.', ',') + '%</div>' : '';
-        return '<tr class="' + (m.isBase ? 'base' : '') + '">' +
-          '<td><div class="m">' + m.label + '</div></td>' +
-          '<td><span class="pct">' + pct + '</span></td>' +
-          '<td><div class="price">' + money(res.precio) + '</div>' + reca + '</td></tr>';
-      }).join(''));
-      return;
-    } else {
-      const plat = PLATAFORMAS_INTERNET.find((p) => p.id === mediosState.plataformaId) || PLATAFORMAS_INTERNET[0];
-      if (plat.submodo && plat.procesadores_online) {
-        const proc = plat.procesadores_online.find((p) => p.id === mediosState.procOnlineId)
-          || plat.procesadores_online[0];
-        const total = proc && proc.comision !== null ? (plat.comision_base || 0) + proc.comision : null;
-        items = [{ label: plat.nombre + (proc ? ' + ' + proc.label : ''), comision: total }];
-      } else {
-        items = [{ label: plat.nombre, comision: plat.editable ? null : plat.comision_base }];
-      }
-    }
-
-    setHTML($('mediosBody'), items.map((m) => {
-      if (m.comision === null) {
-        return '<tr><td colspan="3" style="color:var(--tinta-soft);font-size:13px;padding:12px 0">Ingresá la comisión en el campo de arriba para calcular el precio.</td></tr>';
-      }
-      const res = Calc.precioPorMedio(base, m.comision);
-      const pct = m.comision > 0 ? String(m.comision).replace('.', ',') + '%' : '—';
-      const reca = res.recargo > 0 ? '<div class="reca">+' + res.recargo.toFixed(1).replace('.', ',') + '%</div>' : '';
-      return '<tr class="' + (m.isBase ? 'base' : '') + '">' +
-        '<td><div class="m">' + m.label + '</div></td>' +
-        '<td><span class="pct">' + pct + '</span></td>' +
-        '<td><div class="price">' + money(res.precio) + '</div>' + reca + '</td></tr>';
-    }).join(''));
-  }
-
-  $('base').addEventListener('input', medios);
-
-  // Medios tab — canal tipo
-  $('m-canal-tipo-seg').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b || !b.dataset.tipo) return;
-    mediosState.tipo = b.dataset.tipo;
-    document.querySelectorAll('#m-canal-tipo-seg button').forEach((x) => x.classList.remove('on'));
-    b.classList.add('on');
-    $('m-canal-local-wrap').style.display = mediosState.tipo === 'local' ? '' : 'none';
-    $('m-canal-internet-wrap').style.display = mediosState.tipo === 'internet' ? '' : 'none';
-    syncMediosUI();
-  });
-
-  // Medios tab — checkboxes de procesadores (multi-select)
-  $('m-proc-checks').addEventListener('change', (e) => {
-    const cb = e.target.closest('input[type=checkbox]');
-    if (!cb) return;
-    cb.closest('label').classList.toggle('on', cb.checked);
-    const checked = Array.from($('m-proc-checks').querySelectorAll('input:checked')).map((el) => el.value);
-    // Asegurar al menos uno seleccionado
-    if (!checked.length) {
-      cb.checked = true;
-      cb.closest('label').classList.add('on');
-      checked.push(cb.value);
-    }
-    mediosState.selectedProcIds = checked;
-    localStorage.setItem(LS.procs, JSON.stringify(checked));
-    syncMediosUI();
-  });
-
-  // Medios tab — plataforma internet
-  $('m-plataforma-sel').addEventListener('change', () => {
-    mediosState.plataformaId = $('m-plataforma-sel').value;
-    updateMProcOnlineOptions(true);
-    syncMediosUI();
-  });
-
-  // Medios tab — procesador online
-  $('m-proc-online-sel').addEventListener('change', () => {
-    mediosState.procOnlineId = $('m-proc-online-sel').value;
-    syncMediosUI();
   });
 
   // ============================================================
@@ -1137,7 +1079,6 @@
   });
 
   $('expPdf').addEventListener('click', printProductosPdf);
-  $('mediosPdfBtn').addEventListener('click', printMediosPdf);
 
   $('shareWa').addEventListener('click', () => {
     const visible = catActiva ? state.productos.filter((p) => p.categoria === catActiva) : state.productos;
@@ -1205,73 +1146,6 @@
       '</style></head><body>' +
       header +
       '<table><thead><tr><th>Producto</th><th>Precio</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<footer>Calculado con Costito · costito.online</footer>' +
-      '</body></html>';
-    abrirVentanaPdf(html);
-  }
-
-  // ============================================================
-  // PDF FORMATEADO — Medios de pago
-  // ============================================================
-  function printMediosPdf() {
-    const base = parseNum($('base').value);
-    const date = new Date().toLocaleDateString('es-AR');
-    let sectionsHtml = '';
-
-    if (mediosState.tipo === 'local') {
-      let procs = PROCESADORES_LOCAL.filter((p) => mediosState.selectedProcIds.includes(p.id));
-      if (!procs.length) procs = [PROCESADORES_LOCAL[0]];
-      procs.forEach((proc) => {
-        const rowsHtml = proc.medios.map((m) => {
-          if (m.comision === null) return '<tr><td>' + m.label + '</td><td>—</td><td>—</td></tr>';
-          const res = Calc.precioPorMedio(base, m.comision);
-          const pct = m.comision > 0 ? String(m.comision).replace('.', ',') + '%' : '—';
-          return '<tr><td>' + m.label + '</td><td>' + pct + '</td>' +
-            '<td class="pr">' + money(res.precio) + '</td></tr>';
-        }).join('');
-        sectionsHtml += '<h2>' + proc.nombre + '</h2>' +
-          '<table><thead><tr><th>Medio de pago</th><th>Comisión</th><th>Cobrás</th></tr></thead>' +
-          '<tbody>' + rowsHtml + '</tbody></table>';
-      });
-    } else {
-      const plat = PLATAFORMAS_INTERNET.find((p) => p.id === mediosState.plataformaId) || PLATAFORMAS_INTERNET[0];
-      let com = plat.editable ? null : plat.comision_base;
-      let label = plat.nombre;
-      if (plat.submodo && plat.procesadores_online) {
-        const proc = plat.procesadores_online.find((p) => p.id === mediosState.procOnlineId) || plat.procesadores_online[0];
-        if (proc) { com = proc.comision !== null ? (plat.comision_base || 0) + proc.comision : null; label += ' + ' + proc.label; }
-      }
-      const rowHtml = com !== null
-        ? (() => { const res = Calc.precioPorMedio(base, com); const pct = com > 0 ? String(com).replace('.', ',') + '%' : '—';
-            return '<tr><td>' + label + '</td><td>' + pct + '</td><td class="pr">' + money(res.precio) + '</td></tr>'; })()
-        : '<tr><td colspan="3">—</td></tr>';
-      sectionsHtml = '<h2>' + plat.nombre + '</h2>' +
-        '<table><thead><tr><th>Canal</th><th>Comisión</th><th>Cobrás</th></tr></thead><tbody>' + rowHtml + '</tbody></table>';
-    }
-
-    const baseStr = money(base);
-    const html = '<!DOCTYPE html><html lang="es-AR"><head><meta charset="UTF-8">' +
-      '<title>Costito — Medios de pago</title><style>' +
-      'body{font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:30px auto;color:#19271F}' +
-      '.logo{font-size:22px;font-weight:700;color:#1F8A5B;margin-bottom:2px}' +
-      '.sub{color:#5E7268;font-size:12px;margin-bottom:16px}' +
-      '.base-box{background:#E9F5EE;border-radius:8px;padding:11px 15px;margin-bottom:22px;font-size:13px}' +
-      '.base-box b{color:#1F8A5B}' +
-      'h2{font-size:13px;font-weight:700;color:#1F8A5B;margin:20px 0 6px;' +
-      'border-bottom:2px solid #E9F5EE;padding-bottom:4px}' +
-      'table{width:100%;border-collapse:collapse;margin-bottom:4px}' +
-      'th{background:#1F8A5B;color:#fff;padding:8px 12px;text-align:left;font-size:11.5px;font-weight:600}' +
-      'th:last-child{text-align:right}' +
-      'td{padding:8px 12px;border-bottom:1px solid #E9F5EE;font-size:13px}' +
-      '.pr{text-align:right;font-weight:700;color:#1F8A5B}' +
-      'footer{margin-top:28px;color:#5E7268;font-size:11px;text-align:center;' +
-      'border-top:1px solid #CBE5D6;padding-top:10px}' +
-      '@media print{body{margin:10px}}' +
-      '</style></head><body>' +
-      '<div class="logo">Costito</div>' +
-      '<div class="sub">Lista de precios por medio de pago · ' + date + '</div>' +
-      '<div class="base-box">Precio base (efectivo / transferencia): <b>' + baseStr + '</b></div>' +
-      sectionsHtml +
       '<footer>Calculado con Costito · costito.online</footer>' +
       '</body></html>';
     abrirVentanaPdf(html);
@@ -1370,10 +1244,8 @@
   }
   bindMoneyInput('costo', calc);
   bindMoneyInput('gananciaARS', calc);
-  bindMoneyInput('base', medios);
   // Valores iniciales con formato
   $('costo').value = (10000).toLocaleString('es-AR');
-  $('base').value = (20000).toLocaleString('es-AR');
 
   // Restaurar condición fiscal guardada
   if (state.condFiscal !== 'mono') {
@@ -1388,13 +1260,12 @@
   checkComisionesStale();
   if (state.cur === 'USD') {
     document.querySelectorAll('#cur button').forEach((x) => x.classList.toggle('on', x.dataset.cur === 'USD'));
-    $('pre1').textContent = $('pre2').textContent = $('finCur').textContent = symbol();
+    $('pre1').textContent = $('finCur').textContent = symbol();
     $('dolarBar').style.display = 'flex';
   }
   updateDolarBar();   // pinta desde cache al instante
   fetchDolares();     // y refresca en segundo plano
   calc();
-  medios();
   renderProds();
   updateTabFades();
 

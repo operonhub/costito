@@ -337,6 +337,37 @@ footer.foot b{color:var(--verde);font-family:var(--serif)}
 .canal-medio-com{font-size:11.5px;color:var(--tinta-soft);margin-top:1px}
 .canal-medio-price{font-size:14px;font-weight:700;color:var(--tinta);font-family:var(--serif);white-space:nowrap}
 .canal-medio-row.on .canal-medio-price{color:var(--verde)}
+/* Multi-select medios: checkbox en cada fila */
+.canal-medio-row{position:relative;padding-right:42px}
+.canal-medio-ck{position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  accent-color:var(--verde);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+/* Estado "off" (desactivado) */
+.canal-medio-row.off{opacity:.45}
+.canal-medio-row.off .canal-medio-price{color:var(--tinta-soft)}
+/* Footer de la lista de medios */
+.canal-medios-footer{margin-top:8px}
+.canal-medios-actions{display:flex;gap:8px;margin-top:8px}
+.btn-medios-add,.btn-medios-pdf{flex:1;display:flex;align-items:center;justify-content:center;
+  gap:6px;padding:9px 12px;border-radius:11px;font-family:var(--sans);font-size:13px;
+  font-weight:600;cursor:pointer;transition:.15s;border:1.5px solid var(--linea)}
+.btn-medios-add{background:transparent;color:var(--tinta)}
+.btn-medios-add:hover{border-color:var(--verde-2);background:var(--crema)}
+.btn-medios-pdf{background:transparent;color:var(--verde);border-color:var(--verde)}
+.btn-medios-pdf:hover{background:rgba(31,138,91,.08)}
+.btn-medios-add svg,.btn-medios-pdf svg{width:14px;height:14px;flex-shrink:0}
+/* Formulario agregar medio propio */
+.canal-add-form{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.canal-add-form .in-bare{flex:1;min-width:100px}
+.btn-add-medio-confirm{padding:9px 14px;border-radius:10px;background:var(--verde);
+  color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;
+  border:none;white-space:nowrap;transition:.12s}
+.btn-add-medio-confirm:hover{filter:brightness(.92)}
+/* Fila de medio personalizado: botón eliminar */
+.canal-medio-del{position:absolute;right:36px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--tinta-soft);padding:3px;
+  opacity:0;transition:.12s;font-size:16px;line-height:1}
+.canal-medio-row:hover .canal-medio-del{opacity:1}
+.canal-medio-del:hover{color:#e55}
 /* Card de IIBB separado */
 .iibb-card{margin-top:0;padding:14px 16px!important}
 .badge-desvin{font-size:11px;font-weight:500;color:var(--naranja);background:rgba(242,96,63,.10);
