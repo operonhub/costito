@@ -97,8 +97,7 @@ const PROCESADORES_LOCAL = [
     nombre: 'Mi procesador / otro',
     nota: 'Ingresá la comisión según tu contrato. Los % de los procesadores generalmente ya incluyen IVA.',
     medios: [
-      { id: 'efectivo', label: 'Efectivo',         comision: 0    },
-      { id: 'custom',   label: 'Mi medio de cobro', comision: null, editable: true },
+      { id: 'efectivo', label: 'Efectivo', comision: 0 },
     ],
   },
 ];

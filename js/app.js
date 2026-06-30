@@ -603,9 +603,10 @@
 
     setHTML(list, html);
 
-    // Mostrar/ocultar "Agregar medio" según si hay un único procesador seleccionado
+    // Mostrar "Agregar medio" si hay un solo procesador O si "personalizado" está en la lista
     const addBtn = $('toggleAddMedioBtn');
-    if (addBtn) addBtn.style.display = canalState.procesadorIds.length === 1 ? '' : 'none';
+    const hasPersonalizado = canalState.procesadorIds.includes('personalizado');
+    if (addBtn) addBtn.style.display = (canalState.procesadorIds.length === 1 || hasPersonalizado) ? '' : 'none';
   }
 
   // Condición fiscal
@@ -740,7 +741,10 @@
     const com = parseFloat($('nuevoMedioCom').value);
     if (!nombre) { $('nuevoMedioNombre').focus(); return; }
     if (isNaN(com) || com < 0 || com > 60) { $('nuevoMedioCom').focus(); return; }
-    const pid = canalState.procesadorIds[0];
+    // Si "personalizado" está entre los procesadores seleccionados, agregar siempre a él
+    const pid = canalState.procesadorIds.includes('personalizado')
+      ? 'personalizado'
+      : canalState.procesadorIds[0];
     const customKey = LS.customMedios + '_' + pid;
     const customs = JSON.parse(localStorage.getItem(customKey) || '[]');
     const id = 'custom_' + Date.now();
