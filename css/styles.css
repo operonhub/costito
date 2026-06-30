@@ -867,13 +867,13 @@ details[open] .comp-chev{transform:rotate(180deg)}
 /* ============================================================
    PROMO BAR — banda de lanzamiento
    ============================================================ */
-.promo-bar{display:flex;align-items:center;gap:10px;background:var(--naranja);color:#fff;
-  font-family:var(--sans);font-size:13.5px;font-weight:600;padding:10px 16px;line-height:1.4;
-  justify-content:center}
+.promo-bar{position:relative;display:flex;align-items:center;justify-content:center;
+  gap:10px;background:var(--naranja);color:#fff;font-family:var(--sans);font-size:13.5px;
+  font-weight:600;padding:10px 44px;line-height:1.4}
 .promo-bar-ico{flex-shrink:0;font-size:16px}
-.promo-bar span:nth-child(2){flex:1}
-.promo-bar-close{background:none;border:none;color:#fff;cursor:pointer;padding:4px;
-  border-radius:6px;display:grid;place-items:center;opacity:.8;transition:.15s;flex-shrink:0}
+.promo-bar-close{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#fff;cursor:pointer;padding:4px;
+  border-radius:6px;display:grid;place-items:center;opacity:.8;transition:.15s}
 .promo-bar-close:hover{opacity:1;background:rgba(0,0,0,.15)}
 .promo-bar-close svg{width:16px;height:16px}
 
