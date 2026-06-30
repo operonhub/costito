@@ -17,6 +17,24 @@ window.CostitoPay = (function () {
   const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, ANON_KEY) : null;
   const toast = (m) => (window.Costito && window.Costito.toast ? window.Costito.toast(m) : null);
 
+  async function cancelSubscription() {
+    if (!confirm('¿Cancelar tu suscripción Premium?\n\nSeguís teniendo acceso hasta que venza el período ya pagado.')) return;
+    try {
+      const { data } = await sb.auth.getSession();
+      const token = data && data.session && data.session.access_token;
+      if (!token) { toast('Volvé a entrar a tu cuenta'); return; }
+      const res = await fetch(SUPABASE_URL + '/functions/v1/cancelar-suscripcion', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (!res.ok) throw new Error('fn ' + res.status);
+      toast('Suscripción cancelada. Tu acceso sigue activo hasta que venza el período.');
+    } catch (e) {
+      toast('Para cancelar, ingresá a mercadopago.com.ar → Mis suscripciones');
+    }
+  }
+
   async function startCheckout() {
     // Premium está atado a la cuenta: si no hay sesión, pedir login primero
     if (!window.CostitoAuth || !window.CostitoAuth.getUser()) {
@@ -56,7 +74,7 @@ window.CostitoPay = (function () {
     }
   }
 
-  return { startCheckout, handleReturn };
+  return { startCheckout, cancelSubscription, handleReturn };
 })();
 
 /* ---------- Botón "Pasate a Premium" en el menú de cuenta ---------- */
@@ -82,9 +100,18 @@ window.CostitoPay = (function () {
 
   btn.addEventListener('click', () => Pay.startCheckout());
 
-  // Mostrar solo si está logueado y NO es premium (el plan llega del backend del socio)
+  // Botón cancelar suscripción (solo visible para usuarios premium)
+  const btnCancel = document.createElement('button');
+  btnCancel.className = 'acct-cancel';
+  btnCancel.id = 'cancelPremium';
+  btnCancel.type = 'button';
+  btnCancel.textContent = 'Cancelar suscripción';
+  menu.insertBefore(btnCancel, logout);
+  btnCancel.addEventListener('click', () => Pay.cancelSubscription());
+
   function sync(u) {
     btn.style.display = (u && u.plan !== 'premium') ? 'flex' : 'none';
+    btnCancel.style.display = (u && u.plan === 'premium') ? 'flex' : 'none';
   }
   Auth.onChange(sync);
   sync(Auth.getUser());
