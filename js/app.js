@@ -22,6 +22,7 @@
     dolarTipo: 'costito_dolar_tipo', dolarCache: 'costito_dolar_cache', condFiscal: 'costito_cond_fiscal',
     customMedios: 'costito_custom_medios',
     mediosChecked: 'costito_medios_ck',
+    procesadorIds: 'costito_proc_ids',
   };
 
   // Estado en memoria
@@ -189,8 +190,7 @@
   // ============================================================
   const canalState = {
     tipo: 'local',
-    procesadorId: PROCESADORES_LOCAL[0].id,
-    medioId: PROCESADORES_LOCAL[0].medios[0].id,
+    procesadorIds: [PROCESADORES_LOCAL[0].id],
     plataformaId: PLATAFORMAS_INTERNET[0].id,
     procOnlineId: null,
     desvinculado: false,
@@ -198,10 +198,7 @@
 
   function comisionComputada(cs) {
     if (cs.tipo === 'local') {
-      const proc = PROCESADORES_LOCAL.find((p) => p.id === cs.procesadorId);
-      if (!proc) return 0;
-      const medio = proc.medios.find((m) => m.id === cs.medioId) || proc.medios[0];
-      return medio ? medio.comision : 0;
+      return 0;
     }
     const plat = PLATAFORMAS_INTERNET.find((p) => p.id === cs.plataformaId);
     if (!plat) return 0;
@@ -217,8 +214,11 @@
 
   function canalNombreDisplay() {
     if (canalState.tipo === 'local') {
-      const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-      return proc ? proc.nombre : 'Local';
+      if (canalState.procesadorIds.length === 1) {
+        const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorIds[0]);
+        return proc ? proc.nombre : 'Local';
+      }
+      return 'Local (' + canalState.procesadorIds.length + ' procesadores)';
     }
     const plat = PLATAFORMAS_INTERNET.find((p) => p.id === canalState.plataformaId);
     if (!plat) return 'Internet';
@@ -243,15 +243,12 @@
         o.label + (o.prov ? ' (' + o.prov + ')' : '') + '</option>')
       .join(''));
 
-    // Procesadores locales (calc tab)
-    setHTML($('procesador-sel'), PROCESADORES_LOCAL.map((p) =>
-      '<option value="' + p.id + '">' + p.nombre + '</option>'
-    ).join(''));
-    // Sincronizar canalState con el valor real del select (puede estar restaurado por el browser)
-    if ($('procesador-sel').value) {
-      canalState.procesadorId = $('procesador-sel').value;
-      resetMedioLocal();
-    }
+    // Procesadores locales (calc tab) — restaurar desde localStorage
+    const savedPids = JSON.parse(localStorage.getItem(LS.procesadorIds) || '["' + PROCESADORES_LOCAL[0].id + '"]');
+    canalState.procesadorIds = savedPids.filter((pid) => PROCESADORES_LOCAL.some((p) => p.id === pid));
+    if (!canalState.procesadorIds.length) canalState.procesadorIds = [PROCESADORES_LOCAL[0].id];
+    renderProcesadores();
+    syncProcNota();
 
     // Plataformas internet (calc tab)
     setHTML($('plataforma-sel'), PLATAFORMAS_INTERNET.map((p) =>
@@ -269,9 +266,29 @@
     syncCanalUI();
   }
 
-  function resetMedioLocal() {
-    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId) || PROCESADORES_LOCAL[0];
-    if (proc && proc.medios.length) canalState.medioId = proc.medios[0].id;
+  function renderProcesadores() {
+    const container = $('procesador-checks');
+    if (!container) return;
+    const html = PROCESADORES_LOCAL.map((proc) => {
+      const isOn = canalState.procesadorIds.includes(proc.id);
+      return '<label class="proc-check-row' + (isOn ? ' on' : '') + '" data-pid="' + proc.id + '">' +
+        '<input type="checkbox" data-pck="' + proc.id + '"' + (isOn ? ' checked' : '') + ' />' +
+        '<span class="proc-check-name">' + proc.nombre + '</span>' +
+        '</label>';
+    }).join('');
+    setHTML(container, html);
+  }
+
+  function syncProcNota() {
+    const notaEl = $('procesador-nota');
+    if (!notaEl) return;
+    if (canalState.procesadorIds.length === 1) {
+      const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorIds[0]);
+      notaEl.textContent = proc ? proc.nota || '' : '';
+      notaEl.style.display = proc && proc.nota ? '' : 'none';
+    } else {
+      notaEl.style.display = 'none';
+    }
   }
 
   function updateProcOnlineOptions(reset) {
@@ -332,13 +349,17 @@
 
     // Nota contextual
     if (tipo === 'local') {
-      const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-      $('procesador-nota').textContent = proc ? proc.nota || '' : '';
+      syncProcNota();
       $('plataforma-nota').textContent = '';
     } else {
-      $('procesador-nota').textContent = '';
+      if ($('procesador-nota')) $('procesador-nota').style.display = 'none';
       const plat = PLATAFORMAS_INTERNET.find((p) => p.id === canalState.plataformaId);
       $('plataforma-nota').textContent = plat ? plat.nota || '' : '';
+    }
+
+    // Para LOCAL: renderizar checkboxes de procesadores
+    if (tipo === 'local') {
+      renderProcesadores();
     }
 
     calc();
@@ -384,12 +405,28 @@
       $('bCostosExtraRow').style.display = 'none';
       $('addBtn').disabled = true;
       $('addBtn').style.opacity = .5;
+      const mediosNoteErr = $('precio-medios-note');
+      if (mediosNoteErr) mediosNoteErr.style.display = 'none';
       return;
     }
     $('addBtn').disabled = false;
     $('addBtn').style.opacity = 1;
 
-    $('finVal').textContent = fmt(conv(r.precio));
+    let finVal = r.precio;
+    // Para LOCAL: usar el precio del medio más caro entre los seleccionados
+    if (canalState.tipo === 'local') {
+      const allMedios = getCanalMedios();
+      const checked = getCanalMediosChecked();
+      const prices = allMedios
+        .filter((m) => checked.has(m.uid) && m.comision !== null)
+        .map((m) => Calc.precioPorMedio(r.precio, m.comision).precio);
+      if (prices.length) finVal = Math.max(...prices);
+    }
+    // Mostrar/ocultar nota de precio máximo
+    const mediosNote = $('precio-medios-note');
+    if (mediosNote) mediosNote.style.display = canalState.tipo === 'local' ? '' : 'none';
+
+    $('finVal').textContent = fmt(conv(finVal));
     setHTML($('ganNote'), 'Con esto ganás <b>' + money(r.ganancia) + ' limpios</b> por unidad.');
     $('bCostoLabel').textContent = r.esRI ? 'Tu costo neto' : 'Te costó (con IVA)';
     $('bCosto').textContent = money(r.costoConIva);
@@ -416,26 +453,52 @@
   }
 
   function getCanalMedios() {
-    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-    const base = (proc ? proc.medios : []).map((m) => ({ ...m, isCustom: false }));
-    const customKey = LS.customMedios + '_' + (proc ? proc.id : 'x');
-    const customs = JSON.parse(localStorage.getItem(customKey) || '[]');
-    return [...base, ...customs.map((c) => ({ ...c, isCustom: true }))];
+    const result = [];
+    for (const pid of canalState.procesadorIds) {
+      const proc = PROCESADORES_LOCAL.find((p) => p.id === pid);
+      if (!proc) continue;
+      const base = proc.medios.map((m) => ({
+        ...m,
+        uid: pid + '::' + m.id,
+        procesadorId: pid,
+        procesadorNombre: proc.nombre,
+        isCustom: false,
+      }));
+      const customKey = LS.customMedios + '_' + pid;
+      const customs = JSON.parse(localStorage.getItem(customKey) || '[]').map((c) => ({
+        ...c,
+        uid: pid + '::' + c.id,
+        procesadorId: pid,
+        procesadorNombre: proc.nombre,
+        isCustom: true,
+      }));
+      result.push(...base, ...customs);
+    }
+    return result;
   }
 
   function getCanalMediosChecked() {
-    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-    const ckKey = LS.mediosChecked + '_' + (proc ? proc.id : 'x');
-    const saved = localStorage.getItem(ckKey);
-    if (saved) return new Set(JSON.parse(saved));
-    // Default: todos ON
-    return new Set(getCanalMedios().map((m) => m.id));
+    const allMedios = getCanalMedios();
+    const checked = new Set();
+    for (const pid of canalState.procesadorIds) {
+      const ckKey = LS.mediosChecked + '_' + pid;
+      const saved = localStorage.getItem(ckKey);
+      const procMedios = allMedios.filter((m) => m.procesadorId === pid);
+      if (saved) {
+        JSON.parse(saved).forEach((uid) => checked.add(uid));
+      } else {
+        procMedios.forEach((m) => checked.add(m.uid));
+      }
+    }
+    return checked;
   }
 
   function saveCanalMediosChecked(set) {
-    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-    const ckKey = LS.mediosChecked + '_' + (proc ? proc.id : 'x');
-    localStorage.setItem(ckKey, JSON.stringify([...set]));
+    for (const pid of canalState.procesadorIds) {
+      const ckKey = LS.mediosChecked + '_' + pid;
+      const procUids = [...set].filter((uid) => uid.startsWith(pid + '::'));
+      localStorage.setItem(ckKey, JSON.stringify(procUids));
+    }
   }
 
   function renderCanalMedios() {
@@ -444,40 +507,57 @@
       if (list) list.style.display = 'none';
       return;
     }
-    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
-    if (!proc) { list.style.display = 'none'; return; }
+    if (!canalState.procesadorIds.length) { list.style.display = 'none'; return; }
 
     list.style.display = '';
-    const base = Calc.precioPublicado(leerInputs());
-    const basePrice = base.ok ? base.precio : 0;
+    const baseResult = Calc.precioPublicado(leerInputs());
+    const basePrice = baseResult.ok ? baseResult.precio : 0;
     const allMedios = getCanalMedios();
     const checked = getCanalMediosChecked();
+    const showHeaders = canalState.procesadorIds.length > 1;
 
-    const rows = allMedios.map((m) => {
-      const isOn = checked.has(m.id);
-      const comDisp = m.comision === null ? '—'
-        : m.comision === 0 ? 'Sin comisión'
-        : String(m.comision).replace('.', ',') + '%';
-      let precioStr = '—';
-      if (m.comision !== null && basePrice > 0) {
-        const r = Calc.precioPorMedio(basePrice, m.comision);
-        precioStr = money(r.precio);
-      } else if (m.editable) {
-        precioStr = basePrice > 0 ? money(basePrice) : '—';
-      }
-      const delBtn = m.isCustom
-        ? '<button class="canal-medio-del" data-del="' + m.id + '" title="Eliminar" aria-label="Eliminar medio">×</button>'
+    // Agrupar por procesador
+    const groups = canalState.procesadorIds.map((pid) => ({
+      pid,
+      nombre: (PROCESADORES_LOCAL.find((p) => p.id === pid) || {}).nombre || pid,
+      medios: allMedios.filter((m) => m.procesadorId === pid),
+    }));
+
+    const html = groups.map((group) => {
+      const header = showHeaders
+        ? '<div class="canal-proc-group-hdr">' + group.nombre + '</div>'
         : '';
-      return '<div class="canal-medio-row' + (isOn ? '' : ' off') + '" data-mid="' + m.id + '">' +
-        '<div><div class="canal-medio-name">' + m.label + '</div>' +
-        '<div class="canal-medio-com">' + comDisp + '</div></div>' +
-        '<div class="canal-medio-price">' + precioStr + '</div>' +
-        delBtn +
-        '<input type="checkbox" class="canal-medio-ck" data-ck="' + m.id + '"' + (isOn ? ' checked' : '') + ' />' +
-      '</div>';
+      const rows = group.medios.map((m) => {
+        const isOn = checked.has(m.uid);
+        const comDisp = m.comision === null ? '—'
+          : m.comision === 0 ? 'Sin comisión'
+          : String(m.comision).replace('.', ',') + '%';
+        let precioStr = '—';
+        if (m.comision !== null && basePrice > 0) {
+          const r = Calc.precioPorMedio(basePrice, m.comision);
+          precioStr = money(r.precio);
+        } else if (m.editable) {
+          precioStr = basePrice > 0 ? money(basePrice) : '—';
+        }
+        const delBtn = m.isCustom
+          ? '<button class="canal-medio-del" data-del="' + m.uid + '" title="Eliminar" aria-label="Eliminar medio">×</button>'
+          : '';
+        return '<div class="canal-medio-row' + (isOn ? '' : ' off') + '" data-uid="' + m.uid + '">' +
+          '<div><div class="canal-medio-name">' + m.label + '</div>' +
+          '<div class="canal-medio-com">' + comDisp + '</div></div>' +
+          '<div class="canal-medio-price">' + precioStr + '</div>' +
+          delBtn +
+          '<input type="checkbox" class="canal-medio-ck" data-ck="' + m.uid + '"' + (isOn ? ' checked' : '') + ' />' +
+          '</div>';
+      }).join('');
+      return header + rows;
     }).join('');
 
-    setHTML(list, rows);
+    setHTML(list, html);
+
+    // Mostrar/ocultar "Agregar medio" según si hay un único procesador seleccionado
+    const addBtn = $('toggleAddMedioBtn');
+    if (addBtn) addBtn.style.display = canalState.procesadorIds.length === 1 ? '' : 'none';
   }
 
   // Condición fiscal
@@ -534,37 +614,68 @@
     syncCanalUI();
   });
 
-  // Procesador local
-  $('procesador-sel').addEventListener('change', () => {
-    canalState.procesadorId = $('procesador-sel').value;
-    canalState.desvinculado = false;
-    resetMedioLocal();
-    syncCanalUI();
-  });
+  // Procesadores locales: event delegation en el contenedor
+  const procChecksContainer = $('procesador-checks');
+  if (procChecksContainer) {
+    procChecksContainer.addEventListener('change', (e) => {
+      const cb = e.target.closest('input[data-pck]');
+      if (!cb) return;
+      const pid = cb.dataset.pck;
+      if (cb.checked) {
+        if (!canalState.procesadorIds.includes(pid)) canalState.procesadorIds.push(pid);
+      } else {
+        canalState.procesadorIds = canalState.procesadorIds.filter((id) => id !== pid);
+        if (!canalState.procesadorIds.length) {
+          // al menos 1 siempre seleccionado
+          canalState.procesadorIds = [pid];
+          cb.checked = true;
+          const row = cb.closest('.proc-check-row');
+          if (row) row.classList.add('on');
+          return;
+        }
+      }
+      // Actualizar clases on/off
+      procChecksContainer.querySelectorAll('.proc-check-row').forEach((row) => {
+        const rowPid = row.dataset.pid;
+        row.classList.toggle('on', canalState.procesadorIds.includes(rowPid));
+      });
+      // Guardar en localStorage
+      localStorage.setItem(LS.procesadorIds, JSON.stringify(canalState.procesadorIds));
+      // Actualizar nota del procesador
+      syncProcNota();
+      renderCanalMedios();
+      calc();
+    });
+  }
 
   // Delegado de click para la lista de medios inline del canal (multi-select con checkboxes)
   $('canal-medios-list').addEventListener('click', (e) => {
     // Eliminar medio custom
     const delBtn = e.target.closest('.canal-medio-del');
     if (delBtn) {
-      const mid = delBtn.dataset.del;
-      const customKey = LS.customMedios + '_' + canalState.procesadorId;
+      const uid = delBtn.dataset.del;
+      const pid = uid.split('::')[0];
+      const mid = uid.split('::').slice(1).join('::');
+      const customKey = LS.customMedios + '_' + pid;
       const customs = JSON.parse(localStorage.getItem(customKey) || '[]');
       localStorage.setItem(customKey, JSON.stringify(customs.filter((m) => m.id !== mid)));
       const ck = getCanalMediosChecked();
-      ck.delete(mid);
+      ck.delete(uid);
       saveCanalMediosChecked(ck);
       renderCanalMedios();
+      calc();
       return;
     }
     // Toggle checkbox (click en checkbox O en la fila)
     const row = e.target.closest('.canal-medio-row');
     if (!row) return;
-    const mid = row.dataset.mid;
+    const uid = row.dataset.uid;
+    if (!uid) return;
     const ck = getCanalMediosChecked();
-    if (ck.has(mid)) ck.delete(mid); else ck.add(mid);
+    if (ck.has(uid)) ck.delete(uid); else ck.add(uid);
     saveCanalMediosChecked(ck);
     renderCanalMedios();
+    calc();
   });
 
   // Toggle formulario agregar medio
@@ -581,29 +692,34 @@
     const com = parseFloat($('nuevoMedioCom').value);
     if (!nombre) { $('nuevoMedioNombre').focus(); return; }
     if (isNaN(com) || com < 0 || com > 60) { $('nuevoMedioCom').focus(); return; }
-    const customKey = LS.customMedios + '_' + canalState.procesadorId;
+    const pid = canalState.procesadorIds[0];
+    const customKey = LS.customMedios + '_' + pid;
     const customs = JSON.parse(localStorage.getItem(customKey) || '[]');
     const id = 'custom_' + Date.now();
     customs.push({ id, label: nombre, comision: com, isCustom: true });
     localStorage.setItem(customKey, JSON.stringify(customs));
-    // Marcar como checked
+    // Marcar como checked (uid = pid::id)
+    const uid = pid + '::' + id;
     const ck = getCanalMediosChecked();
-    ck.add(id);
+    ck.add(uid);
     saveCanalMediosChecked(ck);
     $('nuevoMedioNombre').value = '';
     $('nuevoMedioCom').value = '';
     $('canal-add-form').style.display = 'none';
     renderCanalMedios();
+    calc();
   });
 
   // Descargar PDF de lista de medios
   $('exportMediosPdfBtn').addEventListener('click', () => {
-    const proc = PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorId);
+    const procNombre = canalState.procesadorIds.length === 1
+      ? (PROCESADORES_LOCAL.find((p) => p.id === canalState.procesadorIds[0]) || {}).nombre || ''
+      : canalState.procesadorIds.map((pid) => (PROCESADORES_LOCAL.find((p) => p.id === pid) || {}).nombre || pid).join(' + ');
     const base = Calc.precioPublicado(leerInputs());
     if (!base.ok) { toast('Calculá un precio primero para descargar la lista.'); return; }
     const allMedios = getCanalMedios();
     const checked = getCanalMediosChecked();
-    const selected = allMedios.filter((m) => checked.has(m.id) && m.comision !== null);
+    const selected = allMedios.filter((m) => checked.has(m.uid) && m.comision !== null);
     if (!selected.length) { toast('No hay medios seleccionados para exportar.'); return; }
 
     const rows = selected.map((m) => {
@@ -626,7 +742,7 @@
       '.footer{margin-top:20px;font-size:11px;color:#aaa}' +
       '</style></head><body>' +
       '<h2>Lista de precios</h2>' +
-      '<div class="fecha">' + (proc ? proc.nombre + ' · ' : '') + fecha + '</div>' +
+      '<div class="fecha">' + (procNombre ? procNombre + ' · ' : '') + fecha + '</div>' +
       '<table><thead><tr><th>Medio de cobro</th><th style="text-align:center">Comisión</th><th style="text-align:right">Cobrás</th></tr></thead>' +
       '<tbody>' + rows + '</tbody></table>' +
       '<div class="footer">Calculado con Costito · costito.online</div>' +
