@@ -36,7 +36,7 @@ const CostitoCalc = {
 
     const com  = (Number(comEfectiva) || 0) / 100;
     const ib   = (Number(iibb) || 0) / 100;
-    const mg   = Math.min(Number(margen) || 0, 95) / 100;
+    const mg   = (Number(margen) || 0) / 100;
     const denom = 1 - com - ib - mg;
 
     if (denom <= 0) {
