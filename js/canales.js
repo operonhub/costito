@@ -11,6 +11,7 @@ const PROCESADORES_LOCAL = [
     nombre: 'Mercado Pago',
     nota: 'Los % ya incluyen IVA. Verificá tu plan vigente en la app de MP.',
     medios: [
+      { id: 'efectivo',  label: 'Efectivo',              comision: 0    },
       { id: 'qr',        label: 'QR / Transferencia',   comision: 0.8  },
       { id: 'debito',    label: 'Débito',                comision: 1.5  },
       { id: 'credito1',  label: 'Crédito 1 cuota',       comision: 3.99 },
@@ -24,6 +25,7 @@ const PROCESADORES_LOCAL = [
     nombre: 'Nave / BBVA (cobro inmediato)',
     nota: 'Acreditación inmediata. Los % ya incluyen IVA. Verificá con tu ejecutivo.',
     medios: [
+      { id: 'efectivo',  label: 'Efectivo',           comision: 0    },
       { id: 'debito',   label: 'Débito',            comision: 1.3  },
       { id: 'credito1', label: 'Crédito 1 cuota',   comision: 3.2  },
       { id: 'credito3', label: 'Crédito 3 cuotas',  comision: 6.9  },
@@ -35,6 +37,7 @@ const PROCESADORES_LOCAL = [
     nombre: 'Nave / BBVA (cobro diferido)',
     nota: 'Acreditación a los 30 días. Menor comisión a cambio de esperar. Los % ya incluyen IVA.',
     medios: [
+      { id: 'efectivo',  label: 'Efectivo',           comision: 0   },
       { id: 'debito',   label: 'Débito',            comision: 0.6 },
       { id: 'credito1', label: 'Crédito 1 cuota',   comision: 1.8 },
       { id: 'credito3', label: 'Crédito 3 cuotas',  comision: 5.4 },
@@ -46,6 +49,7 @@ const PROCESADORES_LOCAL = [
     nombre: 'Ualá Bis',
     nota: 'Los % ya incluyen IVA. El QR sin costo. Verificá tu categoría en la app.',
     medios: [
+      { id: 'efectivo',  label: 'Efectivo',            comision: 0    },
       { id: 'qr',       label: 'QR / Transferencia', comision: 0    },
       { id: 'debito',   label: 'Débito',              comision: 1.5  },
       { id: 'credito1', label: 'Crédito 1 cuota',     comision: 3.49 },
@@ -68,6 +72,7 @@ const PROCESADORES_LOCAL = [
     nombre: 'Getnet (Santander)',
     nota: 'Los % ya incluyen IVA. Consultá con tu ejecutivo del banco.',
     medios: [
+      { id: 'efectivo',  label: 'Efectivo',            comision: 0    },
       { id: 'debito',    label: 'Débito',             comision: 1.5  },
       { id: 'credito1',  label: 'Crédito 1 cuota',    comision: 3.5  },
       { id: 'credito3',  label: 'Crédito 3 cuotas',   comision: 7.0  },
@@ -80,6 +85,7 @@ const PROCESADORES_LOCAL = [
     nombre: 'Fiserv / First Data',
     nota: 'Los % ya incluyen IVA. Las tasas varían por banco y contrato.',
     medios: [
+      { id: 'efectivo',  label: 'Efectivo',          comision: 0    },
       { id: 'debito',   label: 'Débito',           comision: 1.5  },
       { id: 'credito1', label: 'Crédito 1 cuota',  comision: 3.5  },
       { id: 'credito3', label: 'Crédito 3 cuotas', comision: 7.5  },
@@ -91,7 +97,8 @@ const PROCESADORES_LOCAL = [
     nombre: 'Mi procesador / otro',
     nota: 'Ingresá la comisión según tu contrato. Los % de los procesadores generalmente ya incluyen IVA.',
     medios: [
-      { id: 'custom', label: 'Mi medio de cobro', comision: null, editable: true },
+      { id: 'efectivo', label: 'Efectivo',         comision: 0    },
+      { id: 'custom',   label: 'Mi medio de cobro', comision: null, editable: true },
     ],
   },
 ];
