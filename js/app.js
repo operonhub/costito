@@ -916,6 +916,7 @@
   const DEL_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
 
   let catActiva = '';
+  let precioTargetProductId = null; // producto pre-seleccionado al abrir el modal desde "Agregar precio"
 
   function renderCatFilter() {
     const el = $('catFilter');
@@ -958,6 +959,8 @@
     ).join(''));
   }
 
+  const TIPO_COSTO_LABEL = { produccion: 'costo/u', servicio: 'costo/hora', importacion: 'costo unit.', reventa: 'costo' };
+
   function renderProds() {
     const list = $('plist');
     const n = state.productos.length;
@@ -988,13 +991,11 @@
       return;
     }
 
-    // Filter by tipo and then by category
     let pool = state.prodTipoActivo
       ? state.productos.filter((p) => (p.tipo || 'reventa') === state.prodTipoActivo)
       : state.productos;
     const visible = catActiva ? pool.filter((p) => p.categoria === catActiva) : pool;
 
-    // Empty state when tipo filter active but no products of that type
     if (!visible.length) {
       const info = state.prodTipoActivo && TIPO_EMPTY[state.prodTipoActivo];
       if (info) {
@@ -1009,24 +1010,45 @@
     }
 
     const showTipoBadge = !state.prodTipoActivo;
+
+    const ADD_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>';
+
     setHTML(list, visible.map((p) => {
       const tipo = p.tipo || 'reventa';
       const tipoBadge = showTipoBadge && tipo !== 'reventa'
         ? '<span class="tipo-tag">' + (TIPO_TABS.find((t) => t.id === tipo) || {}).label + '</span>'
         : '';
-      const prLabel = TIPO_PRECIO_LABEL[tipo] || 'a publicar';
+      const costoLabel = TIPO_COSTO_LABEL[tipo] || 'costo';
+
+      const preciosHtml = (p.precios && p.precios.length)
+        ? p.precios.map((pr) =>
+            '<div class="prod-precio-row">' +
+              '<div class="prod-precio-info">' +
+                '<span class="prod-precio-canal">' + escapeHtml(pr.canal) + '</span>' +
+                (pr.margen ? '<span class="prod-precio-margen">' + String(pr.margen).replace('.', ',') + '% margen</span>' : '') +
+              '</div>' +
+              '<span class="prod-precio-val">' + money(pr.precioARS) + '</span>' +
+              '<button class="prod-precio-del" data-del-precio="' + pr.id + '" aria-label="Borrar precio">×</button>' +
+            '</div>'
+          ).join('')
+        : '<p class="prod-no-precios">Sin precios de venta aún</p>';
+
       return '<div class="prod" data-id="' + p.id + '">' +
-        '<span class="pic">' + TAG_ICO + '</span>' +
-        '<div class="info">' +
-          (p.categoria ? '<span class="cat-tag">' + escapeHtml(p.categoria) + '</span>' : '') +
-          tipoBadge +
-          '<h4>' + escapeHtml(p.nombre) + (p.codigo ? ' <span class="sku-tag">' + escapeHtml(p.codigo) + '</span>' : '') + '</h4>' +
-          '<p>' + escapeHtml(p.sub) + '</p>' +
+        '<div class="prod-card-top">' +
+          '<span class="pic">' + TAG_ICO + '</span>' +
+          '<div class="info">' +
+            (p.categoria ? '<span class="cat-tag">' + escapeHtml(p.categoria) + '</span>' : '') +
+            tipoBadge +
+            '<h4>' + escapeHtml(p.nombre) + (p.codigo ? ' <span class="sku-tag">' + escapeHtml(p.codigo) + '</span>' : '') + '</h4>' +
+            '<p>' + costoLabel + ' · ' + money(p.costoARS) + '</p>' +
+          '</div>' +
+          '<button class="del" data-del="' + p.id + '" aria-label="Borrar producto">' + DEL_ICO + '</button>' +
         '</div>' +
-        '<div class="pr">' +
-          '<div style="text-align:right"><div class="n">' + money(p.precioARS) + '</div><div class="s">' + prLabel + '</div></div>' +
-          '<button class="del" data-del="' + p.id + '" aria-label="Borrar">' + DEL_ICO + '</button>' +
-        '</div></div>';
+        '<div class="prod-precios">' + preciosHtml + '</div>' +
+        '<button class="prod-add-precio" data-add-precio="' + p.id + '" data-costo="' + p.costoARS + '">' +
+          ADD_ICO + ' Agregar precio de venta' +
+        '</button>' +
+      '</div>';
     }).join(''));
   }
 
@@ -1069,17 +1091,41 @@
     setHTML(dl, all.map((c) => '<option value="' + escapeHtml(c) + '">').join(''));
   }
 
+  function populateModalLinkSel(preSelectedId) {
+    const sel = $('modalLinkSel');
+    const wrap = $('modalLinkWrap');
+    const newFields = $('modalNewProdFields');
+    if (!sel || !wrap) return;
+    if (!state.productos.length) {
+      wrap.style.display = 'none';
+      if (newFields) newFields.style.display = '';
+      return;
+    }
+    wrap.style.display = '';
+    setHTML(sel,
+      '<option value="">Nuevo producto</option>' +
+      state.productos.map((p) => '<option value="' + p.id + '">' + escapeHtml(p.nombre) + '</option>').join('')
+    );
+    if (preSelectedId) sel.value = preSelectedId;
+    function syncFields() {
+      const isNew = !sel.value;
+      if (newFields) newFields.style.display = isNew ? '' : 'none';
+      const titleEl = $('modalTitle');
+      const hintEl = $('modalHint');
+      if (titleEl) titleEl.textContent = isNew ? 'Guardar precio de venta' : 'Agregar precio de venta';
+      if (hintEl) hintEl.textContent = isNew
+        ? 'Ingresá el nombre del producto para organizarlo en tu lista.'
+        : 'Se va a agregar un precio de venta al producto seleccionado.';
+    }
+    sel.onchange = syncFields;
+    syncFields();
+  }
+
   function showSaveModal() {
     if (!window.CostitoAuth || !window.CostitoAuth.getUser()) {
       toast('Creá una cuenta para guardar tus productos en la nube');
       const authOverlay = $('authOverlay');
       if (authOverlay) { authOverlay.classList.add('on'); setTimeout(() => { const el = $('authEmail'); if (el) el.focus(); }, 60); }
-      return;
-    }
-    if (!Costito.isPremium() && state.productos.length >= PROD_LIMIT_FREE) {
-      toast('Llegaste al límite de 5 productos. ¡Pasate a Premium para guardar ilimitados! 🟢');
-      const btn = document.getElementById('goPremium');
-      if (btn) btn.closest('.acct-wrap') && document.getElementById('acctBtn').click();
       return;
     }
     const r = Calc.precioPublicado(leerInputs());
@@ -1089,8 +1135,12 @@
     $('modalCategoria').value = '';
     $('modalCodigo').value = '';
     populateCatList();
+    populateModalLinkSel(precioTargetProductId);
+    precioTargetProductId = null;
     $('saveOverlay').classList.add('on');
-    setTimeout(() => $('modalNombre').focus(), 60);
+    const linkSel = $('modalLinkSel');
+    const focusEl = (linkSel && linkSel.value) ? linkSel : $('modalNombre');
+    setTimeout(() => focusEl.focus(), 60);
   }
 
   function closeSaveModal() {
@@ -1099,69 +1149,91 @@
     pendingServicio = null;
     pendingProduccion = null;
     pendingRecipeData = null;
+    const linkWrap = $('modalLinkWrap');
+    if (linkWrap) linkWrap.style.display = 'none';
+    const newFields = $('modalNewProdFields');
+    if (newFields) newFields.style.display = '';
   }
 
   function confirmSave() {
     if (!pendingCalcResult && !pendingServicio && !pendingProduccion) return;
+
+    const linkSel = $('modalLinkSel');
+    const linkId = (linkSel && linkSel.value) ? linkSel.value : '';
+    const isNewProd = !linkId;
+
     const fallback = pendingProduccion ? 'Producción sin nombre' : pendingServicio ? 'Servicio sin nombre' : 'Producto sin nombre';
-    const nombre = $('modalNombre').value.trim() || fallback;
+    const nombre = ($('modalNombre').value || '').trim() || fallback;
     const categoria = ($('modalCategoria').value || '').trim();
     const codigo = ($('modalCodigo').value || '').trim();
     addCat(categoria);
-    let prod;
-    if (pendingProduccion) {
-      prod = {
-        nombre,
-        sub: ['Costo de producción', new Date().toLocaleDateString('es-AR')].join(' · '),
-        precioARS: pendingProduccion,
-        ganancia: 0,
-        costo: pendingProduccion,
-        margen: 0,
-        canalNombre: 'Producción propia',
-        categoria,
-        codigo,
-        tipo: 'produccion',
-        recipeData: pendingRecipeData,
-      };
-    } else if (pendingServicio) {
-      const r = pendingServicio;
-      prod = {
-        nombre,
-        sub: ['Servicio por hora', new Date().toLocaleDateString('es-AR')].join(' · '),
-        precioARS: r.precioHora,
-        ganancia: 0,
-        costo: r.costosFijos || 0,
-        margen: 0,
-        canalNombre: 'Servicio por hora',
-        categoria,
-        codigo,
-        tipo: 'servicio',
-      };
-    } else {
-      const inputs = leerInputs();
-      const canalNom = canalNombreDisplay();
-      const margenGuardar = Math.round(pendingCalcResult.margenReal * 10) / 10;
-      prod = {
-        nombre,
-        sub: [canalNom, 'margen ' + margenGuardar + '%', new Date().toLocaleDateString('es-AR')].join(' · '),
-        precioARS: pendingCalcResult.precio,
-        ganancia: pendingCalcResult.ganancia,
-        costo: inputs.costo,
-        margen: margenGuardar,
-        canalNombre: canalNom,
-        categoria,
-        codigo,
-        tipo: 'reventa',
-      };
+
+    if (isNewProd && !Costito.isPremium() && state.productos.length >= PROD_LIMIT_FREE) {
+      toast('Llegaste al límite de 5 productos. ¡Pasate a Premium para guardar ilimitados! 🟢');
+      return;
     }
+
     const btn = $('modalConfirm');
     btn.disabled = true;
     closeSaveModal();
-    window.CostitoAuth.saveProduct(prod)
-      .then((id) => {
-        state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria, codigo, tipo: prod.tipo || 'reventa' });
+
+    const hoy = new Date().toLocaleDateString('es-AR');
+
+    function buildPriceData() {
+      if (pendingServicio) {
+        return { canal: 'Servicio por hora', margen: 0, precioARS: pendingServicio.precioHora, ganancia: 0 };
+      }
+      const canalNom = canalNombreDisplay();
+      const margenReal = Math.round(pendingCalcResult.margenReal * 10) / 10;
+      return { canal: canalNom, margen: margenReal, precioARS: pendingCalcResult.precio, ganancia: pendingCalcResult.ganancia };
+    }
+
+    const hasPrice = !!(pendingCalcResult || pendingServicio);
+
+    // Caso A: agregar precio a producto existente
+    if (!isNewProd && hasPrice) {
+      const priceData = buildPriceData();
+      window.CostitoAuth.savePrecio(linkId, priceData)
+        .then((priceId) => {
+          const prod = state.productos.find((p) => String(p.id) === linkId);
+          if (prod) {
+            prod.precios = prod.precios || [];
+            prod.precios.push({ id: priceId, canal: priceData.canal, margen: priceData.margen, precioARS: priceData.precioARS, ganancia: priceData.ganancia, fecha: hoy });
+          }
+          renderProds();
+          toast('Precio de venta guardado');
+        })
+        .catch((err) => toast('Error al guardar: ' + err.message))
+        .finally(() => { btn.disabled = false; });
+      return;
+    }
+
+    // Caso B: nuevo producto
+    let prodData;
+    if (pendingProduccion) {
+      prodData = { nombre, costo: pendingProduccion, tipo: 'produccion', categoria, codigo, canalNombre: 'Producción propia', recipeData: pendingRecipeData };
+    } else if (pendingServicio) {
+      prodData = { nombre, costo: pendingServicio.costosFijos || 0, tipo: 'servicio', categoria, codigo, canalNombre: 'Servicio por hora' };
+    } else {
+      const inputs = leerInputs();
+      const canalNom = canalNombreDisplay();
+      prodData = { nombre, costo: inputs.costo, tipo: 'reventa', categoria, codigo, canalNombre: canalNom, margen: Math.round(pendingCalcResult.margenReal * 10) / 10 };
+    }
+
+    window.CostitoAuth.saveProduct(prodData)
+      .then((productId) => {
+        const newProd = { id: productId, nombre: prodData.nombre, costoARS: prodData.costo, categoria, codigo, tipo: prodData.tipo, recipeData: prodData.recipeData || null, precios: [] };
+        state.productos.unshift(newProd);
+        if (hasPrice) {
+          const priceData = buildPriceData();
+          return window.CostitoAuth.savePrecio(productId, priceData).then((priceId) => {
+            newProd.precios.push({ id: priceId, canal: priceData.canal, margen: priceData.margen, precioARS: priceData.precioARS, ganancia: priceData.ganancia, fecha: hoy });
+          });
+        }
+      })
+      .then(() => {
         renderProds();
-        toast('Guardado en mis productos');
+        toast(pendingProduccion ? 'Producto guardado' : 'Precio de venta guardado');
       })
       .catch((err) => toast('Error al guardar: ' + err.message))
       .finally(() => { btn.disabled = false; });
@@ -1173,7 +1245,7 @@
   $('saveOverlay').addEventListener('click', (e) => { if (e.target === $('saveOverlay')) closeSaveModal(); });
   $('modalNombre').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmSave(); });
 
-  // Borrar producto / CTAs (delegación)
+  // Borrar producto / precio / CTAs (delegación)
   $('plist').addEventListener('click', (e) => {
     if (e.target.closest('.reg-teaser-btn')) {
       const goto = e.target.closest('.reg-teaser-btn').dataset.gotoTab;
@@ -1181,16 +1253,44 @@
       document.getElementById('acctBtn').click();
       return;
     }
-    const b = e.target.closest('[data-del]');
-    if (!b) return;
-    const id = b.dataset.del;
-    window.CostitoAuth.deleteProduct(id)
-      .then(() => {
-        state.productos = state.productos.filter((p) => String(p.id) !== id);
-        renderProds();
-        toast('Producto borrado');
-      })
-      .catch((err) => toast('Error al borrar: ' + err.message));
+
+    // Borrar solo un precio de venta
+    const delPrecioBtn = e.target.closest('[data-del-precio]');
+    if (delPrecioBtn) {
+      const priceId = delPrecioBtn.dataset.delPrecio;
+      window.CostitoAuth.deletePrecio(priceId)
+        .then(() => {
+          state.productos.forEach((p) => {
+            p.precios = (p.precios || []).filter((pr) => String(pr.id) !== priceId);
+          });
+          renderProds();
+          toast('Precio borrado');
+        })
+        .catch((err) => toast('Error al borrar: ' + err.message));
+      return;
+    }
+
+    // Borrar producto entero (con todos sus precios, CASCADE en BD)
+    const delBtn = e.target.closest('[data-del]');
+    if (delBtn) {
+      const id = delBtn.dataset.del;
+      window.CostitoAuth.deleteProduct(id)
+        .then(() => {
+          state.productos = state.productos.filter((p) => String(p.id) !== id);
+          renderProds();
+          toast('Producto borrado');
+        })
+        .catch((err) => toast('Error al borrar: ' + err.message));
+      return;
+    }
+
+    // Ir a calculadora para agregar un precio de venta al producto
+    const addPrecioBtn = e.target.closest('[data-add-precio]');
+    if (addPrecioBtn) {
+      precioTargetProductId = addPrecioBtn.dataset.addPrecio;
+      const costoARS = parseFloat(addPrecioBtn.dataset.costo) || 0;
+      Costito.usarComoCosto(costoARS);
+    }
   });
 
   // ============================================================
@@ -1203,20 +1303,26 @@
     if (!r.ok) return Promise.reject(new Error(r.motivo || 'No se pudo calcular el precio'));
     const canalNom = canalNombreDisplay();
     const margenReal = Math.round(r.margenReal * 10) / 10;
-    const prod = {
+    const prodData = {
       nombre: nombre || 'Producto sin nombre',
-      sub: [canalNom, 'margen ' + margenReal + '%', new Date().toLocaleDateString('es-AR')].join(' · '),
-      precioARS: r.precio,
-      ganancia: r.ganancia,
       costo: Number(costo) || 0,
       margen: margenReal,
       canalNombre: canalNom,
       categoria: categoria || '',
       tipo,
     };
-    return window.CostitoAuth.saveProduct(prod).then((id) => {
-      state.productos.unshift({ id, nombre: prod.nombre, sub: prod.sub, precioARS: prod.precioARS, ganancia: prod.ganancia, categoria: prod.categoria, tipo });
-      return prod;
+    return window.CostitoAuth.saveProduct(prodData).then((productId) => {
+      const priceData = { canal: canalNom, margen: margenReal, precioARS: r.precio, ganancia: r.ganancia };
+      return window.CostitoAuth.savePrecio(productId, priceData).then((priceId) => {
+        const newProd = {
+          id: productId, nombre: prodData.nombre, costoARS: prodData.costo,
+          categoria: prodData.categoria, codigo: '', tipo,
+          recipeData: null,
+          precios: [{ id: priceId, canal: canalNom, margen: margenReal, precioARS: r.precio, ganancia: r.ganancia, fecha: new Date().toLocaleDateString('es-AR') }],
+        };
+        state.productos.unshift(newProd);
+        return { ...prodData, precio: r.precio };
+      });
     });
   };
   // Datos de la config actual para mostrarlos en el preview del importador
@@ -1242,6 +1348,10 @@
     $('modalCategoria').value = '';
     $('modalCodigo').value = '';
     populateCatList();
+    const lw = $('modalLinkWrap'); if (lw) lw.style.display = 'none';
+    const nf = $('modalNewProdFields'); if (nf) nf.style.display = '';
+    const th = $('modalTitle'); if (th) th.textContent = 'Guardar servicio';
+    const mh = $('modalHint'); if (mh) mh.textContent = 'Ingresá el nombre del servicio para organizarlo en tu lista.';
     $('saveOverlay').classList.add('on');
     setTimeout(() => $('modalNombre').focus(), 60);
   };
@@ -1266,6 +1376,10 @@
     $('modalCategoria').value = '';
     $('modalCodigo').value = '';
     populateCatList();
+    const lw = $('modalLinkWrap'); if (lw) lw.style.display = 'none';
+    const nf = $('modalNewProdFields'); if (nf) nf.style.display = '';
+    const th = $('modalTitle'); if (th) th.textContent = 'Guardar producto de producción';
+    const mh = $('modalHint'); if (mh) mh.textContent = 'Ingresá el nombre del producto. Desde "Mis productos" podés agregarle precios de venta después.';
     $('saveOverlay').classList.add('on');
     setTimeout(() => $('modalNombre').focus(), 60);
   };
@@ -1275,8 +1389,12 @@
   // ============================================================
   $('expCsv').addEventListener('click', () => {
     if (!state.productos.length) return toast('No hay productos para exportar');
-    const rows = [['Producto', 'Detalle', 'Precio (ARS)']].concat(
-      state.productos.map((p) => [p.nombre, p.sub, Math.round(p.precioARS)])
+    const rows = [['Producto', 'Canal de venta', 'Margen', 'Precio de venta (ARS)', 'Costo (ARS)']].concat(
+      state.productos.flatMap((p) =>
+        (p.precios && p.precios.length)
+          ? p.precios.map((pr) => [p.nombre, pr.canal, (pr.margen || 0) + '%', Math.round(pr.precioARS), Math.round(p.costoARS)])
+          : [[p.nombre, '—', '—', '—', Math.round(p.costoARS)]]
+      )
     );
     const csv = rows.map((r) => r.map((c) => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1311,7 +1429,16 @@
     const lines = [titulo, ''];
     cats.forEach((cat) => {
       if (multiCat && cat) lines.push('*' + cat + '*');
-      groups[cat].forEach((p) => lines.push('▸ ' + p.nombre + ' · ' + money(p.precioARS)));
+      groups[cat].forEach((p) => {
+        if (!p.precios || !p.precios.length) {
+          lines.push('▸ ' + p.nombre + ' (costo: ' + money(p.costoARS) + ')');
+        } else if (p.precios.length === 1) {
+          lines.push('▸ ' + p.nombre + ' · ' + money(p.precios[0].precioARS));
+        } else {
+          lines.push('▸ *' + p.nombre + '*');
+          p.precios.forEach((pr) => lines.push('  · ' + pr.canal + ': ' + money(pr.precioARS)));
+        }
+      });
       if (multiCat && cat) lines.push('');
     });
     lines.push('');
@@ -1326,10 +1453,17 @@
   function printProductosPdf() {
     if (!state.productos.length) return toast('No hay productos para exportar');
     const date = new Date().toLocaleDateString('es-AR');
-    const rows = state.productos.map((p) =>
-      '<tr><td><div class="n">' + escapeHtml(p.nombre) + '</div><div class="d">' + escapeHtml(p.sub) + '</div></td>' +
-      '<td class="pr">' + money(p.precioARS) + '</td></tr>'
-    ).join('');
+    const rows = state.productos.flatMap((p) => {
+      if (!p.precios || !p.precios.length) {
+        return ['<tr><td><div class="n">' + escapeHtml(p.nombre) + '</div><div class="d">Costo: ' + money(p.costoARS) + '</div></td><td class="pr">—</td></tr>'];
+      }
+      return p.precios.map((pr, i) =>
+        '<tr><td>' +
+        (i === 0 ? '<div class="n">' + escapeHtml(p.nombre) + '</div>' : '') +
+        '<div class="d">' + escapeHtml(pr.canal) + (pr.margen ? ' · ' + String(pr.margen).replace('.', ',') + '% margen' : '') + '</div></td>' +
+        '<td class="pr">' + money(pr.precioARS) + '</td></tr>'
+      );
+    }).join('');
     const neg = (window.CostitoNegocio && window.CostitoNegocio.get) ? window.CostitoNegocio.get() : { nombre: '', logo: '' };
     const header = (neg.logo || neg.nombre)
       ? '<div class="biz">' + (neg.logo ? '<img class="bizlogo" src="' + neg.logo + '">' : '') +

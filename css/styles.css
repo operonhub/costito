@@ -223,20 +223,34 @@ select option{background:var(--papel);color:var(--tinta)}
 
 /* ---------- PRODUCTS ---------- */
 .plist{display:grid;gap:12px}
-.prod{display:flex;align-items:center;gap:14px;background:var(--papel);border:1.5px solid var(--linea);
-  border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.prod{display:flex;flex-direction:column;background:var(--papel);border:1.5px solid var(--linea);
+  border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.prod-card-top{display:flex;align-items:center;gap:14px;padding:14px 16px}
 .prod .pic{width:46px;height:46px;border-radius:11px;background:var(--crema-2);display:grid;place-items:center;
   flex:0 0 auto;font-size:22px}
 .prod .info{flex:1;min-width:0}
 .prod .info h4{font-family:var(--serif);font-size:16px;font-weight:700}
 .prod .info p{font-size:12.5px;color:var(--tinta-soft);margin-top:1px}
-.prod .pr{text-align:right;flex:0 0 auto;display:flex;align-items:center;gap:10px}
-.prod .pr .n{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--verde)}
-.prod .pr .s{font-size:11.5px;color:var(--tinta-soft)}
 .prod .del{background:transparent;border:0;color:var(--tinta-soft);cursor:pointer;padding:4px;border-radius:7px;
-  display:grid;place-items:center;transition:.15s}
+  display:grid;place-items:center;transition:.15s;flex-shrink:0}
 .prod .del:hover{color:var(--naranja);background:var(--crema-2)}
 .prod .del svg{width:16px;height:16px}
+.prod-precios{border-top:1px solid var(--linea);padding:8px 16px;display:flex;flex-direction:column;gap:5px}
+.prod-precio-row{display:flex;align-items:center;gap:8px}
+.prod-precio-info{flex:1;min-width:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.prod-precio-canal{font-size:13px;font-weight:600;color:var(--tinta)}
+.prod-precio-margen{font-size:11px;color:var(--tinta-soft);background:var(--crema-2);padding:2px 7px;border-radius:20px;white-space:nowrap}
+.prod-precio-val{font-family:var(--serif);font-weight:700;font-size:16px;color:var(--verde);white-space:nowrap;flex-shrink:0}
+.prod-precio-del{background:transparent;border:0;color:var(--tinta-soft);cursor:pointer;padding:2px 6px;
+  border-radius:6px;font-size:17px;line-height:1;transition:.15s;flex-shrink:0}
+.prod-precio-del:hover{color:var(--naranja);background:var(--crema-2)}
+.prod-no-precios{font-size:12.5px;color:var(--tinta-soft);margin:2px 0;font-style:italic}
+.prod-add-precio{width:100%;border:none;background:none;color:var(--verde);font-family:var(--sans);
+  font-size:12.5px;font-weight:600;cursor:pointer;padding:9px 16px;text-align:left;
+  border-top:1px solid var(--linea);display:flex;align-items:center;gap:6px;transition:.15s}
+.prod-add-precio:hover{background:var(--crema-2)}
+.prod-add-precio svg{width:15px;height:15px;flex-shrink:0}
+.modal-label{font-size:13px;font-weight:600;color:var(--tinta-soft);display:block}
 .empty{text-align:center;padding:30px 16px;color:var(--tinta-soft);font-size:14px;line-height:1.6}
 .empty svg{width:40px;height:40px;opacity:.35;margin-bottom:10px}
 

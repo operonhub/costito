@@ -465,20 +465,30 @@
 
 </div>
 
-<!-- Modal: guardar producto -->
+<!-- Modal: guardar producto / precio -->
 <div class="overlay" id="saveOverlay">
   <div class="modal-box">
-    <h3 class="modal-title">¿Cómo se llama el producto?</h3>
-    <p class="modal-hint">Ingresá el nombre, la categoría y el código para organizarlo en tu lista.</p>
-    <div class="in" style="margin:14px 0 10px">
-      <input type="text" id="modalNombre" placeholder="Ej: Remera talle M" maxlength="80" />
+    <h3 class="modal-title" id="modalTitle">Guardar precio de venta</h3>
+    <p class="modal-hint" id="modalHint">Ingresá el nombre del producto para organizarlo en tu lista.</p>
+    <div id="modalLinkWrap" style="display:none; margin:14px 0 0">
+      <label class="modal-label">¿A qué producto pertenece este precio?</label>
+      <div class="in" style="margin:6px 0 10px">
+        <select id="modalLinkSel">
+          <option value="">Nuevo producto</option>
+        </select>
+      </div>
     </div>
-    <div class="in" style="margin-bottom:10px">
-      <input type="text" id="modalCategoria" list="categoriasData" placeholder="Categoría (podés escribir la tuya)" maxlength="50" autocomplete="off" />
-      <datalist id="categoriasData"></datalist>
-    </div>
-    <div class="in" style="margin-bottom:14px">
-      <input type="text" id="modalCodigo" placeholder="Código / SKU (opcional)" maxlength="40" />
+    <div id="modalNewProdFields">
+      <div class="in" style="margin:14px 0 10px">
+        <input type="text" id="modalNombre" placeholder="Ej: Remera talle M" maxlength="80" />
+      </div>
+      <div class="in" style="margin-bottom:10px">
+        <input type="text" id="modalCategoria" list="categoriasData" placeholder="Categoría (podés escribir la tuya)" maxlength="50" autocomplete="off" />
+        <datalist id="categoriasData"></datalist>
+      </div>
+      <div class="in" style="margin-bottom:14px">
+        <input type="text" id="modalCodigo" placeholder="Código / SKU (opcional)" maxlength="40" />
+      </div>
     </div>
     <div class="modal-btns">
       <button id="modalCancel">Cancelar</button>

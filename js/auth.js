@@ -155,33 +155,39 @@ window.CostitoAuth = (function () {
 
   function loadProducts() {
     return sb.from('productos')
-      .select('id, nombre, precio_publicar, ganancia, canal_nombre, margen, categoria, codigo, tipo, recipe_data, created_at')
+      .select('id, nombre, costo, categoria, codigo, tipo, recipe_data, created_at, product_prices(id, canal_nombre, margen, precio_publicar, ganancia, created_at)')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) throw new Error(error.message);
         return (data || []).map((r) => ({
           id: r.id,
           nombre: r.nombre,
-          sub: [r.canal_nombre, r.margen ? 'margen ' + r.margen + '%' : null,
-                new Date(r.created_at).toLocaleDateString('es-AR')].filter(Boolean).join(' · '),
-          precioARS: r.precio_publicar,
-          ganancia: r.ganancia,
+          costoARS: r.costo || 0,
           categoria: r.categoria || '',
           codigo: r.codigo || '',
           tipo: r.tipo || 'reventa',
           recipeData: r.recipe_data || null,
+          createdAt: r.created_at,
+          precios: (r.product_prices || [])
+            .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+            .map((p) => ({
+              id: p.id,
+              canal: p.canal_nombre,
+              margen: p.margen,
+              precioARS: p.precio_publicar,
+              ganancia: p.ganancia,
+              fecha: new Date(p.created_at).toLocaleDateString('es-AR'),
+            })),
         }));
       });
   }
 
-  function saveProduct({ nombre, precioARS, ganancia, costo, margen, canalNombre, categoria, codigo, tipo, recipeData }) {
+  function saveProduct({ nombre, costo, canalNombre, margen, categoria, codigo, tipo, recipeData }) {
     if (!currentUser) return Promise.reject(new Error('No hay sesión activa.'));
     return sb.from('productos')
       .insert({
         user_id: currentUser.id,
         nombre,
-        precio_publicar: precioARS,
-        ganancia: ganancia || 0,
         costo: costo || 0,
         margen: margen || 0,
         canal_nombre: canalNombre || '',
@@ -202,13 +208,38 @@ window.CostitoAuth = (function () {
       });
   }
 
+  function savePrecio(productId, { canal, margen, precioARS, ganancia }) {
+    if (!currentUser) return Promise.reject(new Error('No hay sesión activa.'));
+    return sb.from('product_prices')
+      .insert({
+        product_id: productId,
+        user_id: currentUser.id,
+        canal_nombre: canal || '',
+        margen: margen || 0,
+        precio_publicar: precioARS || 0,
+        ganancia: ganancia || 0,
+      })
+      .select('id')
+      .single()
+      .then(({ data, error }) => {
+        if (error) throw new Error(error.message);
+        return data.id;
+      });
+  }
+
+  function deletePrecio(id) {
+    return sb.from('product_prices').delete().eq('id', id).then(({ error }) => {
+      if (error) throw new Error(error.message);
+    });
+  }
+
   function deleteProduct(id) {
     return sb.from('productos').delete().eq('id', id).then(({ error }) => {
       if (error) throw new Error(error.message);
     });
   }
 
-  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut, resetPassword, loadProducts, saveProduct, deleteProduct };
+  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut, resetPassword, loadProducts, saveProduct, savePrecio, deletePrecio, deleteProduct };
 })();
 
 /* ---------- 3) WIRING DE LA UI ---------- */
