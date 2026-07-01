@@ -865,6 +865,83 @@ details[open] .comp-chev{transform:rotate(180deg)}
 .hb-reopen svg{width:13px;height:13px}
 
 /* ============================================================
+   PRODUCCIÓN v2 — Insumos + Receta
+   ============================================================ */
+
+/* Grilla insumos: nombre | cant | unidad | precio total | $ por unidad | del */
+.pinsumo-header{display:grid;
+  grid-template-columns:1.6fr 90px 80px 130px 120px 38px;
+  gap:6px;padding:0 2px 8px;font-size:10.5px;font-weight:700;color:var(--tinta-soft);
+  text-transform:uppercase;letter-spacing:.04em}
+.pinsumo-row{display:grid;
+  grid-template-columns:1.6fr 90px 80px 130px 120px 38px;
+  gap:6px;align-items:center;margin-bottom:7px}
+.pinsumo-pu{font-family:var(--serif);font-weight:700;font-size:13.5px;color:var(--verde);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Grilla receta: insumo dropdown | cant usada | unidad | $ unitario | costo | del */
+.preceta-header{display:grid;
+  grid-template-columns:1.8fr 90px 60px 100px 90px 38px;
+  gap:6px;padding:0 2px 8px;font-size:10.5px;font-weight:700;color:var(--tinta-soft);
+  text-transform:uppercase;letter-spacing:.04em}
+.preceta-row{display:grid;
+  grid-template-columns:1.8fr 90px 60px 100px 90px 38px;
+  gap:6px;align-items:center;margin-bottom:7px}
+.preceta-unit{font-size:13px;font-weight:600;color:var(--tinta-soft)}
+.preceta-pu{font-size:13px;font-weight:600;color:var(--tinta-soft);white-space:nowrap}
+.preceta-costo{font-family:var(--serif);font-weight:700;font-size:14px;color:var(--verde);
+  text-align:right;white-space:nowrap}
+.preceta-ins-sel{cursor:pointer}
+.prod-unit-sel{width:72px!important;padding:10px 4px!important;
+  -webkit-appearance:auto!important;appearance:auto!important;cursor:pointer}
+
+/* Empty state */
+.prod-empty{font-size:13px;color:var(--tinta-soft);text-align:center;padding:8px 0 4px;line-height:1.5}
+
+/* Modal confirmación eliminar insumo en uso */
+.prod-confirm{background:var(--crema);border:1.5px solid var(--naranja);
+  border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.prod-confirm-txt{font-size:13.5px;color:var(--tinta);margin-bottom:11px;line-height:1.5}
+.prod-confirm-btns{display:flex;gap:8px;justify-content:flex-end}
+.prod-confirm-no{background:transparent;border:1.5px solid var(--linea);border-radius:9px;
+  padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:600;
+  color:var(--tinta-soft);cursor:pointer;transition:.15s}
+.prod-confirm-no:hover{border-color:var(--tinta-soft)}
+.prod-confirm-yes{background:var(--naranja);color:#fff;border:none;border-radius:9px;
+  padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.prod-confirm-yes:hover{filter:brightness(.92)}
+
+/* Mobile ≤600px */
+@media(max-width:600px){
+  .pinsumo-header,.preceta-header{display:none}
+  .pinsumo-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 38px;
+    grid-template-rows:auto auto auto;
+    gap:6px;padding-bottom:10px;margin-bottom:8px;
+    border-bottom:1px solid var(--crema-2)}
+  .pinsumo-row>:nth-child(1){grid-column:1/-1}
+  .pinsumo-row>:nth-child(2){grid-column:1}
+  .pinsumo-row>:nth-child(3){grid-column:2}
+  .pinsumo-row>:nth-child(4){grid-column:1}
+  .pinsumo-row>:nth-child(5){grid-column:2;font-size:13px}
+  .pinsumo-row>:nth-child(6){grid-row:1;grid-column:3;align-self:start}
+  .preceta-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 38px;
+    grid-template-rows:auto auto;
+    gap:6px;padding-bottom:10px;margin-bottom:8px;
+    border-bottom:1px solid var(--crema-2)}
+  .preceta-row>:nth-child(1){grid-column:1/-1}
+  .preceta-row>:nth-child(2){grid-column:1}
+  .preceta-row>:nth-child(3){grid-column:2}
+  .preceta-row>:nth-child(4){display:none}
+  .preceta-row>:nth-child(5){grid-column:1/-1;text-align:right;font-size:16px}
+  .preceta-row>:nth-child(6){grid-row:1;grid-column:3;align-self:start}
+  .pinsumo-row .in-bare,.preceta-row .in-bare,.prod-unit-sel,.preceta-ins-sel{font-size:16px!important}
+}
+
+/* ============================================================
    PROMO BAR — banda de lanzamiento
    ============================================================ */
 .promo-bar{position:relative;display:flex;align-items:center;justify-content:center;
