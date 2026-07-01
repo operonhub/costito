@@ -77,7 +77,7 @@
       '<div class="card" id="pinsumo-card">',
         '<div class="card-h">',
           '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg></span>',
-          '<div><h3>Insumos</h3><p>Cargá tus materias primas una sola vez. Después las usás en todas las recetas.</p></div>',
+          '<div><h3>Insumos</h3><p>Cargá tus materias primas una sola vez. Después las usás en todas las composiciones.</p></div>',
         '</div>',
         '<div id="pinsumo-header" class="ping-header pinsumo-header">',
           '<span>Insumo</span>',
@@ -95,7 +95,7 @@
       '<div class="card" id="preceta-card" style="margin-top:16px">',
         '<div class="card-h">',
           '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>',
-          '<div><h3>Receta</h3><p>Elegí los insumos que usás y cuánto necesitás de cada uno para esta tanda.</p></div>',
+          '<div><h3>Composición</h3><p>Elegí los insumos que usás y cuánto necesitás de cada uno para esta tanda.</p></div>',
         '</div>',
         '<div id="preceta-header" class="ping-header preceta-header">',
           '<span>Insumo</span>',
@@ -106,7 +106,7 @@
           '<span></span>',
         '</div>',
         '<div id="preceta-list"></div>',
-        '<button class="s-add" id="preceta-add" type="button">+ Agregar insumo a la receta</button>',
+        '<button class="s-add" id="preceta-add" type="button">+ Agregar insumo a la composición</button>',
         '<div class="imp-sub" id="preceta-subtotal" style="margin-top:12px;display:none">',
           '<span>Subtotal materia prima</span><span id="preceta-sub-val">$ —</span>',
         '</div>',
@@ -291,7 +291,7 @@
     if (enUso) {
       pendingDelInsId = id;
       const ins = insumos.find(i => i.id === id);
-      showConfirm((ins?.nombre ? '"' + ins.nombre + '"' : 'Este insumo') + ' se está usando en la receta. Si lo eliminás, se va a quitar también de ahí. ¿Confirmás?');
+      showConfirm((ins?.nombre ? '"' + ins.nombre + '"' : 'Este insumo') + ' se está usando en la composición. Si lo eliminás, se va a quitar también de ahí. ¿Confirmás?');
     } else {
       insumos = insumos.filter(i => i.id !== id);
       save();
@@ -341,8 +341,8 @@
       if (header) header.style.display = 'none';
       if (subtotal) subtotal.style.display = 'none';
       list.innerHTML = !insumos.length
-        ? '<p class="prod-empty">Primero cargá los insumos arriba, después armás la receta acá.</p>'
-        : '<p class="prod-empty">Tocá "+ Agregar insumo a la receta" para armar tu receta.</p>';
+        ? '<p class="prod-empty">Primero cargá los insumos arriba, después armás la composición acá.</p>'
+        : '<p class="prod-empty">Tocá "+ Agregar insumo a la composición" para armar tu composición.</p>';
       return;
     }
 
