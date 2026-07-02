@@ -239,7 +239,51 @@ window.CostitoAuth = (function () {
     });
   }
 
-  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut, resetPassword, loadProducts, saveProduct, savePrecio, deletePrecio, deleteProduct };
+  function updateProduct(id, { costo, recipeData }) {
+    if (!currentUser) return Promise.reject(new Error('No hay sesión activa.'));
+    return sb.from('productos')
+      .update({ costo: costo || 0, recipe_data: recipeData || null })
+      .eq('id', id)
+      .eq('user_id', currentUser.id)
+      .then(({ error }) => { if (error) throw new Error(error.message); });
+  }
+
+  function loadInsumos() {
+    if (!currentUser) return Promise.resolve([]);
+    return sb.from('insumos')
+      .select('id, nombre, cantidad_comprada, unidad, precio_total')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: true })
+      .then(({ data, error }) => {
+        if (error) throw new Error(error.message);
+        return (data || []).map((r) => ({
+          supabaseId: r.id,
+          nombre: r.nombre,
+          cantidadComprada: r.cantidad_comprada,
+          unidad: r.unidad,
+          precioTotal: r.precio_total,
+        }));
+      });
+  }
+
+  function upsertInsumo({ supabaseId, nombre, cantidadComprada, unidad, precioTotal }) {
+    if (!currentUser) return Promise.resolve(null);
+    const row = { nombre, cantidad_comprada: cantidadComprada || 0, unidad, precio_total: precioTotal || 0 };
+    if (supabaseId) {
+      return sb.from('insumos').update(row).eq('id', supabaseId).eq('user_id', currentUser.id)
+        .then(({ error }) => { if (error) throw new Error(error.message); return supabaseId; });
+    }
+    return sb.from('insumos').insert({ ...row, user_id: currentUser.id }).select('id').single()
+      .then(({ data, error }) => { if (error) throw new Error(error.message); return data.id; });
+  }
+
+  function deleteInsumo(supabaseId) {
+    if (!supabaseId || !currentUser) return Promise.resolve();
+    return sb.from('insumos').delete().eq('id', supabaseId).eq('user_id', currentUser.id)
+      .then(({ error }) => { if (error) throw new Error(error.message); });
+  }
+
+  return { getUser, onChange, signInWithEmail, signInWithGoogle, signOut, resetPassword, loadProducts, saveProduct, savePrecio, deletePrecio, deleteProduct, updateProduct, loadInsumos, upsertInsumo, deleteInsumo };
 })();
 
 /* ---------- 3) WIRING DE LA UI ---------- */

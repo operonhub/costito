@@ -1033,6 +1033,7 @@
           ).join('')
         : '<p class="prod-no-precios">Sin precios de venta aún</p>';
 
+      const hasRecipe = p.tipo === 'produccion' && p.recipeData;
       return '<div class="prod" data-id="' + p.id + '">' +
         '<div class="prod-card-top">' +
           '<span class="pic">' + TAG_ICO + '</span>' +
@@ -1040,10 +1041,19 @@
             (p.categoria ? '<span class="cat-tag">' + escapeHtml(p.categoria) + '</span>' : '') +
             tipoBadge +
             '<h4>' + escapeHtml(p.nombre) + (p.codigo ? ' <span class="sku-tag">' + escapeHtml(p.codigo) + '</span>' : '') + '</h4>' +
-            '<p>' + costoLabel + ' · ' + money(p.costoARS) + '</p>' +
+            '<p>' + costoLabel + ' · ' + money(p.costoARS) +
+              ' <button class="prod-edit-ico" data-edit-costo="' + p.id + '" title="Editar costo" aria-label="Editar costo">✏</button>' +
+            '</p>' +
           '</div>' +
           '<button class="del" data-del="' + p.id + '" aria-label="Borrar producto">' + DEL_ICO + '</button>' +
         '</div>' +
+        '<div class="prod-edit-bar" style="display:none">' +
+          '<span class="prod-edit-label">Nuevo costo</span>' +
+          '<div class="prod-edit-in"><span>$</span><input type="number" class="prod-edit-input" value="' + p.costoARS + '" inputmode="decimal" /></div>' +
+          '<button class="prod-edit-save" data-edit-save="' + p.id + '">Guardar</button>' +
+          '<button class="prod-edit-cancel" data-edit-cancel>Cancelar</button>' +
+        '</div>' +
+        (hasRecipe ? '<button class="prod-recalcular" data-recalcular="' + p.id + '">↻ Recalcular desde insumos actuales</button>' : '') +
         '<div class="prod-precios">' + preciosHtml + '</div>' +
         '<button class="prod-add-precio" data-add-precio="' + p.id + '" data-costo="' + p.costoARS + '">' +
           ADD_ICO + ' Agregar precio de venta' +
@@ -1251,6 +1261,68 @@
       const goto = e.target.closest('.reg-teaser-btn').dataset.gotoTab;
       if (goto) { document.querySelector('[data-tab="' + goto + '"]').click(); return; }
       document.getElementById('acctBtn').click();
+      return;
+    }
+
+    // Editar costo — mostrar barra
+    const editIco = e.target.closest('[data-edit-costo]');
+    if (editIco) {
+      const card = editIco.closest('.prod');
+      const bar = card && card.querySelector('.prod-edit-bar');
+      if (bar) { bar.style.display = ''; const inp = bar.querySelector('.prod-edit-input'); if (inp) inp.select(); }
+      return;
+    }
+
+    // Editar costo — cancelar
+    if (e.target.closest('[data-edit-cancel]')) {
+      const bar = e.target.closest('.prod-edit-bar');
+      if (bar) bar.style.display = 'none';
+      return;
+    }
+
+    // Editar costo — guardar
+    const saveEditBtn = e.target.closest('[data-edit-save]');
+    if (saveEditBtn) {
+      const id = saveEditBtn.dataset.editSave;
+      const bar = e.target.closest('.prod-edit-bar');
+      const inp = bar && bar.querySelector('.prod-edit-input');
+      const newCosto = parseFloat(inp && inp.value) || 0;
+      const prod = state.productos.find((p) => String(p.id) === id);
+      if (!prod) return;
+      window.CostitoAuth.updateProduct(id, { costo: newCosto, recipeData: prod.recipeData })
+        .then(() => { prod.costoARS = newCosto; renderProds(); toast('Costo actualizado'); })
+        .catch((err) => toast('Error: ' + err.message));
+      return;
+    }
+
+    // Recalcular costo desde insumos actuales
+    const recalcBtn = e.target.closest('[data-recalcular]');
+    if (recalcBtn) {
+      const id = recalcBtn.dataset.recalcular;
+      const prod = state.productos.find((p) => String(p.id) === id);
+      if (!prod || !prod.recipeData) return;
+      recalcBtn.textContent = '↻ Calculando…';
+      recalcBtn.disabled = true;
+      window.CostitoAuth.loadInsumos()
+        .then((currentInsumos) => {
+          const snap = prod.recipeData;
+          const updatedInsumos = snap.insumos.map((si) => {
+            const cur = currentInsumos.find((ci) =>
+              ci.nombre.trim().toLowerCase() === si.nombre.trim().toLowerCase() && ci.unidad === si.unidad
+            );
+            return cur ? { ...si, precioTotal: cur.precioTotal, cantidadComprada: cur.cantidadComprada } : si;
+          });
+          const ingParaCalc = snap.receta.map((row) => {
+            const ins = updatedInsumos.find((i) => i.id === row.insumoId);
+            return ins ? { id: row.id, cantidad: row.cantidadUsada, paqueteCosto: ins.precioTotal, paqueteCantidad: ins.cantidadComprada } : null;
+          }).filter(Boolean);
+          const result = Calc.costoProduccion({ ingredientes: ingParaCalc, unidades: snap.unidades, gastos: snap.gastos || [] });
+          const newCosto = result.costoTotalPorUnidad;
+          const newRecipeData = { ...snap, insumos: updatedInsumos };
+          return window.CostitoAuth.updateProduct(id, { costo: newCosto, recipeData: newRecipeData })
+            .then(() => { prod.costoARS = newCosto; prod.recipeData = newRecipeData; renderProds(); toast('Costo recalculado: ' + money(newCosto)); });
+        })
+        .catch((err) => { recalcBtn.textContent = '↻ Recalcular desde insumos actuales'; recalcBtn.disabled = false; toast('Error: ' + err.message); });
       return;
     }
 

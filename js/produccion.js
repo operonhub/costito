@@ -27,9 +27,47 @@
   let gastoSeq = maxSeq(gastos, 'g');
   let lastResult = null;
   let pendingDelInsId = null;
+  const syncTimers = {};
 
   function parse(key, def) { try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; } }
   function maxSeq(arr, prefix) { return arr.reduce((m, x) => Math.max(m, parseInt(x.id?.slice(1)) || 0), 0); }
+  function auth() { return window.CostitoAuth && window.CostitoAuth.getUser() ? window.CostitoAuth : null; }
+
+  function debouncedSyncInsumo(ins) {
+    if (!auth()) return;
+    clearTimeout(syncTimers[ins.id]);
+    syncTimers[ins.id] = setTimeout(() => {
+      auth() && auth().upsertInsumo({ supabaseId: ins.supabaseId || null, nombre: ins.nombre, cantidadComprada: ins.cantidadComprada, unidad: ins.unidad, precioTotal: ins.precioTotal })
+        .then(id => { if (!ins.supabaseId) { ins.supabaseId = id; save(); } })
+        .catch(() => {});
+    }, 800);
+  }
+
+  function syncDeleteInsumo(ins) {
+    if (ins && ins.supabaseId && auth()) {
+      auth().deleteInsumo(ins.supabaseId).catch(() => {});
+    }
+  }
+
+  function loadInsumosFromSb() {
+    if (!auth()) return;
+    auth().loadInsumos().then(sbInsumos => {
+      if (!sbInsumos.length) {
+        insumos.forEach(ins => debouncedSyncInsumo(ins));
+        return;
+      }
+      insumos = sbInsumos.map(si => {
+        const existing = insumos.find(li =>
+          li.nombre.trim().toLowerCase() === si.nombre.trim().toLowerCase() && li.unidad === si.unidad
+        );
+        return { id: existing ? existing.id : 'i' + (++insSec), nombre: si.nombre, cantidadComprada: si.cantidadComprada, unidad: si.unidad, precioTotal: si.precioTotal, supabaseId: si.supabaseId };
+      });
+      save();
+      renderInsumos();
+      recalc();
+    }).catch(() => {});
+  }
+
   function save() {
     localStorage.setItem(LS.insumos, JSON.stringify(insumos));
     localStorage.setItem(LS.receta, JSON.stringify(receta));
@@ -206,7 +244,7 @@
   // BLOQUE A — INSUMOS
   // ============================================================
   function addInsumo() {
-    insumos.push({ id: 'i' + (++insSec), nombre: '', cantidadComprada: 0, unidad: 'g', precioTotal: 0 });
+    insumos.push({ id: 'i' + (++insSec), nombre: '', cantidadComprada: 0, unidad: 'g', precioTotal: 0, supabaseId: null });
     save();
     renderInsumos();
     const inputs = document.querySelectorAll('.pinsumo-nombre');
@@ -281,6 +319,7 @@
 
     save();
     recalc();
+    debouncedSyncInsumo(ins);
   }
 
   function onInsClick(e) {
@@ -293,15 +332,18 @@
       const ins = insumos.find(i => i.id === id);
       showConfirm((ins?.nombre ? '"' + ins.nombre + '"' : 'Este insumo') + ' se está usando en la composición. Si lo eliminás, se va a quitar también de ahí. ¿Confirmás?');
     } else {
+      const ins = insumos.find(i => i.id === id);
       insumos = insumos.filter(i => i.id !== id);
       save();
       renderInsumos();
       recalc();
+      syncDeleteInsumo(ins);
     }
   }
 
   function confirmDelete() {
     if (!pendingDelInsId) return;
+    const ins = insumos.find(i => i.id === pendingDelInsId);
     receta = receta.filter(r => r.insumoId !== pendingDelInsId);
     insumos = insumos.filter(i => i.id !== pendingDelInsId);
     pendingDelInsId = null;
@@ -309,6 +351,7 @@
     save();
     renderInsumos();
     recalc();
+    syncDeleteInsumo(ins);
   }
 
   // ============================================================
@@ -529,6 +572,11 @@
     if (!lastResult || !lastResult.costoTotalPorUnidad) return;
     window.Costito && window.Costito.usarComoCosto(lastResult.costoTotalPorUnidad);
   }
+
+  document.addEventListener('costito:authchange', (e) => {
+    const user = e && e.detail && e.detail.user;
+    if (user) loadInsumosFromSb();
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', buildProduccion);
